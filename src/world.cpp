@@ -14,7 +14,8 @@
 #include <iostream>
 
 // Game configuration
-const size_t MAX_TURTLES = 15;
+// CHANGES: Changed MAX_TURTLES to 1 for testing purposes
+const size_t MAX_TURTLES = 1;
 const size_t MAX_FISH = 5;
 const size_t TURTLE_DELAY_MS = 2000;
 const size_t FISH_DELAY_MS = 5000;
@@ -202,8 +203,25 @@ void WorldSystem::restart()
 	// Debugging for memory/component leaks
 	ECS::ContainerInterface::list_all_components();
 
+	// NEW: creates tile grid.
+	// 12 by 8 since screen is 1200 x 800.
+	createGrid(12, 8);
+
+	// ORIGINAL LINES
 	// Create a new salmon
-	player_salmon = Salmon::createSalmon({ 100, 200 });
+	//player_salmon = Salmon::createSalmon({ 100, 200 });
+
+	// CHANGES: 
+	// Salmon/Snail should spawn in same position as before. Slightly hard coded, but good
+	// enough for now. Could be enough for game since I am assuming the Snail will have
+	// a fixed start position at every level.
+	player_salmon = Salmon::createSalmon({tiles[1][2].x, tiles[1][2].y});
+	salmonX = 1;
+	salmonY = 2;
+	// NEW: I don't know if this actually does anything but maybe it will be useful. Original idea
+	// was to remove salmon from a certain tile and add it to another when it moved, but it
+	// does not seem possible with this sort of registry style.
+	ECS::registry<Tile>.emplace(player_salmon);
 
 	// !! TODO A3: Enable static pebbles on the ground
 	/*
@@ -280,11 +298,38 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 	// Move salmon if alive
 	if (!ECS::registry<DeathTimer>.has(player_salmon))
 	{
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		// TODO A1: HANDLE SALMON MOVEMENT HERE
-		// key is of 'type' GLFW_KEY_
-		// action can be GLFW_PRESS GLFW_RELEASE GLFW_REPEAT
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		// NEW: Added motion here. I am assuming some sort of rectangular/square level for now
+		// this function might get quite messy as time goes on so maybe we will need a decent 
+		// amount of helper functions when we get there.
+		auto& mot = ECS::registry<Motion>.get(player_salmon);
+		if (key == GLFW_KEY_W && action == GLFW_PRESS) {
+			if (salmonY - 1 != -1) {
+				Tile& t = tiles[salmonX][salmonY - 1];
+				mot.position = {t.x, t.y};
+				salmonY = salmonY - 1;
+			}
+		}
+		if (key == GLFW_KEY_S && action == GLFW_PRESS) {
+			if (salmonY + 1 != tiles[salmonY].size()) {
+				Tile& t = tiles[salmonX][salmonY + 1];
+				mot.position = { t.x, t.y };
+				salmonY = salmonY + 1;
+			}
+		}
+		if (key == GLFW_KEY_D && action == GLFW_PRESS) {
+			if (salmonX + 1 != tiles.size()) {
+				Tile& t = tiles[salmonX + 1][salmonY];
+				mot.position = { t.x, t.y };
+				salmonX = salmonX + 1;
+			}
+		}
+		if (key == GLFW_KEY_A && action == GLFW_PRESS) {
+			if (salmonX - 1 != -1) {
+				Tile& t = tiles[salmonX - 1][salmonY];
+				mot.position = { t.x, t.y };
+				salmonX = salmonX - 1;
+			}
+		}
 	}
 
 	// Resetting game
@@ -297,7 +342,8 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 	}
 
 	// Debugging
-	if (key == GLFW_KEY_D)
+	// CHANGE: Switched debug key to V so it would not trigger when moving to the right
+	if (key == GLFW_KEY_V)
 		DebugSystem::in_debug_mode = (action != GLFW_RELEASE);
 
 	// Control the current speed with `<` `>`
@@ -326,4 +372,26 @@ void WorldSystem::on_mouse_move(vec2 mouse_pos)
 
 		(void)mouse_pos;
 	}
+}
+
+// NEW: creates a grid of size x times y
+
+void WorldSystem::createGrid(int x, int y)
+{
+	for (int i = 0; i < x; i++) {
+		// can change this 100.f to some other float, depends what size of tile we want.
+		float xPos = 100.f * i;
+		std::vector<Tile> tileRow;
+		for (int j = 0; j < y; j++) {
+			// Creating tile components.
+			float yPos = 100.f * j;
+			WorldSystem::Tile tile;
+			tile.x = xPos;
+			tile.y = yPos;
+			tile.type = EMPTY;
+			tileRow.push_back(tile);
+		}
+		tiles.push_back(tileRow);
+	}
+	return;
 }

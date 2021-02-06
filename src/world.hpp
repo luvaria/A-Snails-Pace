@@ -38,6 +38,34 @@ public:
 	// Should the game be over ?
 	bool is_over() const;
 
+	// NEW: creates a grid of size x times y (x = width, y = height)
+	void createGrid(int x, int y);
+
+	// NEW: Defining what tile types are possible, could be used to render correct tile types
+	// and to check if can be moved. EMPTY = nothing is on the tile and you can move to it, 
+	// OCCUPIED = something is on the tile, UNUSED = don't render anything/tile is not going
+	// to be used
+
+	typedef enum {EMPTY, WALL, OCCUPIED, UNUSED} TYPE;
+
+	// NEW: Defines the Tile Component
+
+	struct Tile {
+		float x;
+		float y;
+		TYPE type;
+	};
+
+	// NEW: Tile array, might make it easier to access it and add to entities
+	std::vector<std::vector<Tile>> tiles;
+
+	// NEW: The salmon coordinates in the tiles array. Made to keep track of salmon
+	// without having to loop across the entirity of tiles array to find it
+	// maybe there is a better way to do this, but this is the way I came up for now
+	int salmonX;
+	int salmonY;
+
+
 	// OpenGL window handle
 	GLFWwindow* window;
 private:
