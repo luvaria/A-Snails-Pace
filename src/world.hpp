@@ -76,6 +76,13 @@ private:
 	float next_turtle_spawn;
 	float next_fish_spawn;
 	ECS::Entity player_salmon;
+
+	// NEW: turn_number is not used for now, but will probably be used to keep track
+	// of what day it is on the calendar. snail_move is how many tiles the snail can
+	// move during the current turn.
+
+	int turn_number;
+	int snail_move;
 	
 	// music references
 	Mix_Music* background_music;

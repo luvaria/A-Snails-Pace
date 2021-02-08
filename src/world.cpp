@@ -132,6 +132,9 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 	}
 
 	// Spawning new turtles
+	// CHANGE: Commented this out since we don't want turtles to randomly spawn somewhere on the screen.
+	// Enemy entities will instead be spawned on the on_step function (at least for now).
+	/*
 	next_turtle_spawn -= elapsed_ms * current_speed;
 	if (ECS::registry<Turtle>.components.size() <= MAX_TURTLES && next_turtle_spawn < 0.f)
 	{
@@ -144,7 +147,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 		motion.position = vec2(window_size_in_game_units.x - 150.f, 50.f + uniform_dist(rng) * (window_size_in_game_units.y - 100.f));
 		motion.velocity = vec2(100.f, 0.f );
 	}
-
+	*/
 	// Spawning new fish
 	next_fish_spawn -= elapsed_ms * current_speed;
 	if (ECS::registry<Fish>.components.size() <= MAX_FISH && next_fish_spawn < 0.f)
@@ -220,6 +223,18 @@ void WorldSystem::restart()
 	// was to remove salmon from a certain tile and add it to another when it moved, but it
 	// does not seem possible with this sort of registry style.
 	ECS::registry<Tile>.emplace(player_salmon);
+
+	// NEW: Initializing turns and amount of tiles snail can move.
+	snail_move = 1;
+	turn_number = 1;
+	// NEW: We will probably have to create and position enemy entities in this function as well. 
+	// Instead of having enemies like the turtles in the Assignments spawn in a random position, they
+	// end up spawning in a fixed tile. So we will have to change whatever function that is spawning
+	// the turtles in random positions.
+	// NEW: This spawns a turtle on tile [10][6]
+	ECS::Entity enemy_one = Turtle::createTurtle({ tiles[10][6].x, tiles[10][6].y });
+	ECS::registry<Tile>.emplace(enemy_one);
+
 
 	// !! TODO A3: Enable static pebbles on the ground
 	/*
@@ -302,31 +317,36 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		auto& mot = ECS::registry<Motion>.get(player_salmon);
 		// CHANGE: Removed salmonX and salmonY. Salmon's position is tracked by using its Motion
 		// Component. Had to divide by 100 since starting screen position is (100, 200) which is 
-		// associated with the tile at tiles[1][2].
+		// associated with the tile at tiles[1][2]. Added snail_move that tracks how many moves
+		// the snail can do this turn.
 		float xCoord = mot.position.x / 100;
 		float yCoord = mot.position.y / 100;
 		if (key == GLFW_KEY_W && action == GLFW_PRESS) {
-			if (yCoord - 1 != -1) {
+			if (yCoord - 1 != -1 && snail_move > 0) {
 				Tile& t = tiles[xCoord][yCoord - 1];
 				mot.position = {t.x, t.y};
+				snail_move--;
 			}
 		}
 		if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-			if (yCoord + 1 != tiles[yCoord].size()) {
+			if (yCoord + 1 != tiles[yCoord].size() && snail_move > 0) {
 				Tile& t = tiles[xCoord][yCoord + 1];
 				mot.position = { t.x, t.y };
+				snail_move--;
 			}
 		}
 		if (key == GLFW_KEY_D && action == GLFW_PRESS) {
-			if (xCoord + 1 != tiles.size()) {
+			if (xCoord + 1 != tiles.size() && snail_move > 0) {
 				Tile& t = tiles[xCoord + 1][yCoord];
 				mot.position = { t.x, t.y };
+				snail_move--;
 			}
 		}
 		if (key == GLFW_KEY_A && action == GLFW_PRESS) {
-			if (xCoord - 1 != -1) {
+			if (xCoord - 1 != -1 && snail_move > 0) {
 				Tile& t = tiles[xCoord - 1][yCoord];
 				mot.position = { t.x, t.y };
+				snail_move--;
 			}
 		}
 	}
@@ -339,6 +359,19 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		
 		restart();
 	}
+
+	// NEW: Next turn button. Might be temporary since we will probably have 
+	// a Button Component in the future, but this is just to get the delay
+	// agnostic requirement to work.
+
+	if (key == GLFW_KEY_N && action == GLFW_RELEASE) {
+		// flip to next turn, reset movement available, make enemies move?.
+		turn_number = turn_number + 1;
+		// Can be more than 1 tile per turn. Will probably gain a different amount
+		// depending on snail's status
+		snail_move = 1;
+	}
+
 
 	// Debugging
 	// CHANGE: Switched debug key to V so it would not trigger when moving to the right
@@ -379,7 +412,8 @@ void WorldSystem::createGrid(int x, int y)
 {
 	for (int i = 0; i < x; i++) {
 		// can change this 100.f to some other float. It is intended to be the center of
-		// the tile.
+		// the tile. Will have to change some values on the on_key function as well so
+		// code does not break
 		float xPos = 100.f * i;
 		std::vector<Tile> tileRow;
 		for (int j = 0; j < y; j++) {
