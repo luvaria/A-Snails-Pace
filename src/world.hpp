@@ -49,7 +49,6 @@ public:
 	typedef enum {EMPTY, WALL, OCCUPIED, UNUSED} TYPE;
 
 	// NEW: Defines the Tile Component
-
 	struct Tile {
 		float x;
 		float y;
@@ -58,13 +57,6 @@ public:
 
 	// NEW: Tile array, might make it easier to access it and add to entities
 	std::vector<std::vector<Tile>> tiles;
-
-	// NEW: The salmon coordinates in the tiles array. Made to keep track of salmon
-	// without having to loop across the entirity of tiles array to find it
-	// maybe there is a better way to do this, but this is the way I came up for now
-	int salmonX;
-	int salmonY;
-
 
 	// OpenGL window handle
 	GLFWwindow* window;

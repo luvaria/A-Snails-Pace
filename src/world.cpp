@@ -216,8 +216,6 @@ void WorldSystem::restart()
 	// enough for now. Could be enough for game since I am assuming the Snail will have
 	// a fixed start position at every level.
 	player_salmon = Salmon::createSalmon({tiles[1][2].x, tiles[1][2].y});
-	salmonX = 1;
-	salmonY = 2;
 	// NEW: I don't know if this actually does anything but maybe it will be useful. Original idea
 	// was to remove salmon from a certain tile and add it to another when it moved, but it
 	// does not seem possible with this sort of registry style.
@@ -302,32 +300,33 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		// this function might get quite messy as time goes on so maybe we will need a decent 
 		// amount of helper functions when we get there.
 		auto& mot = ECS::registry<Motion>.get(player_salmon);
+		// CHANGE: Removed salmonX and salmonY. Salmon's position is tracked by using its Motion
+		// Component. Had to divide by 100 since starting screen position is (100, 200) which is 
+		// associated with the tile at tiles[1][2].
+		float xCoord = mot.position.x / 100;
+		float yCoord = mot.position.y / 100;
 		if (key == GLFW_KEY_W && action == GLFW_PRESS) {
-			if (salmonY - 1 != -1) {
-				Tile& t = tiles[salmonX][salmonY - 1];
+			if (yCoord - 1 != -1) {
+				Tile& t = tiles[xCoord][yCoord - 1];
 				mot.position = {t.x, t.y};
-				salmonY = salmonY - 1;
 			}
 		}
 		if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-			if (salmonY + 1 != tiles[salmonY].size()) {
-				Tile& t = tiles[salmonX][salmonY + 1];
+			if (yCoord + 1 != tiles[yCoord].size()) {
+				Tile& t = tiles[xCoord][yCoord + 1];
 				mot.position = { t.x, t.y };
-				salmonY = salmonY + 1;
 			}
 		}
 		if (key == GLFW_KEY_D && action == GLFW_PRESS) {
-			if (salmonX + 1 != tiles.size()) {
-				Tile& t = tiles[salmonX + 1][salmonY];
+			if (xCoord + 1 != tiles.size()) {
+				Tile& t = tiles[xCoord + 1][yCoord];
 				mot.position = { t.x, t.y };
-				salmonX = salmonX + 1;
 			}
 		}
 		if (key == GLFW_KEY_A && action == GLFW_PRESS) {
-			if (salmonX - 1 != -1) {
-				Tile& t = tiles[salmonX - 1][salmonY];
+			if (xCoord - 1 != -1) {
+				Tile& t = tiles[xCoord - 1][yCoord];
 				mot.position = { t.x, t.y };
-				salmonX = salmonX - 1;
 			}
 		}
 	}
@@ -379,7 +378,8 @@ void WorldSystem::on_mouse_move(vec2 mouse_pos)
 void WorldSystem::createGrid(int x, int y)
 {
 	for (int i = 0; i < x; i++) {
-		// can change this 100.f to some other float, depends what size of tile we want.
+		// can change this 100.f to some other float. It is intended to be the center of
+		// the tile.
 		float xPos = 100.f * i;
 		std::vector<Tile> tileRow;
 		for (int j = 0; j < y; j++) {
