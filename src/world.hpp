@@ -73,7 +73,7 @@ private:
 
 	// Game state
 	float current_speed;
-	float next_turtle_spawn;
+	float next_spider_spawn;
 	float next_fish_spawn;
 	ECS::Entity player_snail;
 

@@ -2,7 +2,7 @@
 #include "world.hpp"
 #include "physics.hpp"
 #include "debug.hpp"
-#include "turtle.hpp"
+#include "spider.hpp"
 #include "fish.hpp"
 #include "pebbles.hpp"
 #include "render_components.hpp"
@@ -14,17 +14,17 @@
 #include <iostream>
 
 // Game configuration
-// CHANGES: Changed MAX_TURTLES to 1 for testing purposes
-const size_t MAX_TURTLES = 1;
+// CHANGES: Changed MAX_SPIDERS to 1 for testing purposes
+const size_t MAX_SPIDERS = 1;
 const size_t MAX_FISH = 5;
-const size_t TURTLE_DELAY_MS = 2000;
+const size_t SPIDER_DELAY_MS = 2000;
 const size_t FISH_DELAY_MS = 5000;
 
 // Create the fish world
 // Note, this has a lot of OpenGL specific things, could be moved to the renderer; but it also defines the callbacks to the mouse and keyboard. That is why it is called here.
 WorldSystem::WorldSystem(ivec2 window_size_px) :
 	points(0),
-	next_turtle_spawn(0.f),
+	next_spider_spawn(0.f),
 	next_fish_spawn(0.f)
 {
 	// Seeding rng with random device
@@ -152,7 +152,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 	next_fish_spawn -= elapsed_ms * current_speed;
 	if (ECS::registry<Fish>.components.size() <= MAX_FISH && next_fish_spawn < 0.f)
 	{
-		// !!! TODO A1: Create new fish with Fish::createFish({0,0}), as for the Turtles above
+		// !!! TODO A1: Create new fish with Fish::createFish({0,0}), as for the Spiders above
 		if(false) // dummy to silence warning about unused function until implemented
 			Fish::createFish({ 0,0 });
 	}
@@ -199,7 +199,7 @@ void WorldSystem::restart()
 	current_speed = 1.f;
 
 	// Remove all entities that we created
-	// All that have a motion, we could also iterate over all fish, turtles, ... but that would be more cumbersome
+	// All that have a motion, we could also iterate over all fish, spiders, ... but that would be more cumbersome
 	while (ECS::registry<Motion>.entities.size()>0)
 		ECS::ContainerInterface::remove_all_components_of(ECS::registry<Motion>.entities.back());
 
@@ -231,8 +231,8 @@ void WorldSystem::restart()
 	// Instead of having enemies like the turtles in the Assignments spawn in a random position, they
 	// end up spawning in a fixed tile. So we will have to change whatever function that is spawning
 	// the turtles in random positions.
-	// NEW: This spawns a turtle on tile [10][6]
-	ECS::Entity enemy_one = Turtle::createTurtle({ tiles[10][6].x, tiles[10][6].y });
+	// NEW: This spawns a spider on tile [10][6]
+	ECS::Entity enemy_one = Spider::createSpider({ tiles[10][6].x, tiles[10][6].y });
 	ECS::registry<Tile>.emplace(enemy_one);
 
 
@@ -263,8 +263,8 @@ void WorldSystem::handle_collisions()
 		// For now, we are only interested in collisions that involve the snail
 		if (ECS::registry<Snail>.has(entity))
 		{
-			// Checking Snail - Turtle collisions
-			if (ECS::registry<Turtle>.has(entity_other))
+			// Checking Snail - Spider collisions
+			if (ECS::registry<Spider>.has(entity_other))
 			{
 				// initiate death unless already dying
 				if (!ECS::registry<DeathTimer>.has(entity))
