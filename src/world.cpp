@@ -50,7 +50,7 @@ WorldSystem::WorldSystem(ivec2 window_size_px) :
 	glfwWindowHint(GLFW_RESIZABLE, 0);
 
 	// Create the main window (for rendering, keyboard, and mouse input)
-	window = glfwCreateWindow(window_size_px.x, window_size_px.y, "Salmon Game Assignment", nullptr, nullptr);
+	window = glfwCreateWindow(window_size_px.x, window_size_px.y, "A Snail's Pace", nullptr, nullptr);
 	if (window == nullptr)
 		throw std::runtime_error("Failed to glfwCreateWindow");
 
@@ -162,7 +162,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 	// DON'T WORRY ABOUT THIS UNTIL ASSIGNMENT 3
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-	// Processing the salmon state
+	// Processing the snail state
 	assert(ECS::registry<ScreenState>.components.size() <= 1);
 	auto& screen = ECS::registry<ScreenState>.components[0];
 
@@ -172,7 +172,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 		auto& counter = ECS::registry<DeathTimer>.get(entity);
 		counter.counter_ms -= elapsed_ms;
 
-		// Reduce window brightness if any of the present salmons is dying
+		// Reduce window brightness if any of the present snails is dying
 		screen.darken_screen_factor = 1-counter.counter_ms/3000.f;
 
 		// Restart the game once the death timer expired
@@ -211,18 +211,18 @@ void WorldSystem::restart()
 	createGrid(12, 8);
 
 	// ORIGINAL LINES
-	// Create a new salmon
-	//player_salmon = Salmon::createSalmon({ 100, 200 });
+	// Create a new snail
+	//player_snail = Snail::createSnail({ 100, 200 });
 
 	// CHANGES: 
-	// Salmon/Snail should spawn in same position as before. Slightly hard coded, but good
+	// Snail should spawn in same position as before. Slightly hard coded, but good
 	// enough for now. Could be enough for game since I am assuming the Snail will have
 	// a fixed start position at every level.
-	player_salmon = Salmon::createSalmon({tiles[1][2].x, tiles[1][2].y});
+	player_snail = Snail::createSnail({tiles[1][2].x, tiles[1][2].y});
 	// NEW: I don't know if this actually does anything but maybe it will be useful. Original idea
-	// was to remove salmon from a certain tile and add it to another when it moved, but it
+	// was to remove snail from a certain tile and add it to another when it moved, but it
 	// does not seem possible with this sort of registry style.
-	ECS::registry<Tile>.emplace(player_salmon);
+	ECS::registry<Tile>.emplace(player_snail);
 
 	// NEW: Initializing turns and amount of tiles snail can move.
 	snail_move = 1;
@@ -260,25 +260,25 @@ void WorldSystem::handle_collisions()
 		auto entity = registry.entities[i];
 		auto entity_other = registry.components[i].other;
 
-		// For now, we are only interested in collisions that involve the salmon
-		if (ECS::registry<Salmon>.has(entity))
+		// For now, we are only interested in collisions that involve the snail
+		if (ECS::registry<Snail>.has(entity))
 		{
-			// Checking Salmon - Turtle collisions
+			// Checking Snail - Turtle collisions
 			if (ECS::registry<Turtle>.has(entity_other))
 			{
 				// initiate death unless already dying
 				if (!ECS::registry<DeathTimer>.has(entity))
 				{
-					// Scream, reset timer, and make the salmon sink
+					// Scream, reset timer, and make the snail sink
 					ECS::registry<DeathTimer>.emplace(entity);
 					Mix_PlayChannel(-1, salmon_dead_sound, 0);
 
-					// !!! TODO A1: change the salmon motion to float down up-side down
+					// !!! TODO A1: change the snail motion to float down up-side down
 
-					// !!! TODO A1: change the salmon color
+					// !!! TODO A1: change the snail color
 				}
 			}
-			// Checking Salmon - Fish collisions
+			// Checking Snail - Fish collisions
 			else if (ECS::registry<Fish>.has(entity_other))
 			{
 				if (!ECS::registry<DeathTimer>.has(entity))
@@ -288,7 +288,7 @@ void WorldSystem::handle_collisions()
 					Mix_PlayChannel(-1, salmon_eat_sound, 0);
 					++points;
 
-					// !!! TODO A1: create a new struct called LightUp in render_components.hpp and add an instance to the salmon entity
+					// !!! TODO A1: create a new struct called LightUp in render_components.hpp and add an instance to the snail entity
 				}
 			}
 		}
@@ -308,13 +308,13 @@ bool WorldSystem::is_over() const
 // TODO A1: check out https://www.glfw.org/docs/3.3/input_guide.html
 void WorldSystem::on_key(int key, int, int action, int mod)
 {
-	// Move salmon if alive
-	if (!ECS::registry<DeathTimer>.has(player_salmon))
+	// Move snail if alive
+	if (!ECS::registry<DeathTimer>.has(player_snail))
 	{
 		// NEW: Added motion here. I am assuming some sort of rectangular/square level for now
 		// this function might get quite messy as time goes on so maybe we will need a decent 
 		// amount of helper functions when we get there.
-		auto& mot = ECS::registry<Motion>.get(player_salmon);
+		auto& mot = ECS::registry<Motion>.get(player_snail);
 		// CHANGE: Removed salmonX and salmonY. Salmon's position is tracked by using its Motion
 		// Component. Had to divide by 100 since starting screen position is (100, 200) which is 
 		// associated with the tile at tiles[1][2]. Added snail_move that tracks how many moves
@@ -394,7 +394,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 
 void WorldSystem::on_mouse_move(vec2 mouse_pos)
 {
-	if (!ECS::registry<DeathTimer>.has(player_salmon))
+	if (!ECS::registry<DeathTimer>.has(player_snail))
 	{
 		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		// TODO A1: HANDLE SALMON ROTATION HERE

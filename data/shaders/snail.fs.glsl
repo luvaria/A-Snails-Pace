@@ -16,7 +16,7 @@ void main()
 {
 	color = vec4(fcolor * vcolor, 1.0);
 
-	// Salmon mesh is contained in a 2x2 square (see salmon.mesh for vertices)
+	// Snail mesh is contained in a 2x2 square (see snail.mesh for vertices)
 	float radius = distance(vec2(0.0), vpos);
 	if (light_up == 1 && radius < 0.3)
 	{

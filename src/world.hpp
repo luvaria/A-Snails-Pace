@@ -2,7 +2,7 @@
 
 // internal
 #include "common.hpp"
-#include "salmon.hpp"
+#include "snail.hpp"
 
 // stlib
 #include <vector>
@@ -68,14 +68,14 @@ private:
 	// Loads the audio
 	void init_audio();
 
-	// Number of fish eaten by the salmon, displayed in the window title
+	// Number of fish eaten by the snail, displayed in the window title
 	unsigned int points;
 
 	// Game state
 	float current_speed;
 	float next_turtle_spawn;
 	float next_fish_spawn;
-	ECS::Entity player_salmon;
+	ECS::Entity player_snail;
 
 	// NEW: turn_number is not used for now, but will probably be used to keep track
 	// of what day it is on the calendar. snail_move is how many tiles the snail can

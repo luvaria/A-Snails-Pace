@@ -3,7 +3,7 @@
 #include "common.hpp"
 #include "tiny_ecs.hpp"
 
-// Salmon enemy 
+// Snail enemy 
 struct Turtle
 {
 	// Creates all the associated render resources and default transform
