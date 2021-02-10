@@ -63,7 +63,15 @@ public:
 	// OpenGL window handle
 	GLFWwindow* window;
 private:
-	// Input callback functions
+    void goRight(bool &isSafeMove, Motion &mot, Tile &nextTile, int xCoord, int yCoord, int &snail_move);
+    
+    void goLeft(bool &isSafeMove, Motion &mot, Tile &nextTile, int xCoord, int yCoord, int &snail_move);
+    
+    void goUp(bool &isSafeMove, Motion &mot, Tile &nextTile, int xCoord, int yCoord, int &snail_move);
+    
+    void goDown(bool &isSafeMove, Motion &mot, Tile &nextTile, int xCoord, int yCoord, int &snail_move);
+    
+    // Input callback functions
 	void on_key(int key, int, int action, int mod);
 	void on_mouse_move(vec2 mouse_pos);
 

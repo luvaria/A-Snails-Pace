@@ -22,7 +22,7 @@ ECS::Entity Spider::createSpider(vec2 position)
 	// Initialize the motion
 	auto& motion = ECS::registry<Motion>.emplace(entity);
 	motion.angle = 0.f;
-	motion.velocity = { 100.f, 0.f }; // 200
+	motion.velocity = { 0.f, 0.f }; // 200
 	motion.position = position;
 	motion.scale = resource.mesh.original_size / resource.mesh.original_size.x * WorldSystem::getScale();
 	motion.scale.y *= -1; // fix orientation
