@@ -221,7 +221,7 @@ float WorldSystem::getScale() { return scale; }
 void WorldSystem::on_key(int key, int, int action, int mod)
 {
 	// Move snail if alive and has turns remaining
-	if (!ECS::registry<DeathTimer>.has(player_snail) && snail_move > 0)
+	if (!ECS::registry<DeathTimer>.has(player_snail))
 	{
 		// NEW: Added motion here. I am assuming some sort of rectangular/square level for now
 		// this function might get quite messy as time goes on so maybe we will need a decent 
@@ -233,37 +233,139 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		// the snail can do this turn.
 		int xCoord = static_cast<int>(mot.position.x / scale);
 		int yCoord = static_cast<int>(mot.position.y / scale);
+        bool isSafeMove=false;
+        Tile nextTile;
 		if (action == GLFW_PRESS)
 		{
 			switch (key)
 			{
 			case GLFW_KEY_W:
-				if (yCoord - 1 != -1) {
-					Tile& t = tiles[yCoord - 1][xCoord];
+                if(mot.scale.y > 0) {
+                    mot.scale.y = - mot.scale.y;
+                }
+				if (tiles[yCoord - 1][xCoord].type == VINE) {
+					Tile& t = tiles[mot.angle == 0 ? yCoord : yCoord - 1][xCoord];
 					mot.position = { t.x, t.y };
+                    mot.angle = PI/2;
 					snail_move--;
 				}
+                else if (tiles[yCoord - 1][xCoord].type == GROUND || tiles[yCoord - 1][xCoord].type == WALL) {
+                    if(mot.scale.y > 0) {
+                        mot.scale.y = - mot.scale.y;
+                    }
+                    mot.angle = -PI;
+                }
+                else if(mot.angle == PI/2) {
+                    nextTile = tiles[yCoord-1][mot.scale.x > 0 ? xCoord+1 : xCoord-1];
+                    isSafeMove = nextTile.type == GROUND || nextTile.type == EMPTY || nextTile.type == VINE;
+                    if (isSafeMove && (tiles[yCoord-1][xCoord].type == EMPTY || tiles[yCoord-1][xCoord].type == VINE)) {
+                        if(nextTile.type == EMPTY || nextTile.type == VINE) {
+                            Tile& t = nextTile;
+                            mot.position = { t.x, t.y };
+                            mot.angle = 0;
+                        } else {
+                            Tile& t = tiles[yCoord-1][xCoord];
+                            mot.position = { t.x, t.y };
+                        }
+                        snail_move--;
+                    }
+                }
 				break;
 			case GLFW_KEY_S:
-				if (yCoord + 1 != tiles.size()) {
-					Tile& t = tiles[yCoord + 1][xCoord];
+                if(mot.scale.y < 0) {
+                    mot.scale.y = -mot.scale.y;
+                }
+                if (tiles[yCoord + 1][xCoord].type == VINE) {
+					Tile& t = tiles[mot.angle == -PI ? yCoord : (yCoord + 1)][xCoord];
 					mot.position = { t.x, t.y };
-					snail_move--;
-				}
+                    mot.angle = PI/2;
+                    snail_move--;
+                } else if(tiles[yCoord + 1][xCoord].type == GROUND) {
+                    if(mot.scale.y > 0) {
+                        mot.scale.y = - mot.scale.y;
+                    }
+                    mot.angle = 0;
+                    snail_move--;
+                    // mot.scale = {5, 5}; Squished inside behavior
+                }
+                else if(mot.angle == PI/2) {
+                    nextTile = tiles[yCoord+1][mot.scale.x < 0 ? xCoord-1 : xCoord+1];
+                    isSafeMove = nextTile.type == GROUND || nextTile.type == EMPTY || nextTile.type == VINE;
+                    if (isSafeMove && (tiles[yCoord+1][xCoord].type == EMPTY || tiles[yCoord+1][xCoord].type == VINE)) {
+                        if(nextTile.type == EMPTY || nextTile.type == VINE) {
+                            Tile& t = nextTile;
+                            mot.position = { t.x, t.y };
+                            mot.angle = -PI;
+                            if(mot.scale.y > 0) {
+                                mot.scale.y = -mot.scale.y;
+                            }
+                            if(mot.scale.x < 0) {
+                                mot.scale.x = -mot.scale.x;
+                            }
+                        } else {
+                            Tile& t = tiles[yCoord+1][xCoord];
+                            mot.position = { t.x, t.y };
+                        }
+                        snail_move--;
+                    }
+                }
+                
 				break;
 			case GLFW_KEY_D:
-				if (xCoord + 1 != tiles[yCoord].size()) {
-					Tile& t = tiles[yCoord][xCoord + 1];
-					mot.position = { t.x, t.y };
-					snail_move--;
-				}
+                if(abs(mot.angle) == 0 && mot.scale.x < 0) {
+                    mot.scale.x = -mot.scale.x;
+                } else if(abs(mot.angle) == PI && mot.scale.x > 0) {
+                    mot.scale.x = -mot.scale.x;
+                }
+                if(mot.angle != PI/2) {
+                    nextTile = tiles[mot.angle == -PI ? (yCoord-1) : (yCoord+1)][xCoord+1];
+                    isSafeMove = nextTile.type == GROUND || nextTile.type == EMPTY || nextTile.type == VINE;
+                    if (isSafeMove && (tiles[yCoord][xCoord+1].type == EMPTY || tiles[yCoord][xCoord+1].type == VINE)) {
+                        if(nextTile.type == EMPTY) {
+                            Tile& t = tiles[mot.angle == -PI ? (yCoord-1) : (yCoord+1)][xCoord + 1];
+                            mot.position = { t.x, t.y };
+                            if(abs(mot.angle) == 0 && mot.scale.y < 0) {
+                                mot.scale.y = -mot.scale.y;
+                            }
+                            if(abs(mot.angle) == 0 && mot.scale.x > 0) {
+                                mot.scale.x = -mot.scale.x;
+                            }
+                            mot.angle = PI/2;
+                        } else {
+                            Tile& t = tiles[yCoord][xCoord + 1];
+                            mot.position = { t.x, t.y };
+                        }
+                        snail_move--;
+                    }
+                }
 				break;
 			case GLFW_KEY_A:
-				if (xCoord - 1 != -1) {
-					Tile& t = tiles[yCoord][xCoord - 1];
-					mot.position = { t.x, t.y };
-					snail_move--;
-				}
+                if(abs(mot.angle) == 0 && mot.scale.x > 0) {
+                    mot.scale.x = -mot.scale.x;
+                } else if(abs(mot.angle) == PI && mot.scale.x < 0) {
+                    mot.scale.x = -mot.scale.x;
+                }
+                if(mot.angle != PI/2) {
+                    nextTile = tiles[mot.angle == -PI ? (yCoord-1) : (yCoord+1)][xCoord-1];
+                    isSafeMove = nextTile.type == GROUND || nextTile.type == EMPTY || nextTile.type == VINE;
+                    if (isSafeMove && (tiles[yCoord][xCoord-1].type == EMPTY || tiles[yCoord][xCoord-1].type == VINE || tiles[yCoord][xCoord-1].type == UNUSED)) {
+                        if(nextTile.type == EMPTY) {
+                            Tile& t = tiles[mot.angle == -PI ? (yCoord-1) : (yCoord+1)][xCoord - 1];
+                            mot.position = { t.x, t.y };
+                            if(abs(mot.angle) == 0 && mot.scale.y < 0) {
+                                mot.scale.y = -mot.scale.y;
+                            }
+                            if(abs(mot.angle) == 0 && mot.scale.x < 0) {
+                                mot.scale.x = -mot.scale.x;
+                            }
+                            mot.angle = PI/2;
+                        } else {
+                            Tile& t = tiles[yCoord][xCoord - 1];
+                            mot.position = { t.x, t.y };
+                        }
+                        snail_move--;
+                    }
+                }
 				break;
 			}
 		}
@@ -356,11 +458,11 @@ void WorldSystem::loadLevel(std::string level)
 					VineTile::createVineTile({ tile.x, tile.y });
 					break;
 				case 'S':
-					tile.type = OCCUPIED;
+					tile.type = EMPTY;
 					player_snail = Snail::createSnail({ tile.x, tile.y });
 					break;
 				case 'P':
-					tile.type = OCCUPIED;
+					tile.type = EMPTY;
 					Spider::createSpider({ tile.x, tile.y });
 					break;
 				case ' ':

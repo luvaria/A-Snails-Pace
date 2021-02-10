@@ -46,7 +46,7 @@ public:
 	// OCCUPIED = something is on the tile, UNUSED = don't render anything/tile is not going
 	// to be used
 
-	typedef enum {EMPTY, OCCUPIED, UNUSED, GROUND, WATER, VINE} TYPE;
+	typedef enum {EMPTY, OCCUPIED, UNUSED, GROUND, WATER, VINE, WALL} TYPE;
 
 	// NEW: Defines the Tile Component
 	struct Tile {
