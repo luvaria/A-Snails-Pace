@@ -4,6 +4,9 @@
 #include "debug.hpp"
 #include "spider.hpp"
 #include "fish.hpp"
+#include "tiles/ground.hpp"
+#include "tiles/water.hpp"
+#include "tiles/vine.hpp"
 #include "pebbles.hpp"
 #include "render_components.hpp"
 
@@ -12,6 +15,7 @@
 #include <cassert>
 #include <sstream>
 #include <iostream>
+#include <fstream>
 
 // Game configuration
 // CHANGES: Changed MAX_SPIDERS to 1 for testing purposes
@@ -19,6 +23,9 @@ const size_t MAX_SPIDERS = 1;
 const size_t MAX_FISH = 5;
 const size_t SPIDER_DELAY_MS = 2000;
 const size_t FISH_DELAY_MS = 5000;
+
+// Zoom level; dimensions of tiles
+static float scale = 0.f;
 
 // Create the fish world
 // Note, this has a lot of OpenGL specific things, could be moved to the renderer; but it also defines the callbacks to the mouse and keyboard. That is why it is called here.
@@ -206,9 +213,8 @@ void WorldSystem::restart()
 	// Debugging for memory/component leaks
 	ECS::ContainerInterface::list_all_components();
 
-	// NEW: creates tile grid.
-	// 12 by 8 since screen is 1200 x 800.
-	createGrid(12, 8);
+	// Load level from data/levels
+	loadLevel("demo.txt");
 
 	// ORIGINAL LINES
 	// Create a new snail
@@ -218,11 +224,11 @@ void WorldSystem::restart()
 	// Snail should spawn in same position as before. Slightly hard coded, but good
 	// enough for now. Could be enough for game since I am assuming the Snail will have
 	// a fixed start position at every level.
-	player_snail = Snail::createSnail({tiles[1][2].x, tiles[1][2].y});
+	//player_snail = Snail::createSnail({tiles[1][2].x, tiles[1][2].y});
 	// NEW: I don't know if this actually does anything but maybe it will be useful. Original idea
 	// was to remove snail from a certain tile and add it to another when it moved, but it
 	// does not seem possible with this sort of registry style.
-	ECS::registry<Tile>.emplace(player_snail);
+	//ECS::registry<Tile>.emplace(player_snail);
 
 	// NEW: Initializing turns and amount of tiles snail can move.
 	snail_move = 1;
@@ -232,8 +238,8 @@ void WorldSystem::restart()
 	// end up spawning in a fixed tile. So we will have to change whatever function that is spawning
 	// the turtles in random positions.
 	// NEW: This spawns a spider on tile [10][6]
-	ECS::Entity enemy_one = Spider::createSpider({ tiles[10][6].x, tiles[10][6].y });
-	ECS::registry<Tile>.emplace(enemy_one);
+	//ECS::Entity enemy_one = Spider::createSpider({ tiles[10][6].x, tiles[10][6].y });
+	//ECS::registry<Tile>.emplace(enemy_one);
 
 
 	// !! TODO A3: Enable static pebbles on the ground
@@ -304,12 +310,14 @@ bool WorldSystem::is_over() const
 	return glfwWindowShouldClose(window)>0;
 }
 
+float WorldSystem::getScale() { return scale; }
+
 // On key callback
 // TODO A1: check out https://www.glfw.org/docs/3.3/input_guide.html
 void WorldSystem::on_key(int key, int, int action, int mod)
 {
-	// Move snail if alive
-	if (!ECS::registry<DeathTimer>.has(player_snail))
+	// Move snail if alive and has turns remaining
+	if (!ECS::registry<DeathTimer>.has(player_snail) && snail_move > 0)
 	{
 		// NEW: Added motion here. I am assuming some sort of rectangular/square level for now
 		// this function might get quite messy as time goes on so maybe we will need a decent 
@@ -319,34 +327,40 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		// Component. Had to divide by 100 since starting screen position is (100, 200) which is 
 		// associated with the tile at tiles[1][2]. Added snail_move that tracks how many moves
 		// the snail can do this turn.
-		float xCoord = mot.position.x / 100;
-		float yCoord = mot.position.y / 100;
-		if (key == GLFW_KEY_W && action == GLFW_PRESS) {
-			if (yCoord - 1 != -1 && snail_move > 0) {
-				Tile& t = tiles[xCoord][yCoord - 1];
-				mot.position = {t.x, t.y};
-				snail_move--;
-			}
-		}
-		if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-			if (yCoord + 1 != tiles[yCoord].size() && snail_move > 0) {
-				Tile& t = tiles[xCoord][yCoord + 1];
-				mot.position = { t.x, t.y };
-				snail_move--;
-			}
-		}
-		if (key == GLFW_KEY_D && action == GLFW_PRESS) {
-			if (xCoord + 1 != tiles.size() && snail_move > 0) {
-				Tile& t = tiles[xCoord + 1][yCoord];
-				mot.position = { t.x, t.y };
-				snail_move--;
-			}
-		}
-		if (key == GLFW_KEY_A && action == GLFW_PRESS) {
-			if (xCoord - 1 != -1 && snail_move > 0) {
-				Tile& t = tiles[xCoord - 1][yCoord];
-				mot.position = { t.x, t.y };
-				snail_move--;
+		int xCoord = static_cast<int>(mot.position.x / scale);
+		int yCoord = static_cast<int>(mot.position.y / scale);
+		if (action == GLFW_PRESS)
+		{
+			switch (key)
+			{
+			case GLFW_KEY_W:
+				if (yCoord - 1 != -1) {
+					Tile& t = tiles[yCoord - 1][xCoord];
+					mot.position = { t.x, t.y };
+					snail_move--;
+				}
+				break;
+			case GLFW_KEY_S:
+				if (yCoord + 1 != tiles.size()) {
+					Tile& t = tiles[yCoord + 1][xCoord];
+					mot.position = { t.x, t.y };
+					snail_move--;
+				}
+				break;
+			case GLFW_KEY_D:
+				if (xCoord + 1 != tiles[xCoord].size()) {
+					Tile& t = tiles[yCoord][xCoord + 1];
+					mot.position = { t.x, t.y };
+					snail_move--;
+				}
+				break;
+			case GLFW_KEY_A:
+				if (xCoord - 1 != -1) {
+					Tile& t = tiles[yCoord][xCoord - 1];
+					mot.position = { t.x, t.y };
+					snail_move--;
+				}
+				break;
 			}
 		}
 	}
@@ -408,24 +422,63 @@ void WorldSystem::on_mouse_move(vec2 mouse_pos)
 
 // NEW: creates a grid of size x times y
 
-void WorldSystem::createGrid(int x, int y)
+void WorldSystem::loadLevel(std::string level)
 {
-	for (int i = 0; i < x; i++) {
-		// can change this 100.f to some other float. It is intended to be the center of
-		// the tile. Will have to change some values on the on_key function as well so
-		// code does not break
-		float xPos = 100.f * i;
-		std::vector<Tile> tileRow;
-		for (int j = 0; j < y; j++) {
-			// Creating tile components.
-			float yPos = 100.f * j;
-			WorldSystem::Tile tile;
-			tile.x = xPos;
-			tile.y = yPos;
-			tile.type = EMPTY;
-			tileRow.push_back(tile);
+	std::string line;
+	std::ifstream file;
+	file.open(levels_path(level), std::ios::in);
+	if (file.is_open())
+	{
+		// get level scale
+		std::getline(file, line);
+		scale = stof(line);
+
+		// load tile types row by row
+		int y = 0;
+		while (std::getline(file, line))
+		{
+			int x = 0;
+			std::vector<Tile> tileRow;
+			for (char const& c : line)
+			{
+				Tile tile;
+				tile.x = x * scale;
+				tile.y = y * scale;
+				
+				switch (c)
+				{
+				case 'G':
+					tile.type = GROUND;
+					GroundTile::createGroundTile({ tile.x, tile.y });
+					break;
+				case 'W':
+					tile.type = WATER;
+					WaterTile::createWaterTile({ tile.x, tile.y });
+					break;
+				case 'V':
+					tile.type = VINE;
+					VineTile::createVineTile({ tile.x, tile.y });
+					break;
+				case 'S':
+					tile.type = OCCUPIED;
+					player_snail = Snail::createSnail({ tile.x, tile.y });
+					break;
+				case 'P':
+					tile.type = OCCUPIED;
+					Spider::createSpider({ tile.x, tile.y });
+					break;
+				case ' ':
+					tile.type = EMPTY;
+					break;
+				default:
+					tile.type = UNUSED;
+					break;
+				}
+				tileRow.push_back(tile);
+				x++;
+			}
+			tiles.push_back(tileRow);
+			y++;
 		}
-		tiles.push_back(tileRow);
 	}
-	return;
 }

@@ -1,18 +1,18 @@
 // Header
-#include "snail.hpp"
+#include "ground.hpp"
 #include "render.hpp"
 #include "world.hpp"
 
-ECS::Entity Snail::createSnail(vec2 position)
+ECS::Entity GroundTile::createGroundTile(vec2 position)
 {
 	auto entity = ECS::Entity();
 
-	std::string key = "snail";
+	std::string key = "ground";
 	ShadedMesh& resource = cache_resource(key);
 	if (resource.mesh.vertices.size() == 0)
 	{
-		resource.mesh.loadFromOBJFile(mesh_path("snail.obj"));
-		RenderSystem::createColoredMesh(resource, "snail");
+		resource.mesh.loadFromOBJFile(mesh_path("ground.obj"));
+		RenderSystem::createColoredMesh(resource, "tile");
 	}
 
 	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
@@ -23,11 +23,10 @@ ECS::Entity Snail::createSnail(vec2 position)
 	motion.position = position;
 	motion.angle = 0.f;
 	motion.velocity = { 0.f, 0.f };
-	motion.scale = resource.mesh.original_size / resource.mesh.original_size.x * WorldSystem::getScale();
-	motion.scale.y *= -1; // fix orientation
+	motion.scale = { WorldSystem::getScale(), -WorldSystem::getScale() };
 
-	// Create an (empty) Snail component
-	ECS::registry<Snail>.emplace(entity);
+	// Create an (empty) GroundTile component
+	ECS::registry<GroundTile>.emplace(entity);
 
 	return entity;
 }

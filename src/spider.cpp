@@ -1,6 +1,7 @@
 // Header
 #include "spider.hpp"
 #include "render.hpp"
+#include "world.hpp"
 
 ECS::Entity Spider::createSpider(vec2 position)
 {
@@ -23,7 +24,7 @@ ECS::Entity Spider::createSpider(vec2 position)
 	motion.angle = 0.f;
 	motion.velocity = { 100.f, 0.f }; // 200
 	motion.position = position;
-	motion.scale = resource.mesh.original_size * 4000.f;
+	motion.scale = resource.mesh.original_size / resource.mesh.original_size.x * WorldSystem::getScale();
 	motion.scale.y *= -1; // fix orientation
 
 	// Create and (empty) Spider component to be able to refer to all spiders
