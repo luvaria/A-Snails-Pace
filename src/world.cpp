@@ -252,7 +252,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 				}
 				break;
 			case GLFW_KEY_D:
-				if (xCoord + 1 != tiles[xCoord].size()) {
+				if (xCoord + 1 != tiles[yCoord].size()) {
 					Tile& t = tiles[yCoord][xCoord + 1];
 					mot.position = { t.x, t.y };
 					snail_move--;
