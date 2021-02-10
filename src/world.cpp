@@ -118,56 +118,13 @@ void WorldSystem::init_audio()
 // Update our game world
 void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 {
-	// Updating window title with points
+	// Updating window title with moves remaining
 	std::stringstream title_ss;
-	title_ss << "Points: " << points;
+	title_ss << "Moves taken: " << turn_number;
 	glfwSetWindowTitle(window, title_ss.str().c_str());
 	
 	// Removing out of screen entities
 	auto& registry = ECS::registry<Motion>;
-
-	// Remove entities that leave the screen on the left side
-	// Iterate backwards to be able to remove without unterfering with the next object to visit
-	// (the containers exchange the last element with the current upon delete)
-	for (int i = static_cast<int>(registry.components.size())-1; i >= 0; --i)
-	{
-		auto& motion = registry.components[i];
-		if (motion.position.x + abs(motion.scale.x) < 0.f)
-		{
-			ECS::ContainerInterface::remove_all_components_of(registry.entities[i]);
-		}
-	}
-
-	// Spawning new turtles
-	// CHANGE: Commented this out since we don't want turtles to randomly spawn somewhere on the screen.
-	// Enemy entities will instead be spawned on the on_step function (at least for now).
-	/*
-	next_turtle_spawn -= elapsed_ms * current_speed;
-	if (ECS::registry<Turtle>.components.size() <= MAX_TURTLES && next_turtle_spawn < 0.f)
-	{
-		// Reset timer
-		next_turtle_spawn = (TURTLE_DELAY_MS / 2) + uniform_dist(rng) * (TURTLE_DELAY_MS / 2);
-		// Create turtle
-		ECS::Entity entity = Turtle::createTurtle({0, 0});
-		// Setting random initial position and constant velocity
-		auto& motion = ECS::registry<Motion>.get(entity);
-		motion.position = vec2(window_size_in_game_units.x - 150.f, 50.f + uniform_dist(rng) * (window_size_in_game_units.y - 100.f));
-		motion.velocity = vec2(100.f, 0.f );
-	}
-	*/
-	// Spawning new fish
-	next_fish_spawn -= elapsed_ms * current_speed;
-	if (ECS::registry<Fish>.components.size() <= MAX_FISH && next_fish_spawn < 0.f)
-	{
-		// !!! TODO A1: Create new fish with Fish::createFish({0,0}), as for the Spiders above
-		if(false) // dummy to silence warning about unused function until implemented
-			Fish::createFish({ 0,0 });
-	}
-
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// TODO A3: HANDLE PEBBLE SPAWN/UPDATES HERE
-	// DON'T WORRY ABOUT THIS UNTIL ASSIGNMENT 3
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 	// Processing the snail state
 	assert(ECS::registry<ScreenState>.components.size() <= 1);
@@ -191,8 +148,6 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 			return;
 		}
 	}
-
-	// !!! TODO A1: update LightUp timers and remove if time drops below zero, similar to the DeathTimer
 }
 
 // Reset the world state to its initial state
@@ -216,43 +171,9 @@ void WorldSystem::restart()
 	// Load level from data/levels
 	loadLevel("demo.txt");
 
-	// ORIGINAL LINES
-	// Create a new snail
-	//player_snail = Snail::createSnail({ 100, 200 });
-
-	// CHANGES: 
-	// Snail should spawn in same position as before. Slightly hard coded, but good
-	// enough for now. Could be enough for game since I am assuming the Snail will have
-	// a fixed start position at every level.
-	//player_snail = Snail::createSnail({tiles[1][2].x, tiles[1][2].y});
-	// NEW: I don't know if this actually does anything but maybe it will be useful. Original idea
-	// was to remove snail from a certain tile and add it to another when it moved, but it
-	// does not seem possible with this sort of registry style.
-	//ECS::registry<Tile>.emplace(player_snail);
-
-	// NEW: Initializing turns and amount of tiles snail can move.
+	// Initializing turns and amount of tiles snail can move.
 	snail_move = 1;
 	turn_number = 1;
-	// NEW: We will probably have to create and position enemy entities in this function as well. 
-	// Instead of having enemies like the turtles in the Assignments spawn in a random position, they
-	// end up spawning in a fixed tile. So we will have to change whatever function that is spawning
-	// the turtles in random positions.
-	// NEW: This spawns a spider on tile [10][6]
-	//ECS::Entity enemy_one = Spider::createSpider({ tiles[10][6].x, tiles[10][6].y });
-	//ECS::registry<Tile>.emplace(enemy_one);
-
-
-	// !! TODO A3: Enable static pebbles on the ground
-	/*
-	// Create pebbles on the floor
-	for (int i = 0; i < 20; i++)
-	{
-		int w, h;
-		glfwGetWindowSize(m_window, &w, &h);
-		float radius = 30 * (m_dist(m_rng) + 0.3f); // range 0.3 .. 1.3
-		Pebble::createPebble({ m_dist(m_rng) * w, h - m_dist(m_rng) * 20 }, { radius, radius });
-	}
-	*/
 }
 
 // Compute collisions between entities
@@ -278,23 +199,6 @@ void WorldSystem::handle_collisions()
 					// Scream, reset timer, and make the snail sink
 					ECS::registry<DeathTimer>.emplace(entity);
 					Mix_PlayChannel(-1, salmon_dead_sound, 0);
-
-					// !!! TODO A1: change the snail motion to float down up-side down
-
-					// !!! TODO A1: change the snail color
-				}
-			}
-			// Checking Snail - Fish collisions
-			else if (ECS::registry<Fish>.has(entity_other))
-			{
-				if (!ECS::registry<DeathTimer>.has(entity))
-				{
-					// chew, count points, and set the LightUp timer 
-					ECS::ContainerInterface::remove_all_components_of(entity_other);
-					Mix_PlayChannel(-1, salmon_eat_sound, 0);
-					++points;
-
-					// !!! TODO A1: create a new struct called LightUp in render_components.hpp and add an instance to the snail entity
 				}
 			}
 		}
@@ -313,7 +217,7 @@ bool WorldSystem::is_over() const
 float WorldSystem::getScale() { return scale; }
 
 // On key callback
-// TODO A1: check out https://www.glfw.org/docs/3.3/input_guide.html
+// Check out https://www.glfw.org/docs/3.3/input_guide.html
 void WorldSystem::on_key(int key, int, int action, int mod)
 {
 	// Move snail if alive and has turns remaining
@@ -380,7 +284,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 
 	if (key == GLFW_KEY_N && action == GLFW_RELEASE) {
 		// flip to next turn, reset movement available, make enemies move?.
-		turn_number = turn_number + 1;
+		turn_number++;
 		// Can be more than 1 tile per turn. Will probably gain a different amount
 		// depending on snail's status
 		snail_move = 1;
@@ -410,17 +314,9 @@ void WorldSystem::on_mouse_move(vec2 mouse_pos)
 {
 	if (!ECS::registry<DeathTimer>.has(player_snail))
 	{
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		// TODO A1: HANDLE SALMON ROTATION HERE
-		// xpos and ypos are relative to the top-left of the window, the salmon's 
-		// default facing direction is (1, 0)
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 		(void)mouse_pos;
 	}
 }
-
-// NEW: creates a grid of size x times y
 
 void WorldSystem::loadLevel(std::string level)
 {
