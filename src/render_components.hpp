@@ -57,7 +57,7 @@ struct GLResource
 	};
 };
 
-// Single Vertex Buffer element for non-textured meshes (colored_mesh.vs.glsl & salmon.vs.glsl)
+// Single Vertex Buffer element for non-textured meshes (colored_mesh.vs.glsl & snail.vs.glsl)
 struct ColoredVertex
 {
 	vec3 position;
@@ -138,7 +138,7 @@ struct DebugComponent
 	// Note, an empty struct has size 1
 };
 
-// A timer that will be associated to dying salmon
+// A timer that will be associated to dying snail
 struct DeathTimer
 {
 	float counter_ms = 1000;

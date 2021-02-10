@@ -3,9 +3,8 @@
 #include "common.hpp"
 #include "tiny_ecs.hpp"
 
-// Salmon enemy 
-struct Turtle
+struct VineTile
 {
 	// Creates all the associated render resources and default transform
-	static ECS::Entity createTurtle(vec2 position);
+	static ECS::Entity createVineTile(vec2 pos);
 };
