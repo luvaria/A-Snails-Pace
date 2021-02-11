@@ -177,7 +177,6 @@ void WorldSystem::restart()
 	current_speed = 1.f;
 
 	// Reset Camera
-	// Another option could be to have it centred on snail?
     ECS::registry<Camera>.components[0].offset = {0.f, 0.f};
 
 	// Remove all entities that we created
@@ -315,7 +314,8 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		turn_number++;
 
 		// Move camera by 1 tile in the x-direction
-		// Maybe one day it could move vertically?
+		// Could eventually move vertically
+		// where direction could be loaded from file as per Rebecca's suggestion
 		ECS::registry<Camera>.components[0].offset.x += WorldSystem::getScale();
 
 		// Can be more than 1 tile per turn. Will probably gain a different amount
@@ -351,9 +351,8 @@ void WorldSystem::on_mouse_move(vec2 mouse_pos)
 	}
 }
 
-void WorldSystem::on_mouse_button(int button, int action, int mods)
+void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
 {
-    (void) mods; // what is this even
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
     {
         // Check if we would go off screen and die, and prevent that from happening
