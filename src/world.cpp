@@ -217,22 +217,30 @@ bool WorldSystem::is_over() const
 
 float WorldSystem::getScale() { return scale; }
 
-void WorldSystem::goLeft(bool &isSafeMove, Motion &mot, WorldSystem::Tile &nextTile, int xCoord, int yCoord, int &snail_move) {
+void WorldSystem::goLeft(Motion &mot, int xCoord, int yCoord, int &snail_move) {
+    bool isSafeMove = false;
+    Tile nextTile;
     if(abs(mot.angle) == 0 && mot.scale.x > 0) {
         mot.scale.x = -mot.scale.x;
     } else if(abs(mot.angle) == PI && mot.scale.x < 0) {
         mot.scale.x = -mot.scale.x;
     }
     if (tiles[yCoord][xCoord-1].type == GROUND || tiles[yCoord][xCoord-1].type == WALL) {
-        mot.angle = PI/2;
-        if(mot.scale.y > 0) {
+        if(mot.angle != -PI && mot.scale.y > 0) {
             mot.scale.y = - mot.scale.y;
         }
+        if(mot.angle == -PI && mot.scale.y < 0) {
+            mot.scale.y = - mot.scale.y;
+        }
+        if(mot.angle == -PI && mot.scale.x > 0) {
+            mot.scale.x = -mot.scale.x;
+        }
+        mot.angle = PI/2;
     }
     else if(mot.angle != PI/2) {
         nextTile = tiles[mot.angle == -PI ? (yCoord-1) : (yCoord+1)][xCoord-1];
         isSafeMove = nextTile.type == GROUND || nextTile.type == EMPTY || nextTile.type == VINE || nextTile.type == WATER;
-        if (isSafeMove && (tiles[yCoord][xCoord-1].type == EMPTY || tiles[yCoord][xCoord-1].type == VINE || tiles[yCoord][xCoord-1].type == UNUSED)) {
+        if (isSafeMove && (tiles[yCoord][xCoord-1].type == EMPTY || tiles[yCoord][xCoord-1].type == VINE)) {
             if(nextTile.type == EMPTY) {
                 Tile& t = tiles[mot.angle == -PI ? (yCoord-1) : (yCoord+1)][xCoord - 1];
                 mot.position = { t.x, t.y };
@@ -256,7 +264,9 @@ void WorldSystem::goLeft(bool &isSafeMove, Motion &mot, WorldSystem::Tile &nextT
     }
 }
 
-void WorldSystem::goUp(bool &isSafeMove, Motion &mot, WorldSystem::Tile &nextTile, int xCoord, int yCoord, int &snail_move) {
+void WorldSystem::goUp(Motion &mot, int xCoord, int yCoord, int &snail_move) {
+    bool isSafeMove = false;
+    Tile nextTile;
     if(mot.scale.y > 0) {
         mot.scale.y = - mot.scale.y;
     }
@@ -289,26 +299,31 @@ void WorldSystem::goUp(bool &isSafeMove, Motion &mot, WorldSystem::Tile &nextTil
     }
 }
 
-void WorldSystem::goDown(bool &isSafeMove, Motion &mot, WorldSystem::Tile &nextTile, int xCoord, int yCoord, int &snail_move) {
-    if(mot.scale.y < 0) {
-        mot.scale.y = -mot.scale.y;
-    }
+void WorldSystem::goDown(Motion &mot, int xCoord, int yCoord, int &snail_move) {
+    bool isSafeMove = false;
     if (tiles[yCoord + 1][xCoord].type == VINE) {
+        if(mot.scale.y < 0) {
+            mot.scale.y = -mot.scale.y;
+        }
         Tile& t = tiles[mot.angle == -PI ? yCoord : (yCoord + 1)][xCoord];
         mot.position = { t.x, t.y };
         mot.angle = PI/2;
         snail_move--;
     } else if(tiles[yCoord + 1][xCoord].type == GROUND) {
+        if(mot.scale.y < 0) {
+            mot.scale.y = -mot.scale.y;
+        }
         if(mot.scale.y > 0) {
             mot.scale.y = -mot.scale.y;
         }
         mot.scale.x = -mot.scale.x;
         mot.angle = 0;
         // snail_move--;
-        // mot.scale = {5, 5}; Squished inside behavior
+        // mot.scale = {5, 5}; Squished inside sbehavior
     }
     else if(mot.angle == PI/2) {
-        nextTile = tiles[yCoord+1][mot.scale.x < 0 ? xCoord-1 : xCoord+1];
+        Tile& nextTile = tiles[yCoord+1][mot.scale.x < 0 ? xCoord-1 : xCoord+1];
+        cout << (nextTile.Tile::type);
         isSafeMove = nextTile.type == GROUND || nextTile.type == EMPTY || nextTile.type == VINE;
         if (isSafeMove && (tiles[yCoord+1][xCoord].type == EMPTY || tiles[yCoord+1][xCoord].type == VINE)) {
             if(nextTile.type == EMPTY || nextTile.type == VINE) {
@@ -328,17 +343,25 @@ void WorldSystem::goDown(bool &isSafeMove, Motion &mot, WorldSystem::Tile &nextT
     }
 }
 
-void WorldSystem::goRight(bool &isSafeMove, Motion &mot, WorldSystem::Tile &nextTile, int xCoord, int yCoord, int &snail_move) {
+void WorldSystem::goRight(Motion &mot, int xCoord, int yCoord, int &snail_move) {
+    bool isSafeMove = false;
+    Tile nextTile;
     if(abs(mot.angle) == 0 && mot.scale.x < 0) {
         mot.scale.x = -mot.scale.x;
     } else if(abs(mot.angle) == PI && mot.scale.x > 0) {
         mot.scale.x = -mot.scale.x;
     }
     if (tiles[yCoord][xCoord+1].type == GROUND || tiles[yCoord][xCoord+1].type == WALL) {
-        mot.angle = PI/2;
-        if(mot.scale.y > 0) {
+        if(mot.angle != -PI && mot.scale.y > 0) {
+            mot.scale.y = -mot.scale.y;
+        }
+        if(mot.angle == -PI && mot.scale.y < 0) {
             mot.scale.y = - mot.scale.y;
         }
+        if(mot.angle == -PI && mot.scale.x < 0) {
+            mot.scale.x = -mot.scale.x;
+        }
+        mot.angle = PI/2;
     }
     else if(mot.angle != PI/2) {
         nextTile = tiles[mot.angle == -PI ? (yCoord-1) : (yCoord+1)][xCoord+1];
@@ -384,24 +407,22 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		// the snail can do this turn.
 		int xCoord = static_cast<int>(mot.position.x / scale);
 		int yCoord = static_cast<int>(mot.position.y / scale);
-        bool isSafeMove=false;
-        Tile nextTile;
         int tempSnailMove = snail_move;
 		if (action == GLFW_PRESS)
 		{
 			switch (key)
 			{
 			case GLFW_KEY_W:
-                    goUp(isSafeMove, mot, nextTile, xCoord, yCoord, snail_move);
+                    goUp(mot, xCoord, yCoord, snail_move);
 				break;
 			case GLFW_KEY_S:
-                    goDown(isSafeMove, mot, nextTile, xCoord, yCoord, snail_move);
+                    goDown(mot, xCoord, yCoord, snail_move);
                 break;
 			case GLFW_KEY_D:
-                    goRight(isSafeMove, mot, nextTile, xCoord, yCoord, snail_move);
+                    goRight(mot, xCoord, yCoord, snail_move);
                 break;
 			case GLFW_KEY_A:
-                    goLeft(isSafeMove, mot, nextTile, xCoord, yCoord, snail_move);
+                    goLeft(mot, xCoord, yCoord, snail_move);
 				break;
 			}
 		}
@@ -434,22 +455,22 @@ void WorldSystem::on_key(int key, int, int action, int mod)
                     int ai_move=0;
                     int tmp_move = ai_move;
                     if (xCoordEntity-xCoord>=0) {
-                        goLeft(isSafeMove, motEntity, nextTile, xCoordEntity, yCoordEntity, ai_move);
+                        goLeft(motEntity, xCoordEntity, yCoordEntity, ai_move);
                         if(ai_move == tmp_move){
                             if(yCoordEntity-yCoord>0) {
-                                goUp(isSafeMove, motEntity, nextTile, xCoordEntity, yCoordEntity, ai_move);
+                                goUp(motEntity, xCoordEntity, yCoordEntity, ai_move);
                             } else {
-                                goDown(isSafeMove, motEntity, nextTile, xCoordEntity, yCoordEntity, ai_move);
+                                goDown(motEntity, xCoordEntity, yCoordEntity, ai_move);
                             }
                         }
                     }
                     if(ai_move == tmp_move) {
-                        goRight(isSafeMove, motEntity, nextTile, xCoordEntity, yCoordEntity, ai_move);
+                        goRight(motEntity, xCoordEntity, yCoordEntity, ai_move);
                         if(ai_move == tmp_move){
                             if(yCoordEntity-yCoord>0) {
-                                goUp(isSafeMove, motEntity, nextTile, xCoordEntity, yCoordEntity, ai_move);
+                                goUp(motEntity, xCoordEntity, yCoordEntity, ai_move);
                             } else {
-                                goDown(isSafeMove, motEntity, nextTile, xCoordEntity, yCoordEntity, ai_move);
+                                goDown(motEntity, xCoordEntity, yCoordEntity, ai_move);
                             }
                         }
                     }
@@ -556,7 +577,7 @@ void WorldSystem::loadLevel(std::string level)
 					tile.type = EMPTY;
 					break;
 				default:
-					tile.type = UNUSED;
+					tile.type = EMPTY;
 					break;
 				}
 				tileRow.push_back(tile);
