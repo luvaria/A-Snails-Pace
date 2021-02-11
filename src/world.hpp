@@ -60,12 +60,16 @@ public:
 	// size of each (square) tile
 	static float getScale();
 
+	// return true if a given point is off screen, false otherwise
+	static bool offScreen(vec2 const& pos, vec2 window_size_in_game_units, vec2 cameraOffset);
+
 	// OpenGL window handle
 	GLFWwindow* window;
 private:
 	// Input callback functions
 	void on_key(int key, int, int action, int mod);
 	void on_mouse_move(vec2 mouse_pos);
+	void on_mouse_button(int button, int action, int /*mods*/);
 
 	// Loads the audio
 	void init_audio();
