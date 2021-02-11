@@ -217,177 +217,333 @@ bool WorldSystem::is_over() const
 
 float WorldSystem::getScale() { return scale; }
 
-void WorldSystem::goLeft(Motion &mot, int xCoord, int yCoord, int &snail_move) {
-    bool isSafeMove = false;
-    Tile nextTile;
-    if(abs(mot.angle) == 0 && mot.scale.x > 0) {
-        mot.scale.x = -mot.scale.x;
-    } else if(abs(mot.angle) == PI && mot.scale.x < 0) {
-        mot.scale.x = -mot.scale.x;
-    }
-    if (tiles[yCoord][xCoord-1].type == GROUND || tiles[yCoord][xCoord-1].type == WALL) {
-        if(mot.angle != -PI && mot.scale.y > 0) {
-            mot.scale.y = - mot.scale.y;
-        }
-        if(mot.angle == -PI && mot.scale.y < 0) {
-            mot.scale.y = - mot.scale.y;
-        }
-        if(mot.angle == -PI && mot.scale.x > 0) {
-            mot.scale.x = -mot.scale.x;
-        }
-        mot.angle = PI/2;
-    }
-    else if(mot.angle != PI/2) {
-        nextTile = tiles[mot.angle == -PI ? (yCoord-1) : (yCoord+1)][xCoord-1];
-        isSafeMove = nextTile.type == GROUND || nextTile.type == EMPTY || nextTile.type == VINE || nextTile.type == WATER;
-        if (isSafeMove && (tiles[yCoord][xCoord-1].type == EMPTY || tiles[yCoord][xCoord-1].type == VINE)) {
-            if(nextTile.type == EMPTY) {
-                Tile& t = tiles[mot.angle == -PI ? (yCoord-1) : (yCoord+1)][xCoord - 1];
-                mot.position = { t.x, t.y };
-                if(abs(mot.angle) == 0 && mot.scale.y < 0) {
-                    mot.scale.y = -mot.scale.y;
+void WorldSystem::doX(Motion &motion, WorldSystem::Tile &currTile, WorldSystem::Tile &nextTile, int defaultDirection ) {
+    if(currTile.x == nextTile.x) {
+        switch (defaultDirection) {
+            case DIRECTION_SOUTH:
+            case DIRECTION_NORTH:
+                if(motion.lastDirection != defaultDirection) {
+                    motion.scale.y = -motion.scale.y;
                 }
-                if(abs(mot.angle) == 0 && mot.scale.x < 0) {
-                    mot.scale.x = -mot.scale.x;
+                break;
+            default:
+                if(motion.lastDirection != defaultDirection) {
+                    motion.scale.x = -motion.scale.x;
                 }
-                mot.angle = PI/2;
-            } else if (nextTile.type == WATER) {
-                Tile& t = tiles[yCoord+1][xCoord - 1];
-                mot.position = { t.x, t.y };
-            }
-            else {
-                Tile& t = tiles[yCoord][xCoord - 1];
-                mot.position = { t.x, t.y };
-            }
-            snail_move--;
+                break;
+        }
+    } else if(currTile.x > nextTile.x) {
+        if(motion.lastDirection != DIRECTION_WEST) {
+            motion.scale.x = -motion.scale.x;
+            motion.lastDirection = DIRECTION_WEST;
+        }
+    } else {
+        if(motion.lastDirection != DIRECTION_EAST) {
+            motion.scale.x = -motion.scale.x;
+            motion.lastDirection = DIRECTION_EAST;
         }
     }
 }
 
-void WorldSystem::goUp(Motion &mot, int xCoord, int yCoord, int &snail_move) {
-    bool isSafeMove = false;
-    Tile nextTile;
-    if(mot.scale.y > 0) {
-        mot.scale.y = - mot.scale.y;
+void WorldSystem::doY(Motion &motion, WorldSystem::Tile &currTile, WorldSystem::Tile &nextTile) {
+    if(currTile.y == nextTile.y) {
+        // nothing
+    } else if(currTile.y > nextTile.y) {
+        if(motion.lastDirection != DIRECTION_NORTH) {
+            motion.scale.y = -motion.scale.y;
+            motion.lastDirection = DIRECTION_NORTH;
+        }
+    } else {
+        if(motion.lastDirection != DIRECTION_SOUTH) {
+            motion.scale.y = -motion.scale.y;
+            motion.lastDirection = DIRECTION_SOUTH;
+        }
     }
-    if (tiles[yCoord - 1][xCoord].type == VINE) {
-        Tile& t = tiles[mot.angle == 0 ? yCoord : yCoord - 1][xCoord];
-        mot.position = { t.x, t.y };
-        mot.angle = PI/2;
+}
+
+void WorldSystem::rotate(WorldSystem::Tile &currTile, Motion &motion, WorldSystem::Tile &nextTile) {
+    if(abs(currTile.x - nextTile.x) > 0 && abs(currTile.y - nextTile.y) > 0) {
+        motion.scale = {motion.scale.y, motion.scale.x};
+        if(abs(motion.angle) == PI/2) {
+            motion.angle = motion.lastDirection == DIRECTION_NORTH ? 0 : 2*motion.angle;
+        } else if (motion.angle == 0) {
+            motion.angle = (currTile.x < nextTile.x) ? PI/2 : -PI/2;
+        } else {
+            motion.angle = (currTile.x < nextTile.x) ? PI/2 : -PI/2;
+        }
+        motion.lastDirection = abs(motion.angle) == PI/2 ? ((currTile.y > nextTile.y) ? DIRECTION_NORTH : DIRECTION_SOUTH)
+                                                         : ((currTile.x > nextTile.x) ? DIRECTION_WEST : DIRECTION_EAST);
+    }
+}
+
+void WorldSystem::changeDirection(Motion &motion, WorldSystem::Tile &currTile, WorldSystem::Tile &nextTile, int defaultDirection) {
+    if(defaultDirection == DIRECTION_SOUTH || defaultDirection == DIRECTION_NORTH) {
+        doY(motion, currTile, nextTile);
+        rotate(currTile, motion, nextTile);
+        doX(motion, currTile, nextTile, defaultDirection);
+    } else {
+        doX(motion, currTile, nextTile, defaultDirection);
+        rotate(currTile, motion, nextTile);
+        doY(motion, currTile, nextTile);
+    }
+    motion.position = {nextTile.x, nextTile.y};
+}
+
+void WorldSystem::goLeft(ECS::Entity &entity, int &snail_move) {
+    auto& motion = ECS::registry<Motion>.get(entity);
+    int xCoord = static_cast<int>(motion.position.x / scale);
+    int yCoord = static_cast<int>(motion.position.y / scale);
+    
+    Tile currTile = tiles[yCoord][xCoord];
+    Tile leftTile = tiles[yCoord][xCoord-1];
+    if (abs(motion.angle) != PI/2 && (leftTile.type == GROUND || leftTile.type == WALL)) {
+        Tile nextTile = tiles[yCoord][xCoord];
+        changeDirection(motion, currTile, nextTile, DIRECTION_WEST);
+        if(abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
+            motion.scale = {motion.scale.y, motion.scale.x};
+            motion.lastDirection = motion.angle == 0 ? DIRECTION_NORTH : DIRECTION_SOUTH;
+            motion.angle = PI/2;
+        }
         snail_move--;
     }
-    else if (tiles[yCoord - 1][xCoord].type == GROUND || tiles[yCoord - 1][xCoord].type == WALL) {
-        if(mot.scale.y > 0) {
-            mot.scale.y = -mot.scale.y;
-        }
-        mot.angle = -PI;
-    }
-    else if(mot.angle == PI/2) {
-        nextTile = tiles[yCoord-1][mot.scale.x > 0 ? xCoord+1 : xCoord-1];
-        isSafeMove = nextTile.type == GROUND || nextTile.type == EMPTY || nextTile.type == VINE;
-        if (isSafeMove && (tiles[yCoord-1][xCoord].type == EMPTY || tiles[yCoord-1][xCoord].type == VINE)) {
-            if(nextTile.type == EMPTY || nextTile.type == VINE) {
-                Tile& t = nextTile;
-                mot.position = { t.x, t.y };
-                mot.angle = 0;
-            } else {
-                Tile& t = tiles[yCoord-1][xCoord];
-                mot.position = { t.x, t.y };
-            }
-            snail_move--;
-        }
-    }
-}
-
-void WorldSystem::goDown(Motion &mot, int xCoord, int yCoord, int &snail_move) {
-    bool isSafeMove = false;
-    if (tiles[yCoord + 1][xCoord].type == VINE) {
-        if(mot.scale.y < 0) {
-            mot.scale.y = -mot.scale.y;
-        }
-        Tile& t = tiles[mot.angle == -PI ? yCoord : (yCoord + 1)][xCoord];
-        mot.position = { t.x, t.y };
-        mot.angle = PI/2;
+    else if(abs(motion.angle) != PI/2) {
+        Tile nextTile = tiles[abs(motion.angle) == PI ? (yCoord-1) : (yCoord+1)][xCoord-1];
+        nextTile = nextTile.type == GROUND ? leftTile : nextTile;
+        changeDirection(motion, currTile, nextTile, DIRECTION_WEST);
         snail_move--;
-    } else if(tiles[yCoord + 1][xCoord].type == GROUND) {
-        if(mot.scale.y < 0) {
-            mot.scale.y = -mot.scale.y;
-        }
-        if(mot.scale.y > 0) {
-            mot.scale.y = -mot.scale.y;
-        }
-        mot.scale.x = -mot.scale.x;
-        mot.angle = 0;
-        // snail_move--;
-        // mot.scale = {5, 5}; Squished inside sbehavior
-    }
-    else if(mot.angle == PI/2) {
-        Tile& nextTile = tiles[yCoord+1][mot.scale.x < 0 ? xCoord-1 : xCoord+1];
-        isSafeMove = nextTile.type == GROUND || nextTile.type == EMPTY || nextTile.type == VINE;
-        if (isSafeMove && (tiles[yCoord+1][xCoord].type == EMPTY || tiles[yCoord+1][xCoord].type == VINE)) {
-            if(nextTile.type == EMPTY || nextTile.type == VINE) {
-                Tile& t = nextTile;
-                mot.position = { t.x, t.y };
-                if(mot.scale.y > 0) {
-                    mot.scale.y = -mot.scale.y;
-                }
-                mot.scale.x = -mot.scale.x;
-                mot.angle = -PI;
-            } else {
-                Tile& t = tiles[yCoord+1][xCoord];
-                mot.position = { t.x, t.y };
-            }
-            snail_move--;
-        }
     }
 }
 
-void WorldSystem::goRight(Motion &mot, int xCoord, int yCoord, int &snail_move) {
-    bool isSafeMove = false;
-    Tile nextTile;
-    if(abs(mot.angle) == 0 && mot.scale.x < 0) {
-        mot.scale.x = -mot.scale.x;
-    } else if(abs(mot.angle) == PI && mot.scale.x > 0) {
-        mot.scale.x = -mot.scale.x;
+//void WorldSystem::goRight(ECS::Entity &entity, int &snail_move) {
+//    auto& mot = ECS::registry<Motion>.get(entity);
+//    int xCoord = static_cast<int>(mot.position.x / scale);
+//    int yCoord = static_cast<int>(mot.position.y / scale);
+//    bool isSafeMove = false;
+//    Tile nextTile;
+//    if(abs(mot.angle) == 0 && mot.scale.x < 0) {
+//        mot.scale.x = -mot.scale.x;
+//    } else if(abs(mot.angle) == PI && mot.scale.x > 0) {
+//        mot.scale.x = -mot.scale.x;
+//    }
+//    if (tiles[yCoord][xCoord+1].type == GROUND || tiles[yCoord][xCoord+1].type == WALL) {
+//        if(mot.angle != -PI && mot.scale.y > 0) {
+//            mot.scale.y = -mot.scale.y;
+//        }
+//        if(mot.angle == -PI && mot.scale.y < 0) {
+//            mot.scale.y = - mot.scale.y;
+//        }
+//        if(mot.angle == -PI && mot.scale.x < 0) {
+//            mot.scale.x = -mot.scale.x;
+//        }
+//        mot.angle = PI/2;
+//    }
+//    else if(mot.angle != PI/2) {
+//        nextTile = tiles[mot.angle == -PI ? (yCoord-1) : (yCoord+1)][xCoord+1];
+//        isSafeMove = nextTile.type == GROUND || nextTile.type == EMPTY || nextTile.type == VINE || nextTile.type == WATER;
+//        if (isSafeMove && (tiles[yCoord][xCoord+1].type == EMPTY || tiles[yCoord][xCoord+1].type == VINE)) {
+//            if(nextTile.type == EMPTY) {
+//                Tile& t = tiles[mot.angle == -PI ? (yCoord-1) : (yCoord+1)][xCoord + 1];
+//                mot.position = { t.x, t.y };
+//                if(abs(mot.angle) == 0 && mot.scale.y < 0) {
+//                    mot.scale.y = -mot.scale.y;
+//                }
+//                if(abs(mot.angle) == 0 && mot.scale.x > 0) {
+//                    mot.scale.x = -mot.scale.x;
+//                }
+//                mot.angle = PI/2;
+//            } else if (nextTile.type == WATER) {
+//                Tile& t = tiles[yCoord+1][xCoord + 1];
+//                mot.position = { t.x, t.y };
+//            }
+//            else {
+//                Tile& t = tiles[yCoord][xCoord + 1];
+//                mot.position = { t.x, t.y };
+//            }
+//            snail_move--;
+//        }
+//    }
+//}
+
+void WorldSystem::goRight(ECS::Entity &entity, int &snail_move) {
+    auto& motion = ECS::registry<Motion>.get(entity);
+    int xCoord = static_cast<int>(motion.position.x / scale);
+    int yCoord = static_cast<int>(motion.position.y / scale);
+    
+    Tile currTile = tiles[yCoord][xCoord];
+    Tile rightTile = tiles[yCoord][xCoord+1];
+    if (abs(motion.angle) != PI/2 && (rightTile.type == GROUND || rightTile.type == WALL)) {
+        Tile nextTile = tiles[yCoord][xCoord];
+        changeDirection(motion, currTile, nextTile, DIRECTION_EAST);
+        if(abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
+            motion.scale = {motion.scale.y, motion.scale.x};
+            motion.lastDirection = motion.angle == 0 ? DIRECTION_NORTH : DIRECTION_SOUTH;
+            motion.angle = -PI/2;
+        }
+        snail_move--;
     }
-    if (tiles[yCoord][xCoord+1].type == GROUND || tiles[yCoord][xCoord+1].type == WALL) {
-        if(mot.angle != -PI && mot.scale.y > 0) {
-            mot.scale.y = -mot.scale.y;
-        }
-        if(mot.angle == -PI && mot.scale.y < 0) {
-            mot.scale.y = - mot.scale.y;
-        }
-        if(mot.angle == -PI && mot.scale.x < 0) {
-            mot.scale.x = -mot.scale.x;
-        }
-        mot.angle = PI/2;
-    }
-    else if(mot.angle != PI/2) {
-        nextTile = tiles[mot.angle == -PI ? (yCoord-1) : (yCoord+1)][xCoord+1];
-        isSafeMove = nextTile.type == GROUND || nextTile.type == EMPTY || nextTile.type == VINE || nextTile.type == WATER;
-        if (isSafeMove && (tiles[yCoord][xCoord+1].type == EMPTY || tiles[yCoord][xCoord+1].type == VINE)) {
-            if(nextTile.type == EMPTY) {
-                Tile& t = tiles[mot.angle == -PI ? (yCoord-1) : (yCoord+1)][xCoord + 1];
-                mot.position = { t.x, t.y };
-                if(abs(mot.angle) == 0 && mot.scale.y < 0) {
-                    mot.scale.y = -mot.scale.y;
-                }
-                if(abs(mot.angle) == 0 && mot.scale.x > 0) {
-                    mot.scale.x = -mot.scale.x;
-                }
-                mot.angle = PI/2;
-            } else if (nextTile.type == WATER) {
-                Tile& t = tiles[yCoord+1][xCoord + 1];
-                mot.position = { t.x, t.y };
-            }
-            else {
-                Tile& t = tiles[yCoord][xCoord + 1];
-                mot.position = { t.x, t.y };
-            }
-            snail_move--;
-        }
+    else if(abs(motion.angle) != PI/2) {
+        Tile nextTile = tiles[abs(motion.angle) == PI ? (yCoord-1) : (yCoord+1)][xCoord+1];
+        nextTile = nextTile.type == GROUND ? rightTile : nextTile;
+        changeDirection(motion, currTile, nextTile, DIRECTION_EAST);
+        snail_move--;
     }
 }
+
+void WorldSystem::goUp(ECS::Entity &entity, int &snail_move) {
+    auto& motion = ECS::registry<Motion>.get(entity);
+    int xCoord = static_cast<int>(motion.position.x / scale);
+    int yCoord = static_cast<int>(motion.position.y / scale);
+    
+    Tile currTile = tiles[yCoord][xCoord];
+    Tile upTile = tiles[yCoord-1][xCoord];
+    if (currTile.type == VINE && abs(motion.angle) == 0) {
+        Tile nextTile = tiles[yCoord][xCoord];
+        changeDirection(motion, currTile, nextTile, motion.lastDirection);
+        if(abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
+            motion.scale = {motion.scale.y, motion.scale.x};
+            motion.angle = motion.lastDirection == DIRECTION_WEST ? PI/2 : -PI/2 ;
+            motion.lastDirection = DIRECTION_NORTH;
+        }
+        snail_move--;
+    }
+    else if (upTile.type == GROUND || upTile.type == WALL) {
+        Tile nextTile = tiles[yCoord][xCoord];
+        changeDirection(motion, currTile, nextTile, DIRECTION_NORTH);
+        if(abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
+            motion.scale = {motion.scale.y, motion.scale.x};
+            motion.lastDirection = motion.angle == PI/2 ? DIRECTION_EAST : DIRECTION_WEST;
+            motion.angle = -PI;
+        }
+        snail_move--;
+    }
+    else if(abs(motion.angle) == PI/2) {
+        Tile nextTile = tiles[(yCoord-1)][motion.angle == -PI/2 ? xCoord+1 : xCoord-1];
+        nextTile = nextTile.type == GROUND || upTile.type == VINE ? upTile : nextTile;
+        changeDirection(motion, currTile, nextTile, DIRECTION_NORTH);
+        snail_move--;
+    }
+}
+
+
+//
+//void WorldSystem::goUp(ECS::Entity &entity, int &snail_move) {
+//    auto& mot = ECS::registry<Motion>.get(entity);
+//    int xCoord = static_cast<int>(mot.position.x / scale);
+//    int yCoord = static_cast<int>(mot.position.y / scale);
+//
+//    bool isSafeMove = false;
+//    Tile nextTile;
+//    if(mot.scale.y > 0) {
+//        mot.scale.y = - mot.scale.y;
+//    }
+//    if (tiles[yCoord - 1][xCoord].type == VINE) {
+//        Tile& t = tiles[mot.angle == 0 ? yCoord : yCoord - 1][xCoord];
+//        mot.position = { t.x, t.y };
+//        mot.angle = PI/2;
+//        snail_move--;
+//    }
+//    else if (tiles[yCoord - 1][xCoord].type == GROUND || tiles[yCoord - 1][xCoord].type == WALL) {
+//        if(mot.scale.y > 0) {
+//            mot.scale.y = -mot.scale.y;
+//        }
+//        mot.angle = -PI;
+//    }
+//    else if(mot.angle == PI/2) {
+//        nextTile = tiles[yCoord-1][mot.scale.x > 0 ? xCoord+1 : xCoord-1];
+//        isSafeMove = nextTile.type == GROUND || nextTile.type == EMPTY || nextTile.type == VINE;
+//        if (isSafeMove && (tiles[yCoord-1][xCoord].type == EMPTY || tiles[yCoord-1][xCoord].type == VINE)) {
+//            if(nextTile.type == EMPTY || nextTile.type == VINE) {
+//                Tile& t = nextTile;
+//                mot.position = { t.x, t.y };
+//                mot.angle = 0;
+//            } else {
+//                Tile& t = tiles[yCoord-1][xCoord];
+//                mot.position = { t.x, t.y };
+//            }
+//            snail_move--;
+//        }
+//    }
+//}
+void WorldSystem::goDown(ECS::Entity &entity, int &snail_move) {
+    auto& motion = ECS::registry<Motion>.get(entity);
+    int xCoord = static_cast<int>(motion.position.x / scale);
+    int yCoord = static_cast<int>(motion.position.y / scale);
+    
+    Tile currTile = tiles[yCoord][xCoord];
+    Tile upTile = tiles[yCoord+1][xCoord];
+    if (currTile.type == VINE && abs(motion.angle) == PI) {
+        Tile nextTile = tiles[yCoord][xCoord];
+        changeDirection(motion, currTile, nextTile, motion.lastDirection);
+        if(abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
+            motion.scale = {motion.scale.y, motion.scale.x};
+            motion.angle = motion.lastDirection == DIRECTION_WEST ? PI/2 : -PI/2 ;
+            motion.lastDirection = DIRECTION_SOUTH;
+        }
+        snail_move--;
+    } else if (upTile.type == GROUND || upTile.type == WALL) {
+        Tile nextTile = tiles[yCoord][xCoord];
+        changeDirection(motion, currTile, nextTile, DIRECTION_SOUTH);
+        if(abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
+            motion.scale = {motion.scale.y, motion.scale.x};
+            motion.lastDirection = motion.angle == -PI/2 ? DIRECTION_WEST : DIRECTION_EAST;
+            motion.angle = 0;
+        }
+        snail_move--;
+    }
+    else if(abs(motion.angle) == PI/2) {
+        Tile nextTile = tiles[(yCoord+1)][motion.angle == -PI/2 ? xCoord+1 : xCoord-1];
+        nextTile = nextTile.type == GROUND || upTile.type == VINE ? upTile : nextTile;
+        changeDirection(motion, currTile, nextTile, DIRECTION_SOUTH);
+        snail_move--;
+    }
+    
+}
+
+//void WorldSystem::goDown(ECS::Entity &entity, int &snail_move) {
+//    auto& mot = ECS::registry<Motion>.get(entity);
+//    int xCoord = static_cast<int>(mot.position.x / scale);
+//    int yCoord = static_cast<int>(mot.position.y / scale);
+//    bool isSafeMove = false;
+//    if (tiles[yCoord + 1][xCoord].type == VINE) {
+//        if(mot.scale.y < 0) {
+//            mot.scale.y = -mot.scale.y;
+//        }
+//        Tile& t = tiles[mot.angle == -PI ? yCoord : (yCoord + 1)][xCoord];
+//        mot.position = { t.x, t.y };
+//        mot.angle = PI/2;
+//        snail_move--;
+//    } else if(tiles[yCoord + 1][xCoord].type == GROUND) {
+//        if(mot.scale.y < 0) {
+//            mot.scale.y = -mot.scale.y;
+//        }
+//        if(mot.scale.y > 0) {
+//            mot.scale.y = -mot.scale.y;
+//        }
+//        mot.scale.x = -mot.scale.x;
+//        mot.angle = 0;
+//        // snail_move--;
+//        // mot.scale = {5, 5}; Squished inside sbehavior
+//    }
+//    else if(mot.angle == PI/2) {
+//        Tile& nextTile = tiles[yCoord+1][mot.scale.x < 0 ? xCoord-1 : xCoord+1];
+//        isSafeMove = nextTile.type == GROUND || nextTile.type == EMPTY || nextTile.type == VINE;
+//        if (isSafeMove && (tiles[yCoord+1][xCoord].type == EMPTY || tiles[yCoord+1][xCoord].type == VINE)) {
+//            if(nextTile.type == EMPTY || nextTile.type == VINE) {
+//                Tile& t = nextTile;
+//                mot.position = { t.x, t.y };
+//                if(mot.scale.y > 0) {
+//                    mot.scale.y = -mot.scale.y;
+//                }
+//                mot.scale.x = -mot.scale.x;
+//                mot.angle = -PI;
+//            } else {
+//                Tile& t = tiles[yCoord+1][xCoord];
+//                mot.position = { t.x, t.y };
+//            }
+//            snail_move--;
+//        }
+//    }
+//}
 
 // On key callback
 // Check out https://www.glfw.org/docs/3.3/input_guide.html
@@ -404,24 +560,22 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		// Component. Had to divide by 100 since starting screen position is (100, 200) which is 
 		// associated with the tile at tiles[1][2]. Added snail_move that tracks how many moves
 		// the snail can do this turn.
-		int xCoord = static_cast<int>(mot.position.x / scale);
-		int yCoord = static_cast<int>(mot.position.y / scale);
         int tempSnailMove = snail_move;
 		if (action == GLFW_PRESS)
 		{
 			switch (key)
 			{
 			case GLFW_KEY_W:
-                    goUp(mot, xCoord, yCoord, snail_move);
+                    goUp(player_snail, snail_move);
 				break;
 			case GLFW_KEY_S:
-                    goDown(mot, xCoord, yCoord, snail_move);
+                    goDown(player_snail, snail_move);
                 break;
 			case GLFW_KEY_D:
-                    goRight(mot, xCoord, yCoord, snail_move);
+                    goRight(player_snail, snail_move);
                 break;
 			case GLFW_KEY_A:
-                    goLeft(mot, xCoord, yCoord, snail_move);
+                    goLeft(player_snail, snail_move);
 				break;
 			}
 		}
@@ -453,23 +607,27 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 //                    angle = angle * (180/PI);
                     int ai_move=0;
                     int tmp_move = ai_move;
-                    if (xCoordEntity-xCoord>=0) {
-                        goLeft(motEntity, xCoordEntity, yCoordEntity, ai_move);
-                        if(ai_move == tmp_move){
-                            if(yCoordEntity-yCoord>0) {
-                                goUp(motEntity, xCoordEntity, yCoordEntity, ai_move);
-                            } else {
-                                goDown(motEntity, xCoordEntity, yCoordEntity, ai_move);
+                    if (xCoordEntity-xCoord==0 && yCoordEntity-yCoord==0) {
+                    // dont move
+                    }else {
+                        if (xCoordEntity-xCoord>=0) {
+                            goLeft(entity, ai_move);
+                            if(ai_move == tmp_move){
+                                if(yCoordEntity-yCoord>0) {
+                                    goUp(entity, ai_move);
+                                } else {
+                                    goDown(entity, ai_move);
+                                }
                             }
                         }
-                    }
-                    if(ai_move == tmp_move) {
-                        goRight(motEntity, xCoordEntity, yCoordEntity, ai_move);
-                        if(ai_move == tmp_move){
-                            if(yCoordEntity-yCoord>0) {
-                                goUp(motEntity, xCoordEntity, yCoordEntity, ai_move);
-                            } else {
-                                goDown(motEntity, xCoordEntity, yCoordEntity, ai_move);
+                        if(ai_move == tmp_move) {
+                            goRight(entity, ai_move);
+                            if(ai_move == tmp_move){
+                                if(yCoordEntity-yCoord>0) {
+                                    goUp(entity, ai_move);
+                                } else {
+                                    goDown(entity, ai_move);
+                                }
                             }
                         }
                     }
@@ -571,9 +729,6 @@ void WorldSystem::loadLevel(std::string level)
 				case 'P':
 					tile.type = EMPTY;
 					Spider::createSpider({ tile.x, tile.y });
-					break;
-				case ' ':
-					tile.type = EMPTY;
 					break;
 				default:
 					tile.type = EMPTY;

@@ -63,14 +63,22 @@ public:
 	// OpenGL window handle
 	GLFWwindow* window;
 private:
-    void goRight(Motion &mot, int xCoord, int yCoord, int &snail_move);
+    void goRight(ECS::Entity &entity, int &snail_move);
     
-    void goLeft(Motion &mot, int xCoord, int yCoord, int &snail_move);
+    void goLeft(ECS::Entity &entity, int &snail_move);
     
-    void goUp(Motion &mot, int xCoord, int yCoord, int &snail_move);
+    void goUp(ECS::Entity &entity, int &snail_move);
     
-    void goDown(Motion &mot, int xCoord, int yCoord, int &snail_move);
+    void goDown(ECS::Entity &entity, int &snail_move);
     
+    void doX(Motion &motion, WorldSystem::Tile &currTile, WorldSystem::Tile &nextTile, int defaultDirection );
+    
+    void doY(Motion &motion, WorldSystem::Tile &currTile, WorldSystem::Tile &nextTile);
+    
+    void rotate(WorldSystem::Tile &currTile, Motion &motion, WorldSystem::Tile &nextTile);
+    
+    void changeDirection(Motion &motion, WorldSystem::Tile &currTile, WorldSystem::Tile &nextTile, int defaultDirection);
+
     // Input callback functions
 	void on_key(int key, int, int action, int mod);
 	void on_mouse_move(vec2 mouse_pos);

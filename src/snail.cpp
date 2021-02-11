@@ -2,6 +2,7 @@
 #include "snail.hpp"
 #include "render.hpp"
 #include "world.hpp"
+#include "common.hpp"
 
 ECS::Entity Snail::createSnail(vec2 position)
 {
@@ -23,9 +24,9 @@ ECS::Entity Snail::createSnail(vec2 position)
 	motion.position = position;
 	motion.angle = 0.f;
 	motion.velocity = { 0.f, 0.f };
-    motion.scale = {WorldSystem::getScale() * .85, WorldSystem::getScale() * .85};
+    motion.scale = resource.mesh.original_size / resource.mesh.original_size.x * WorldSystem::getScale();
 	motion.scale.y *= -1; // fix orientation
-
+    motion.lastDirection = DIRECTION_EAST;
 	// Create an (empty) Snail component
 	ECS::registry<Snail>.emplace(entity);
 

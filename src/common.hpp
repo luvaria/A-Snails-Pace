@@ -36,10 +36,17 @@ struct Transform {
 	void translate(vec2 offset);
 };
 
+#define DIRECTION_WEST  2
+#define DIRECTION_NORTH 0
+#define DIRECTION_SOUTH 1
+#define DIRECTION_EAST  3
+
+
 // All data relevant to the shape and motion of entities
 struct Motion {
 	vec2 position = { 0, 0 };
 	float angle = 0;
 	vec2 velocity = { 0, 0 };
 	vec2 scale = { 10, 10 };
+    int lastDirection = DIRECTION_NORTH;
 };
