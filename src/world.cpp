@@ -25,7 +25,7 @@ const size_t SPIDER_DELAY_MS = 2000;
 const size_t FISH_DELAY_MS = 5000;
 
 // Zoom level; dimensions of tiles
-static float scale = 0.f;
+static float scale = 100.f;
 
 // Create the fish world
 // Note, this has a lot of OpenGL specific things, could be moved to the renderer; but it also defines the callbacks to the mouse and keyboard. That is why it is called here.

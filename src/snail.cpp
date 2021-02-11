@@ -23,7 +23,7 @@ ECS::Entity Snail::createSnail(vec2 position)
 	motion.position = position;
 	motion.angle = 0.f;
 	motion.velocity = { 0.f, 0.f };
-	motion.scale = resource.mesh.original_size / resource.mesh.original_size.x * WorldSystem::getScale();
+    motion.scale = {WorldSystem::getScale() * .85, WorldSystem::getScale() * .85};
 	motion.scale.y *= -1; // fix orientation
 
 	// Create an (empty) Snail component
