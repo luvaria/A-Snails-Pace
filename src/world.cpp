@@ -293,7 +293,9 @@ void WorldSystem::goLeft(ECS::Entity &entity, int &snail_move) {
     auto& motion = ECS::registry<Motion>.get(entity);
     int xCoord = static_cast<int>(motion.position.x / scale);
     int yCoord = static_cast<int>(motion.position.y / scale);
-    
+    if(xCoord-1 < 0) {
+        return;
+    }
     Tile currTile = tiles[yCoord][xCoord];
     Tile leftTile = tiles[yCoord][xCoord-1];
     if (abs(motion.angle) != PI/2 && (leftTile.type == GROUND || leftTile.type == WALL)) {
@@ -307,6 +309,10 @@ void WorldSystem::goLeft(ECS::Entity &entity, int &snail_move) {
         snail_move--;
     }
     else if(abs(motion.angle) != PI/2) {
+        int yCord = (motion.angle == -PI/2 ? yCoord+1 : yCoord-1);
+        if(yCord < 0 && yCord > tiles.size()-1) {
+            return;
+        }
         Tile nextTile = tiles[abs(motion.angle) == PI ? (yCoord-1) : (yCoord+1)][xCoord-1];
         nextTile = nextTile.type == GROUND ? leftTile : nextTile;
         changeDirection(motion, currTile, nextTile, DIRECTION_WEST);
@@ -368,7 +374,9 @@ void WorldSystem::goRight(ECS::Entity &entity, int &snail_move) {
     auto& motion = ECS::registry<Motion>.get(entity);
     int xCoord = static_cast<int>(motion.position.x / scale);
     int yCoord = static_cast<int>(motion.position.y / scale);
-    
+    if(xCoord+1 > tiles[yCoord].size()-1) {
+        return;
+    }
     Tile currTile = tiles[yCoord][xCoord];
     Tile rightTile = tiles[yCoord][xCoord+1];
     if (abs(motion.angle) != PI/2 && (rightTile.type == GROUND || rightTile.type == WALL)) {
@@ -382,6 +390,13 @@ void WorldSystem::goRight(ECS::Entity &entity, int &snail_move) {
         snail_move--;
     }
     else if(abs(motion.angle) != PI/2) {
+        int yCord = abs(motion.angle) == PI ? (yCoord-1) : (yCoord+1);
+        if(yCord < 0 && yCord > tiles.size()-1) {
+            return;
+        }
+        if(xCoord+1 > tiles[yCord].size()-1) {
+            return;
+        }
         Tile nextTile = tiles[abs(motion.angle) == PI ? (yCoord-1) : (yCoord+1)][xCoord+1];
         nextTile = nextTile.type == GROUND ? rightTile : nextTile;
         changeDirection(motion, currTile, nextTile, DIRECTION_EAST);
@@ -393,7 +408,9 @@ void WorldSystem::goUp(ECS::Entity &entity, int &snail_move) {
     auto& motion = ECS::registry<Motion>.get(entity);
     int xCoord = static_cast<int>(motion.position.x / scale);
     int yCoord = static_cast<int>(motion.position.y / scale);
-    
+    if(yCoord-1 < 0) {
+        return;
+    }
     Tile currTile = tiles[yCoord][xCoord];
     Tile upTile = tiles[yCoord-1][xCoord];
     if (currTile.type == VINE && abs(motion.angle) == 0) {
@@ -417,6 +434,11 @@ void WorldSystem::goUp(ECS::Entity &entity, int &snail_move) {
         snail_move--;
     }
     else if(abs(motion.angle) == PI/2) {
+        
+        int xCord = (motion.angle == -PI/2 ? xCoord+1 : xCoord-1);
+        if(xCord > tiles[(yCoord-1)].size()-1) {
+            return;
+        }
         Tile nextTile = tiles[(yCoord-1)][motion.angle == -PI/2 ? xCoord+1 : xCoord-1];
         nextTile = nextTile.type == GROUND || upTile.type == VINE ? upTile : nextTile;
         changeDirection(motion, currTile, nextTile, DIRECTION_NORTH);
@@ -468,7 +490,9 @@ void WorldSystem::goDown(ECS::Entity &entity, int &snail_move) {
     auto& motion = ECS::registry<Motion>.get(entity);
     int xCoord = static_cast<int>(motion.position.x / scale);
     int yCoord = static_cast<int>(motion.position.y / scale);
-    
+    if(yCoord+1 > tiles.size()-1) {
+        return;
+    }
     Tile currTile = tiles[yCoord][xCoord];
     Tile upTile = tiles[yCoord+1][xCoord];
     if (currTile.type == VINE && abs(motion.angle) == PI) {
@@ -491,6 +515,11 @@ void WorldSystem::goDown(ECS::Entity &entity, int &snail_move) {
         snail_move--;
     }
     else if(abs(motion.angle) == PI/2) {
+        
+        int xCord = (motion.angle == -PI/2 ? xCoord+1 : xCoord-1);
+        if(xCord > tiles[(yCoord+1)].size()-1) {
+            return;
+        }
         Tile nextTile = tiles[(yCoord+1)][motion.angle == -PI/2 ? xCoord+1 : xCoord-1];
         nextTile = nextTile.type == GROUND || upTile.type == VINE ? upTile : nextTile;
         changeDirection(motion, currTile, nextTile, DIRECTION_SOUTH);
