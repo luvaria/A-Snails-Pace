@@ -389,8 +389,8 @@ void WorldSystem::loadLevel(std::string level)
 			for (char const& c : line)
 			{
 				Tile tile;
-				tile.x = x * scale;
-				tile.y = y * scale;
+				tile.x = x * scale + 0.5 * scale;
+				tile.y = y * scale + 0.5 * scale;
 				
 				switch (c)
 				{
