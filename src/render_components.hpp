@@ -132,6 +132,11 @@ struct ShadedMeshRef
 	ShadedMeshRef(ShadedMesh& mesh);
 };
 
+struct Camera
+{
+    vec2 offset = {0,0};
+};
+
 // A struct to refer to debugging graphics in the ECS
 struct DebugComponent
 {

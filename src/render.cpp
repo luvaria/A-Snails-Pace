@@ -177,11 +177,13 @@ void RenderSystem::draw(vec2 window_size_in_game_units)
 	float right = window_size_in_game_units.x;
 	float bottom = window_size_in_game_units.y;
 
+	vec2 offset = ECS::registry<Camera>.components[0].offset;
+
 	float sx = 2.f / (right - left);
 	float sy = 2.f / (top - bottom);
-	float tx = -(right + left) / (right - left);
-	float ty = -(top + bottom) / (top - bottom);
-	mat3 projection_2D{ { sx, 0.f, 0.f },{ 0.f, sy, 0.f },{ tx, ty, 1.f } };
+	float tx = (-(right + left) / (right - left)) - 2 * (offset.x/right);
+	float ty = (-(top + bottom) / (top - bottom)) -  2 * (offset.y/bottom);
+	mat3 projection_2D{ { sx, 0.f, 0.f },{ 0.f, sy, 0.f },{ tx , ty, 1.f } };
 
 	// Draw all textured meshes that have a position and size component
 	for (ECS::Entity entity : ECS::registry<ShadedMeshRef>.entities)
