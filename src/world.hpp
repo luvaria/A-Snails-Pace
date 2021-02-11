@@ -46,7 +46,7 @@ public:
 	// OCCUPIED = something is on the tile, UNUSED = don't render anything/tile is not going
 	// to be used
 
-	typedef enum {EMPTY, OCCUPIED, UNUSED, GROUND, WATER, VINE, WALL} TYPE;
+	typedef enum {EMPTY, GROUND, WATER, VINE, WALL} TYPE;
 
 	// NEW: Defines the Tile Component
 	struct Tile {
@@ -63,13 +63,13 @@ public:
 	// OpenGL window handle
 	GLFWwindow* window;
 private:
-    void goRight(bool &isSafeMove, Motion &mot, Tile &nextTile, int xCoord, int yCoord, int &snail_move);
+    void goRight(Motion &mot, int xCoord, int yCoord, int &snail_move);
     
-    void goLeft(bool &isSafeMove, Motion &mot, Tile &nextTile, int xCoord, int yCoord, int &snail_move);
+    void goLeft(Motion &mot, int xCoord, int yCoord, int &snail_move);
     
-    void goUp(bool &isSafeMove, Motion &mot, Tile &nextTile, int xCoord, int yCoord, int &snail_move);
+    void goUp(Motion &mot, int xCoord, int yCoord, int &snail_move);
     
-    void goDown(bool &isSafeMove, Motion &mot, Tile &nextTile, int xCoord, int yCoord, int &snail_move);
+    void goDown(Motion &mot, int xCoord, int yCoord, int &snail_move);
     
     // Input callback functions
 	void on_key(int key, int, int action, int mod);
