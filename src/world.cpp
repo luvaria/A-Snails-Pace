@@ -323,7 +323,6 @@ void WorldSystem::goDown(Motion &mot, int xCoord, int yCoord, int &snail_move) {
     }
     else if(mot.angle == PI/2) {
         Tile& nextTile = tiles[yCoord+1][mot.scale.x < 0 ? xCoord-1 : xCoord+1];
-        cout << (nextTile.Tile::type);
         isSafeMove = nextTile.type == GROUND || nextTile.type == EMPTY || nextTile.type == VINE;
         if (isSafeMove && (tiles[yCoord+1][xCoord].type == EMPTY || tiles[yCoord+1][xCoord].type == VINE)) {
             if(nextTile.type == EMPTY || nextTile.type == VINE) {
