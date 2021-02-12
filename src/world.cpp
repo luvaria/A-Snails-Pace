@@ -68,14 +68,17 @@ WorldSystem::WorldSystem(ivec2 window_size_px) :
 	auto key_redirect = [](GLFWwindow* wnd, int _0, int _1, int _2, int _3) { ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_key(_0, _1, _2, _3); };
 	auto cursor_pos_redirect = [](GLFWwindow* wnd, double _0, double _1) { ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_move({ _0, _1 }); };
     auto mouse_button_redirect = [](GLFWwindow* wnd, int _0, int _1, int _2) { ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_button(_0, _1, _2); };
+
 	glfwSetKeyCallback(window, key_redirect);
 	glfwSetCursorPosCallback(window, cursor_pos_redirect);
     glfwSetMouseButtonCallback(window, mouse_button_redirect);
+
 
     // Might want to enforce having only one camera
     // For now we will just have this
     auto cameraEntity = ECS::Entity();
     ECS::registry<Camera>.emplace(cameraEntity);
+
 
 	// Playing background music indefinitely
 	init_audio();
@@ -133,6 +136,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 	// Removing out of screen entities
 	auto& registry = ECS::registry<Motion>;
 
+
     // Kill snail if off screen
     auto& snailMotion = ECS::registry<Motion>.get(player_snail);
     if (!ECS::registry<DeathTimer>.has(player_snail)
@@ -176,8 +180,10 @@ void WorldSystem::restart()
 	// Reset the game speed
 	current_speed = 1.f;
 
+  
     // Reset Camera
     ECS::registry<Camera>.components[0].offset = { 0.f, 0.f };
+
 
 	// Remove all entities that we created
 	// All that have a motion, we could also iterate over all fish, spiders, ... but that would be more cumbersome
@@ -238,11 +244,14 @@ float WorldSystem::getScale() { return scale; }
 
 bool WorldSystem::offScreen(vec2 const& pos, vec2 window_size_in_game_units, vec2 cameraOffset)
 {
+
     vec2 offsetPos = { pos.x - cameraOffset.x, pos.y - cameraOffset.y };
+
 
     return (offsetPos.x < 0.f || offsetPos.x > window_size_in_game_units.x
         || offsetPos.y < 0.f || offsetPos.y > window_size_in_game_units.y);
 }
+
 
 void WorldSystem::doX(Motion &motion, WorldSystem::Tile &currTile, WorldSystem::Tile &nextTile, int defaultDirection ) {
     if(currTile.x == nextTile.x) {
@@ -601,6 +610,7 @@ void WorldSystem::goDown(ECS::Entity &entity, int &snail_move) {
 //    }
 //}
 
+
 // On key callback
 // Check out https://www.glfw.org/docs/3.3/input_guide.html
 void WorldSystem::on_key(int key, int, int action, int mod)
@@ -708,6 +718,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 	if (key == GLFW_KEY_N && action == GLFW_RELEASE) {
 		// flip to next turn, reset movement available, make enemies move?.
 		turn_number++;
+
         // Move camera by 1 tile in the x-direction
         // Could eventually move vertically
         // where direction could be loaded from file as per Rebecca's suggestion
@@ -764,6 +775,23 @@ void WorldSystem::on_mouse_move(vec2 mouse_pos)
 	}
 }
 
+void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
+{
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
+    {
+        // Check if we would go off screen and die, and prevent that from happening
+        vec2& cameraOffset = ECS::registry<Camera>.components[0].offset;
+        vec2 possibleOffset = {cameraOffset.x + WorldSystem::getScale(), cameraOffset.y};
+        // Have to get window size this way because no access to window_size_in_game_units
+        int w, h;
+        glfwGetWindowSize(window, &w, &h);
+        if (!offScreen(ECS::registry<Motion>.get(player_snail).position, vec2(w,h), possibleOffset))
+        {
+            cameraOffset = possibleOffset;
+        }
+    }
+}
+
 void WorldSystem::loadLevel(std::string level)
 {
 	std::string line;
@@ -784,6 +812,7 @@ void WorldSystem::loadLevel(std::string level)
 			for (char const& c : line)
 			{
 				Tile tile;
+
 				tile.x = x * scale;
 				tile.y = y * scale;
                 tile.x = x * scale + 0.5 * scale;
