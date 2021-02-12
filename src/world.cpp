@@ -775,22 +775,6 @@ void WorldSystem::on_mouse_move(vec2 mouse_pos)
 	}
 }
 
-void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
-{
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
-    {
-        // Check if we would go off screen and die, and prevent that from happening
-        vec2& cameraOffset = ECS::registry<Camera>.components[0].offset;
-        vec2 possibleOffset = {cameraOffset.x + WorldSystem::getScale(), cameraOffset.y};
-        // Have to get window size this way because no access to window_size_in_game_units
-        int w, h;
-        glfwGetWindowSize(window, &w, &h);
-        if (!offScreen(ECS::registry<Motion>.get(player_snail).position, vec2(w,h), possibleOffset))
-        {
-            cameraOffset = possibleOffset;
-        }
-    }
-}
 
 void WorldSystem::loadLevel(std::string level)
 {
