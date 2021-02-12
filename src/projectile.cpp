@@ -25,7 +25,7 @@ ECS::Entity Projectile::createProjectile(vec2 position, vec2 velocity)
 	motion.position = position;
 	motion.velocity = velocity;
 	//divided by 5 since it shouldn't take up the whole tile
-	motion.scale = (resource.mesh.original_size / resource.mesh.original_size.x * WorldSystem::getScale()) / 5.0f;
+	motion.scale = (resource.mesh.original_size / resource.mesh.original_size.x * TileSystem::getScale()) / 5.0f;
 	motion.scale.y *= -1; // fix orientation
 
 	// Create and (empty) Projectile component to be able to refer to all projectiles

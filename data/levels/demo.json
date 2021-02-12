@@ -1,0 +1,29 @@
+{
+  "name": "Demo",
+  "description": "Showing off M1 features.",
+  "scale": 100,
+  "tiles": [
+    "            ",
+    "            ",
+    "            ",
+    "            ",
+    "   XXXXXX   ",
+    "   V        ",
+    "X  V        ",
+    "XXXXXWWWXXXX"
+  ],
+  "characters": {
+    "snail": [
+      {
+        "x": 1,
+        "y": 6
+      }
+    ],
+    "spider": [
+      {
+        "x": 7,
+        "y": 3
+      }
+    ]
+  }
+}

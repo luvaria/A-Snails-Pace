@@ -3,6 +3,7 @@
 // internal
 #include "common.hpp"
 #include "snail.hpp"
+#include "tiles/tiles.hpp"
 
 // stlib
 #include <vector>
@@ -38,29 +39,7 @@ public:
 	// Should the game be over ?
 	bool is_over() const;
 
-	// loads level from file
-	void loadLevel(std::string level);
-
 	void shootProjectile(vec2 mouse_pos);
-
-	// NEW: Defining what tile types are possible, could be used to render correct tile types
-	// and to check if can be moved. EMPTY = nothing is on the tile and you can move to it, 
-	// OCCUPIED = something is on the tile, UNUSED = don't render anything/tile is not going
-	// to be used
-
-	typedef enum {EMPTY, GROUND, WATER, VINE, WALL} TYPE;
-
-	// NEW: Defines the Tile Component
-	struct Tile {
-		float x;
-		float y;
-		TYPE type;
-	};
-
-	// NEW: Tile array, might make it easier to access it and add to entities
-	std::vector<std::vector<Tile>> tiles;
-	// size of each (square) tile
-	static float getScale();
 
 	// return true if a given point is off screen, false otherwise
 	static bool offScreen(vec2 const& pos, vec2 window_size_in_game_units, vec2 cameraOffset);
@@ -76,13 +55,13 @@ private:
     
     void goDown(ECS::Entity &entity, int &snail_move);
     
-    void doX(Motion &motion, WorldSystem::Tile &currTile, WorldSystem::Tile &nextTile, int defaultDirection );
+    void doX(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile, int defaultDirection );
     
-    void doY(Motion &motion, WorldSystem::Tile &currTile, WorldSystem::Tile &nextTile);
+    void doY(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile);
     
-    void rotate(WorldSystem::Tile &currTile, Motion &motion, WorldSystem::Tile &nextTile);
+    void rotate(TileSystem::Tile &currTile, Motion &motion, TileSystem::Tile &nextTile);
     
-    void changeDirection(Motion &motion, WorldSystem::Tile &currTile, WorldSystem::Tile &nextTile, int defaultDirection);
+    void changeDirection(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile, int defaultDirection);
 
     // Input callback functions
 	void on_key(int key, int, int action, int mod);

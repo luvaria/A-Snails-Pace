@@ -1,7 +1,7 @@
 // Header
 #include "spider.hpp"
 #include "render.hpp"
-#include "world.hpp"
+#include "tiles/tiles.hpp"
 
 ECS::Entity Spider::createSpider(vec2 position)
 {
@@ -24,7 +24,7 @@ ECS::Entity Spider::createSpider(vec2 position)
 	motion.angle = 0.f;
 	motion.velocity = { 0.f, 0.f }; // 200
 	motion.position = position;
-    motion.scale = resource.mesh.original_size / resource.mesh.original_size.x * WorldSystem::getScale();
+    motion.scale = resource.mesh.original_size / resource.mesh.original_size.x * TileSystem::getScale();
 	motion.scale.y *= -1; // fix orientation
     motion.lastDirection = DIRECTION_WEST;
 

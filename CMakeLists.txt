@@ -33,7 +33,7 @@ if (IS_OS_MAC)
   link_directories(/usr/local/lib)
 endif()
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILES} "src/tiles/ground.cpp" "src/tiles/ground.hpp" "src/tiles/water.cpp" "src/tiles/water.hpp" "src/tiles/vine.cpp" "src/tiles/vine.hpp" "src/projectile.cpp" "src/projectile.hpp")
+add_executable(${PROJECT_NAME} ${SOURCE_FILES} "src/tiles/ground.cpp" "src/tiles/ground.hpp" "src/tiles/water.cpp" "src/tiles/water.hpp" "src/tiles/vine.cpp" "src/tiles/vine.hpp" "src/projectile.cpp" "src/projectile.hpp" "src/level_loader.hpp" "src/level_loader.cpp" "src/tiles/tiles.hpp" "src/tiles/tiles.cpp")
 target_include_directories(${PROJECT_NAME} PUBLIC src/)
 
 # Added this so policy CMP0065 doesn't scream
@@ -163,3 +163,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${GLFW_LIBRARIES} ${SDL2_LIBRARIES}
 if(IS_OS_LINUX)
   target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_DL_LIBS})
 endif()
+
+# JSON
+add_subdirectory(ext/nlohmann_json)
+set(JSON_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/ext/nlohmann_json/single_include")
+target_link_directories(${PROJECT_NAME} PUBLIC ${JSON_INCLUDE_DIRS})

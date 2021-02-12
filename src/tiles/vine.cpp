@@ -1,7 +1,7 @@
 // Header
 #include "vine.hpp"
 #include "render.hpp"
-#include "world.hpp"
+#include "tiles/tiles.hpp"
 
 ECS::Entity VineTile::createVineTile(vec2 position)
 {
@@ -23,7 +23,7 @@ ECS::Entity VineTile::createVineTile(vec2 position)
 	motion.position = position;
 	motion.angle = 0.f;
 	motion.velocity = { 0.f, 0.f };
-	motion.scale = { WorldSystem::getScale(), -WorldSystem::getScale() };
+	motion.scale = { TileSystem::getScale(), -TileSystem::getScale() };
 
 	// Create an (empty) VineTile component
 	ECS::registry<VineTile>.emplace(entity);
