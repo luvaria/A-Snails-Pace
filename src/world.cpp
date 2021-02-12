@@ -3,6 +3,7 @@
 #include "physics.hpp"
 #include "debug.hpp"
 #include "spider.hpp"
+#include "projectile.hpp"
 #include "fish.hpp"
 #include "tiles/ground.hpp"
 #include "tiles/water.hpp"
@@ -146,6 +147,16 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
         Mix_PlayChannel(-1, salmon_dead_sound, 0);
     }
 
+	//remove any offscreen projectiles
+	for (auto entity: ECS::registry<Projectile>.entities) 
+	{
+		auto projectilePosition = ECS::registry<Motion>.get(entity).position;
+		if (offScreen(projectilePosition, window_size_in_game_units, ECS::registry<Camera>.components[0].offset))
+		{
+			ECS::ContainerInterface::remove_all_components_of(entity);
+		}
+	}
+
 	// Processing the snail state
 	assert(ECS::registry<ScreenState>.components.size() <= 1);
 	auto& screen = ECS::registry<ScreenState>.components[0];
@@ -226,6 +237,25 @@ void WorldSystem::handle_collisions()
 					ECS::registry<DeathTimer>.emplace(entity);
 					Mix_PlayChannel(-1, salmon_dead_sound, 0);
 				}
+			}
+		}
+
+		//collisions involving the projectiles
+		if (ECS::registry<Projectile>.has(entity)) 
+		{
+			// Checking Projectile - Spider collisions
+			if (ECS::registry<Spider>.has(entity_other)) 
+			{
+				//remove both the spider and the projectile
+				ECS::ContainerInterface::remove_all_components_of(entity);
+				ECS::ContainerInterface::remove_all_components_of(entity_other);
+			}
+
+			// Checking Projectile - Wall collisions
+			if (ECS::registry<GroundTile>.has(entity_other))
+			{
+				//remove the Projectile
+				ECS::ContainerInterface::remove_all_components_of(entity);
 			}
 		}
 	}
@@ -764,6 +794,36 @@ void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
             cameraOffset = possibleOffset;
         }
     }
+	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) 
+	{
+		double mouse_pos_x;
+		double mouse_pos_y;
+		glfwGetCursorPos(window, &mouse_pos_x, &mouse_pos_y);
+		vec2 mouse_pos = vec2(mouse_pos_x, mouse_pos_y);
+		shootProjectile(mouse_pos);
+	}
+}
+
+void WorldSystem::shootProjectile(vec2 mousePos) 
+{
+
+	//first we get the position of the mouse_pos relative to the start of the level.
+	vec2& cameraOffset = ECS::registry<Camera>.components[0].offset;
+	mousePos = mousePos + cameraOffset;
+
+	// now you want to go in the direction of the (mouse_pos - snail_pos), but make it a unit vector
+	vec2 snailPosition = ECS::registry<Motion>.get(player_snail).position;
+	vec2 projectileVelocity = (mousePos - snailPosition);
+	float length = glm::length(projectileVelocity);
+	projectileVelocity.x = (projectileVelocity.x / length) * 100;
+	projectileVelocity.y = (projectileVelocity.y / length) * 100;
+	if (projectileVelocity != vec2(0, 0))
+	{
+		Projectile::createProjectile(snailPosition, projectileVelocity);
+	}
+	
+	//shooting a projectile takes your turn.
+	snail_move--;
 }
 
 

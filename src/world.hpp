@@ -41,6 +41,8 @@ public:
 	// loads level from file
 	void loadLevel(std::string level);
 
+	void shootProjectile(vec2 mouse_pos);
+
 	// NEW: Defining what tile types are possible, could be used to render correct tile types
 	// and to check if can be moved. EMPTY = nothing is on the tile and you can move to it, 
 	// OCCUPIED = something is on the tile, UNUSED = don't render anything/tile is not going

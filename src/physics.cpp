@@ -1,5 +1,6 @@
 // internal
 #include "physics.hpp"
+#include "projectile.hpp"
 #include "tiny_ecs.hpp"
 #include "debug.hpp"
 
@@ -29,21 +30,20 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 {
 	// Move entities based on how much time has passed, this is to (partially) avoid
 	// having entities move at different speed based on the machine.
-	/*
-	for (auto& motion : ECS::registry<Motion>.components)
+	
+	//for (auto& motion : ECS::registry<Motion>.components)
+
+	//just start by moving the projectile!
+	for (auto entity: ECS::registry<Projectile>.entities)
 	{
+		auto& motion = ECS::registry<Motion>.get(entity);
 		float step_seconds = 1.0f * (elapsed_ms / 1000.f);
-		
-		// !!! TODO A1: uncomment block and update motion.position based on step_seconds and motion.velocity
+		vec2 velocity = motion.velocity;
+		motion.position += velocity * step_seconds;
 	}
-	*/
+	
 	(void)elapsed_ms; // placeholder to silence unused warning until implemented
 	(void)window_size_in_game_units;
-
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// TODO A3: HANDLE PEBBLE UPDATES HERE
-	// DON'T WORRY ABOUT THIS UNTIL ASSIGNMENT 3
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 	// Visualization for debugging the position and scale of objects
 	if (DebugSystem::in_debug_mode)
@@ -81,16 +81,6 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 			}
 		}
 	}
-
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// TODO A2: HANDLE SALMON - WALL COLLISIONS HERE
-	// DON'T WORRY ABOUT THIS UNTIL ASSIGNMENT 2
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// TODO A3: HANDLE PEBBLE COLLISIONS HERE
-	// DON'T WORRY ABOUT THIS UNTIL ASSIGNMENT 3
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 }
 
 PhysicsSystem::Collision::Collision(ECS::Entity& other)
