@@ -17,15 +17,16 @@ ECS::Entity Spider::createSpider(vec2 position)
 	}
 
 	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
-	ECS::registry<ShadedMeshRef>.emplace(entity, resource);
+    ECS::registry<ShadedMeshRef>.emplace(entity, resource);
 
 	// Initialize the motion
 	auto& motion = ECS::registry<Motion>.emplace(entity);
 	motion.angle = 0.f;
-	motion.velocity = { 100.f, 0.f }; // 200
+	motion.velocity = { 0.f, 0.f }; // 200
 	motion.position = position;
-	motion.scale = resource.mesh.original_size / resource.mesh.original_size.x * WorldSystem::getScale();
+    motion.scale = resource.mesh.original_size / resource.mesh.original_size.x * WorldSystem::getScale();
 	motion.scale.y *= -1; // fix orientation
+    motion.lastDirection = DIRECTION_WEST;
 
 	// Create and (empty) Spider component to be able to refer to all spiders
 	ECS::registry<Spider>.emplace(entity);

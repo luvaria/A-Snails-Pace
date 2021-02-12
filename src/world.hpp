@@ -46,7 +46,7 @@ public:
 	// OCCUPIED = something is on the tile, UNUSED = don't render anything/tile is not going
 	// to be used
 
-	typedef enum {EMPTY, OCCUPIED, UNUSED, GROUND, WATER, VINE} TYPE;
+	typedef enum {EMPTY, GROUND, WATER, VINE, WALL} TYPE;
 
 	// NEW: Defines the Tile Component
 	struct Tile {
@@ -66,7 +66,23 @@ public:
 	// OpenGL window handle
 	GLFWwindow* window;
 private:
-	// Input callback functions
+    void goRight(ECS::Entity &entity, int &snail_move);
+    
+    void goLeft(ECS::Entity &entity, int &snail_move);
+    
+    void goUp(ECS::Entity &entity, int &snail_move);
+    
+    void goDown(ECS::Entity &entity, int &snail_move);
+    
+    void doX(Motion &motion, WorldSystem::Tile &currTile, WorldSystem::Tile &nextTile, int defaultDirection );
+    
+    void doY(Motion &motion, WorldSystem::Tile &currTile, WorldSystem::Tile &nextTile);
+    
+    void rotate(WorldSystem::Tile &currTile, Motion &motion, WorldSystem::Tile &nextTile);
+    
+    void changeDirection(Motion &motion, WorldSystem::Tile &currTile, WorldSystem::Tile &nextTile, int defaultDirection);
+
+    // Input callback functions
 	void on_key(int key, int, int action, int mod);
 	void on_mouse_move(vec2 mouse_pos);
 	void on_mouse_button(int button, int action, int /*mods*/);
