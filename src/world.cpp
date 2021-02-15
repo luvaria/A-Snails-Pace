@@ -487,13 +487,13 @@ void WorldSystem::goDown(ECS::Entity &entity, int &snail_move) {
         snail_move--;
     } else if (upTile.type == TileSystem::WALL || upTile.type == TileSystem::WALL) {
         TileSystem::Tile nextTile = tiles[yCoord][xCoord];
-        changeDirection(motion, currTile, nextTile, DIRECTION_SOUTH);
-        if(abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
+        if(motion.angle != 0 && abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
+            changeDirection(motion, currTile, nextTile, DIRECTION_SOUTH);
             motion.scale = {motion.scale.y, motion.scale.x};
             motion.lastDirection = motion.angle == -PI/2 ? DIRECTION_WEST : DIRECTION_EAST;
             motion.angle = 0;
+            snail_move--;
         }
-        snail_move--;
     }
     else if(abs(motion.angle) == PI/2) {
         
