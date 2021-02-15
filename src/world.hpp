@@ -39,7 +39,7 @@ public:
 	// Should the game be over ?
 	bool is_over() const;
 
-	void shootProjectile(vec2 mouse_pos);
+	void shootProjectile(vec2 mouse_pos, bool preview = false);
 
 	// return true if a given point is off screen, false otherwise
 	static bool offScreen(vec2 const& pos, vec2 window_size_in_game_units, vec2 cameraOffset);
@@ -79,6 +79,8 @@ private:
 	float next_spider_spawn;
 	float next_fish_spawn;
 	ECS::Entity player_snail;
+
+    bool left_mouse_pressed;
 
 	// NEW: turn_number is not used for now, but will probably be used to keep track
 	// of what day it is on the calendar. snail_move is how many tiles the snail can

@@ -77,6 +77,7 @@ struct Texture
 	GLResource<TEXTURE> texture_id;
 	ivec2 size = {0, 0};
 	vec3 color = {1,1,1};
+	float alpha = 1.0f; // only affects projectile for now, should it be implemented for all?
 	
 	// Loads texture from file specified by path
 	void load_from_file(std::string path);
