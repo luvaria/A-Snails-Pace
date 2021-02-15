@@ -2,9 +2,10 @@
 
 #include "common.hpp"
 #include "tiny_ecs.hpp"
+#include "subject.hpp"
 
 // A simple physics system that moves rigid bodies and checks for collision
-class PhysicsSystem
+class PhysicsSystem : public Subject
 {
 public:
 	void step(float elapsed_ms, vec2 window_size_in_game_units);

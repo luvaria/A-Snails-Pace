@@ -74,10 +74,9 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 
 			if (collides(motion_i, motion_j))
 			{
-				// Create a collision event
-				// Note, we are abusing the ECS system a bit in that we potentially insert muliple collisions for the same entity, hence, emplace_with_duplicates
-				ECS::registry<Collision>.emplace_with_duplicates(entity_i, entity_j);
-				ECS::registry<Collision>.emplace_with_duplicates(entity_j, entity_i);
+				//notify both entities of collision
+				notify(entity_i, Event(Event::COLLISION_EVENT, entity_j));
+				notify(entity_j, Event(Event::COLLISION_EVENT, entity_i));
 			}
 		}
 	}
