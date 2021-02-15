@@ -25,5 +25,5 @@ public:
 	static void setScale(float s);
 
 	// tile grid
-	static std::vector<std::vector<TileSystem::Tile>>& TileSystem::getTiles();
+	static std::vector<std::vector<TileSystem::Tile>>& getTiles();
 };
