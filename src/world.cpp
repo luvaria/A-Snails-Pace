@@ -442,6 +442,15 @@ void WorldSystem::goUp(ECS::Entity &entity, int &snail_move) {
         snail_move--;
     }
     else if (upTile.type == TileSystem::WALL || upTile.type == TileSystem::WALL) {
+        // This is to fix a movement bug where snail flips to weird positions when: a. it is upside down
+        // and b. W is pressed. In order to fix that bug I have written this if statement
+        // which might not be the best way to do it, but solves the bug for now.
+        if (tiles[yCoord - 1][xCoord + 1].type == TileSystem::WALL && (motion.angle == PI || motion.angle == -PI)) {
+            return;
+        }
+        if (tiles[yCoord - 1][xCoord + 1].type != TileSystem::WALL && (motion.angle == PI || motion.angle == -PI)) {
+            goRight(entity, snail_move);
+        }
         TileSystem::Tile nextTile = tiles[yCoord][xCoord];
         changeDirection(motion, currTile, nextTile, DIRECTION_NORTH);
         if(abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
@@ -509,6 +518,69 @@ void WorldSystem::goDown(ECS::Entity &entity, int &snail_move) {
     
 }
 
+void WorldSystem::fallDown(ECS::Entity& entity, int& snail_move) {
+    float scale = TileSystem::getScale();
+    auto& tiles = TileSystem::getTiles();
+
+    auto& motion = ECS::registry<Motion>.get(entity);
+    int xCoord = static_cast<int>(motion.position.x / scale);
+    int yCoord = static_cast<int>(motion.position.y / scale);
+
+    TileSystem::Tile currTile = tiles[yCoord][xCoord];
+    TileSystem::Tile upTile = tiles[yCoord + 1][xCoord];
+    if (upTile.type == TileSystem::WALL || currTile.type == TileSystem::VINE) {
+        return;
+    }
+    for (int i = yCoord + 1; i < tiles.size(); i++) {
+        TileSystem::Tile t = tiles[i][xCoord];
+        // this part of the code is still slightly buggy. It works fine for first iteration. After snail dies and if pressed
+        // with water tile at bottom of fall and snail being upside down, snail will flip over to top of platform
+        // instead of falling
+        // NVM I think I have fixed it, but I am keeping the message just in case someone else runs into it.
+        if (t.type == TileSystem::WATER) {
+            motion.position = { tiles[i][xCoord].x, tiles[i][xCoord].y };
+        }
+        if (t.type == TileSystem::WALL) {
+            motion.position = { tiles[i - 1][xCoord].x, tiles[i - 1][xCoord].y };
+            if (motion.angle == PI / 2) {
+                if (motion.lastDirection == DIRECTION_NORTH) {
+                    motion.angle = 0;
+                    motion.scale = { motion.scale.y, motion.scale.x };
+                    snail_move--;
+                }
+                else {
+                    goDown(entity, snail_move);
+                }
+            }
+            else if (motion.angle == -PI) {
+                if (motion.lastDirection == DIRECTION_EAST) {
+                    motion.scale = { motion.scale.y, motion.scale.x };
+                    goDown(entity, snail_move);
+                }
+                else {
+                    motion.scale = { motion.scale.y, -motion.scale.x };
+                    goDown(entity, snail_move);
+                }
+            }
+            // for some reason this works for both DIRECTION_NORTH and DIRECTION_SOUTH
+            else if (motion.angle == -PI / 2) {
+                goDown(entity, snail_move);
+            }
+            else if (motion.angle == PI) {
+                if (motion.lastDirection == DIRECTION_WEST) {
+                    motion.scale = { motion.scale.y, -motion.scale.x };
+                    goDown(entity, snail_move);
+                }
+                else {
+                    motion.scale = { motion.scale.y, motion.scale.x };
+                    goDown(entity, snail_move);
+                }
+            }
+        }
+    }
+    return;
+}
+
 // On key callback
 // Check out https://www.glfw.org/docs/3.3/input_guide.html
 void WorldSystem::on_key(int key, int, int action, int mod)
@@ -529,18 +601,37 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		{
 			switch (key)
 			{
+            // These logs are pretty useful to see what scale, angle and direction the snail should have
 			case GLFW_KEY_W:
                     goUp(player_snail, snail_move);
+                    //std::cout << mot.angle << std::endl;
+                    //std::cout << mot.scale.x << ", " << mot.scale.y << std::endl;
+                    //std::cout << mot.lastDirection << std::endl;
 				break;
 			case GLFW_KEY_S:
                     goDown(player_snail, snail_move);
+                    //std::cout << mot.angle << std::endl;
+                    //std::cout << mot.scale.x << ", " << mot.scale.y << std::endl;
+                    //std::cout << mot.lastDirection << std::endl;
                 break;
 			case GLFW_KEY_D:
                     goRight(player_snail, snail_move);
+                    //std::cout << mot.angle << std::endl;
+                    //std::cout << mot.scale.x << ", " << mot.scale.y << std::endl;
+                    //std::cout << mot.lastDirection << std::endl;
                 break;
 			case GLFW_KEY_A:
                     goLeft(player_snail, snail_move);
+                    //std::cout << mot.angle << std::endl;
+                    //std::cout << mot.scale.x << ", " << mot.scale.y << std::endl;
+                    //std::cout << mot.lastDirection << std::endl;
 				break;
+            case GLFW_KEY_SPACE:
+                    fallDown(player_snail, snail_move);
+                    //std::cout << mot.angle << std::endl;
+                    //std::cout << mot.scale.x << ", " << mot.scale.y << std::endl;
+                    //std::cout << mot.lastDirection << std::endl;
+                break;
 			}
 		}
         

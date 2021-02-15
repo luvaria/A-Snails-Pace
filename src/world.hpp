@@ -54,6 +54,8 @@ private:
     void goUp(ECS::Entity &entity, int &snail_move);
     
     void goDown(ECS::Entity &entity, int &snail_move);
+
+	void fallDown(ECS::Entity& entity, int& snail_move);
     
     void doX(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile, int defaultDirection );
     
