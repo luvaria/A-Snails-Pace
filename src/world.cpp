@@ -27,8 +27,6 @@ const size_t SPIDER_DELAY_MS = 2000;
 const size_t FISH_DELAY_MS = 5000;
 const size_t PROJECTILE_PREVIEW_DELAY_MS = 500;
 
-//std::chrono::time_point<std::chrono::high_resolution_clock> Projectile::Preview::s_projectile_preview_pos;
-//Projectile::Preview::s_can_show_projectile_preview_time;
 
 // Create the fish world
 // Note, this has a lot of OpenGL specific things, could be moved to the renderer; but it also defines the callbacks to the mouse and keyboard. That is why it is called here.
