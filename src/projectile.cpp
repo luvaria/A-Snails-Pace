@@ -3,10 +3,6 @@
 #include "render.hpp"
 #include "world.hpp"
 
-std::chrono::time_point<std::chrono::high_resolution_clock> Projectile::Preview::s_can_show_projectile_preview_time
-    = std::chrono::time_point<std::chrono::high_resolution_clock>::max();
-vec2 Projectile::Preview::s_projectile_preview_pos = {0.f,0.f};
-
 ECS::Entity Projectile::createProjectile(vec2 position, vec2 velocity, bool preview /* = false */)
 {
 	auto entity = ECS::Entity();
@@ -39,9 +35,18 @@ ECS::Entity Projectile::createProjectile(vec2 position, vec2 velocity, bool prev
 	    ECS::registry<Preview>.emplace(entity);
         resource.texture.alpha = 0.25f;
         motion.scale *= 0.5f;
+        motion.velocity *= 3.f;
     }
 
 	return entity;
+}
+
+void Projectile::Preview::removeCurrent()
+{
+    for (auto& entity : ECS::registry<Projectile::Preview>.entities)
+    {
+        ECS::ContainerInterface::remove_all_components_of(entity);
+    }
 }
 
 

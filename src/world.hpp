@@ -85,7 +85,8 @@ private:
 	float next_fish_spawn;
 	ECS::Entity player_snail;
 
-    bool left_mouse_pressed;
+    std::chrono::time_point<std::chrono::high_resolution_clock> can_show_projectile_preview_time;
+	bool left_mouse_pressed;
 
 	// NEW: turn_number is not used for now, but will probably be used to keep track
 	// of what day it is on the calendar. snail_move is how many tiles the snail can

@@ -27,7 +27,7 @@ const size_t MAX_SPIDERS = 1;
 const size_t MAX_FISH = 5;
 const size_t SPIDER_DELAY_MS = 2000;
 const size_t FISH_DELAY_MS = 5000;
-const size_t PROJECTILE_PREVIEW_DELAY_MS = 500;
+const size_t PROJECTILE_PREVIEW_DELAY_MS = 200;
 
 
 // Create the fish world
@@ -156,11 +156,14 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 		}
 	}
 
-	if (left_mouse_pressed && (std::chrono::high_resolution_clock::now() > Projectile::Preview::s_can_show_projectile_preview_time))
+	if (left_mouse_pressed && (std::chrono::high_resolution_clock::now() > can_show_projectile_preview_time))
     {
-        shootProjectile(Projectile::Preview::s_projectile_preview_pos, true);
-        Projectile::Preview::s_can_show_projectile_preview_time = std::chrono::high_resolution_clock::now()
-                                                                  + std::chrono::milliseconds{PROJECTILE_PREVIEW_DELAY_MS};
+        double mouse_pos_x, mouse_pos_y;
+        glfwGetCursorPos(window, &mouse_pos_x, &mouse_pos_y);
+        vec2 mouse_pos = vec2(mouse_pos_x, mouse_pos_y);
+	    shootProjectile(mouse_pos, true);
+        can_show_projectile_preview_time = std::chrono::high_resolution_clock::now()
+                + std::chrono::milliseconds{PROJECTILE_PREVIEW_DELAY_MS};
     }
 
 	// Processing the snail state
@@ -224,7 +227,7 @@ void WorldSystem::onNotify(const ECS::Entity& entity, Event event) {
 
 	if (event.type == Event::COLLISION_EVENT) {
 
-		// For now, we are only interested in collisions that involve the snail
+	    // Collisions involving snail
 		if (ECS::registry<Snail>.has(entity))
 		{
 			// Checking Snail - Spider collisions
@@ -605,6 +608,8 @@ void WorldSystem::on_key(int key, int, int action, int mod)
                     }
                 }
             }
+            // presumably the snail moved therefore, remove any projectile preview
+            Projectile::Preview::removeCurrent();
         }
 	}
 
@@ -629,6 +634,9 @@ void WorldSystem::on_key(int key, int, int action, int mod)
         // Could eventually move vertically
         // where direction could be loaded from file as per Rebecca's suggestion
         ECS::registry<Camera>.components[0].offset.x += TileSystem::getScale();
+
+        // Remove any projectile previews if turn ended
+        Projectile::Preview::removeCurrent();
 
 		// Can be more than 1 tile per turn. Will probably gain a different amount
 		// depending on snail's status
@@ -657,10 +665,8 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 
 void WorldSystem::on_mouse_move(vec2 mouse_pos)
 {
-    if (left_mouse_pressed)
-    {
-        Projectile::Preview::s_projectile_preview_pos = mouse_pos;
-    }
+    // Remove current previews if mouse moves
+    Projectile::Preview::removeCurrent();
 }
 
 void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
@@ -688,12 +694,13 @@ void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
         {
             shootProjectile(mouse_pos);
             left_mouse_pressed = false;
+            Projectile::Preview::removeCurrent();
+
         }
 		else if (action == GLFW_PRESS)
         {
             left_mouse_pressed = true;
-            Projectile::Preview::s_projectile_preview_pos = mouse_pos;
-            Projectile::Preview::s_can_show_projectile_preview_time = std::chrono::high_resolution_clock::now()
+            can_show_projectile_preview_time = std::chrono::high_resolution_clock::now()
                     + std::chrono::milliseconds{PROJECTILE_PREVIEW_DELAY_MS};
         }
 	}
