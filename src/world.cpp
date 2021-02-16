@@ -12,6 +12,8 @@
 #include "render_components.hpp"
 #include "tiles/tiles.hpp"
 #include "level_loader.hpp"
+#include "observer.hpp"
+#include "subject.hpp"
 
 // stlib
 #include <cassert>
@@ -218,22 +220,15 @@ void WorldSystem::restart()
 	turn_number = 1;
 }
 
-// Compute collisions between entities
-void WorldSystem::handle_collisions()
-{
-	// Loop over all collisions detected by the physics system
-	auto& registry = ECS::registry<PhysicsSystem::Collision>;
-	for (unsigned int i=0; i< registry.components.size(); i++)
-	{
-		// The entity and its collider
-		auto entity = registry.entities[i];
-		auto entity_other = registry.components[i].other;
+void WorldSystem::onNotify(const ECS::Entity& entity, Event event) {
+
+	if (event.type == Event::COLLISION_EVENT) {
 
 		// For now, we are only interested in collisions that involve the snail
 		if (ECS::registry<Snail>.has(entity))
 		{
 			// Checking Snail - Spider collisions
-			if (ECS::registry<Spider>.has(entity_other) || ECS::registry<WaterTile>.has(entity_other))
+			if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<WaterTile>.has(event.other_entity))
 			{
 				// initiate death unless already dying
 				if (!ECS::registry<DeathTimer>.has(entity))
@@ -246,31 +241,28 @@ void WorldSystem::handle_collisions()
 		}
 
 		//collisions involving the projectiles
-		if (ECS::registry<Projectile>.has(entity)) 
+		if (ECS::registry<Projectile>.has(entity))
 		{
 			// Don't collide with a preview projectile (ie. all enemies should fall under here)
 		    if (!ECS::registry<Projectile::Preview>.has(entity))
             {
                 // Checking Projectile - Spider collisions
-                if (ECS::registry<Spider>.has(entity_other))
+                if (ECS::registry<Spider>.has(event.other_entity))
                 {
                     //remove both the spider and the projectile
                     ECS::ContainerInterface::remove_all_components_of(entity);
-                    ECS::ContainerInterface::remove_all_components_of(entity_other);
+                    ECS::ContainerInterface::remove_all_components_of(event.other_entity);
                 }
             }
 
 			// Checking Projectile - Wall collisions
-			if (ECS::registry<GroundTile>.has(entity_other))
+			if (ECS::registry<GroundTile>.has(event.other_entity))
 			{
 				//remove the Projectile
 				ECS::ContainerInterface::remove_all_components_of(entity);
 			}
 		}
 	}
-
-	// Remove all collisions from this simulation step
-	ECS::registry<PhysicsSystem::Collision>.clear();
 }
 
 // Should the game be over ?

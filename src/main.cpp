@@ -40,6 +40,10 @@ int main()
 	world.restart();
 	auto t = Clock::now();
 	// Variable timestep loop
+
+	// add the world system as an observer of the physics systems to handle collisions
+	physics.addObserver(&world);
+
 	while (!world.is_over())
 	{
 		// Processes system messages, if this wasn't present the window would become unresponsive
@@ -54,7 +58,6 @@ int main()
 		ai.step(elapsed_ms, window_size_in_game_units);
 		world.step(elapsed_ms, window_size_in_game_units);
 		physics.step(elapsed_ms, window_size_in_game_units);
-		world.handle_collisions();
 
 		renderer.draw(window_size_in_game_units);
 	}
