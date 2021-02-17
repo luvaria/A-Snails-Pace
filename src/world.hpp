@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "snail.hpp"
 #include "tiles/tiles.hpp"
+#include "observer.hpp"
 
 // stlib
 #include <vector>
@@ -15,7 +16,7 @@
 
 // Container for all our entities and game logic. Individual rendering / update is 
 // deferred to the relative update() methods
-class WorldSystem
+class WorldSystem : public Observer
 {
 public:
 	// Creates a window
@@ -30,9 +31,6 @@ public:
 	// Steps the game ahead by ms milliseconds
 	void step(float elapsed_ms, vec2 window_size_in_game_units);
 
-	// Check for collisions
-	void handle_collisions();
-
 	// Renders our scene
 	void draw();
 
@@ -40,6 +38,13 @@ public:
 	bool is_over() const;
 
 	void shootProjectile(vec2 mouse_pos);
+
+	void onNotify(const ECS::Entity& entity, Event event);
+
+	// NEW: Defining what tile types are possible, could be used to render correct tile types
+	// and to check if can be moved. EMPTY = nothing is on the tile and you can move to it, 
+	// OCCUPIED = something is on the tile, UNUSED = don't render anything/tile is not going
+	// to be used
 
 	// return true if a given point is off screen, false otherwise
 	static bool offScreen(vec2 const& pos, vec2 window_size_in_game_units, vec2 cameraOffset);
