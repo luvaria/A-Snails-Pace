@@ -33,7 +33,7 @@ if (IS_OS_MAC)
   link_directories(/usr/local/lib)
 endif()
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILES} "src/tiles/ground.cpp" "src/tiles/ground.hpp" "src/tiles/water.cpp" "src/tiles/water.hpp" "src/tiles/vine.cpp" "src/tiles/vine.hpp" "src/projectile.cpp" "src/projectile.hpp" "src/level_loader.hpp" "src/level_loader.cpp" "src/tiles/tiles.hpp" "src/tiles/tiles.cpp" "src/event.hpp")
+add_executable(${PROJECT_NAME} ${SOURCE_FILES} "src/tiles/wall.cpp" "src/tiles/wall.hpp" "src/tiles/water.cpp" "src/tiles/water.hpp" "src/tiles/vine.cpp" "src/tiles/vine.hpp" "src/projectile.cpp" "src/projectile.hpp" "src/level_loader.hpp" "src/level_loader.cpp" "src/tiles/tiles.hpp" "src/tiles/tiles.cpp" "src/event.hpp")
 target_include_directories(${PROJECT_NAME} PUBLIC src/)
 
 # Added this so policy CMP0065 doesn't scream

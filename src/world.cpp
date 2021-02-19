@@ -5,7 +5,7 @@
 #include "spider.hpp"
 #include "projectile.hpp"
 #include "fish.hpp"
-#include "tiles/ground.hpp"
+#include "tiles/wall.hpp"
 #include "tiles/water.hpp"
 #include "tiles/vine.hpp"
 #include "pebbles.hpp"
@@ -242,7 +242,7 @@ void WorldSystem::onNotify(const ECS::Entity& entity, Event event) {
 			}
 
 			// Checking Projectile - Wall collisions
-			if (ECS::registry<GroundTile>.has(event.other_entity))
+			if (ECS::registry<WallTile>.has(event.other_entity))
 			{
 				//remove the Projectile
 				ECS::ContainerInterface::remove_all_components_of(entity);

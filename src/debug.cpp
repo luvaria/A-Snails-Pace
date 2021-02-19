@@ -50,7 +50,7 @@ namespace DebugSystem
 		}
 
 		// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
-		ECS::registry<ShadedMeshRef>.emplace(entity, resource);
+		ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::DEBUG);
 
 		// Create motion
 		auto& motion = ECS::registry<Motion>.emplace(entity);

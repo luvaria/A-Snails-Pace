@@ -185,6 +185,9 @@ void RenderSystem::draw(vec2 window_size_in_game_units)
 	float ty = (-(top + bottom) / (top - bottom)) - 2 * (offset.y / bottom);
 	mat3 projection_2D{ { sx, 0.f, 0.f },{ 0.f, sy, 0.f },{ tx , ty, 1.f } };
 
+	// Sort meshes for correct asset drawing order
+	ECS::registry<ShadedMeshRef>.sort(renderCmp);
+
 	// Draw all textured meshes that have a position and size component
 	for (ECS::Entity entity : ECS::registry<ShadedMeshRef>.entities)
 	{
@@ -235,4 +238,12 @@ void gl_has_errors()
 		error = glGetError();
 	}
 	throw std::runtime_error("last OpenGL error:" + std::string(error_str));
+}
+
+bool renderCmp(ECS::Entity a, ECS::Entity b)
+{
+	RenderBucket a_bucket = ECS::registry<ShadedMeshRef>.get(a).renderBucket;
+	RenderBucket b_bucket = ECS::registry<ShadedMeshRef>.get(b).renderBucket;
+
+	return a_bucket > b_bucket;
 }

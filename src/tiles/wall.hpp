@@ -3,8 +3,8 @@
 #include "common.hpp"
 #include "tiny_ecs.hpp"
 
-struct GroundTile
+struct WallTile
 {
 	// Creates all the associated render resources and default transform
-	static ECS::Entity createGroundTile(vec2 pos);
+	static ECS::Entity createWallTile(vec2 pos);
 };

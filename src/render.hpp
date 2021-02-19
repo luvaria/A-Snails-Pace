@@ -10,6 +10,9 @@ struct ShadedMesh;
 // OpenGL utilities
 void gl_has_errors();
 
+// Rendering order comparison function
+bool renderCmp(ECS::Entity a, ECS::Entity b);
+
 // System responsible for setting up OpenGL and for rendering all the 
 // visual entities in the game
 class RenderSystem

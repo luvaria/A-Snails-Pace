@@ -17,7 +17,7 @@ ECS::Entity Projectile::createProjectile(vec2 position, vec2 velocity)
 	}
 
 	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
-	ECS::registry<ShadedMeshRef>.emplace(entity, resource);
+	ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::PROJECTILE);
 
 	// Initialize the motion
 	auto& motion = ECS::registry<Motion>.emplace(entity);

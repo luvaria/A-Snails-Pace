@@ -125,11 +125,24 @@ struct ShadedMesh
 // Cache for ShadedMesh resources (mesh consisting of vertex and index buffer, the vertex and fragment shaders, and the texture)
 ShadedMesh& cache_resource(std::string key);
 
+// Enum for rendering order layers/buckets
+//	lower value = render at front
+enum RenderBucket
+{
+	DEBUG = -2,
+	FOREGROUND = -1,
+	CHARACTER = 0,
+	PROJECTILE = 1,
+	TILE = 2,
+	BACKGROUND = 3
+};
+
 // A wrapper that points to the ShadedMesh in the resource_cache
 struct ShadedMeshRef
 {
 	ShadedMesh* reference_to_cache;
-	ShadedMeshRef(ShadedMesh& mesh);
+	RenderBucket renderBucket;
+	ShadedMeshRef(ShadedMesh& mesh, RenderBucket bucket);
 };
 
 struct Camera

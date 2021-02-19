@@ -280,6 +280,7 @@ ShadedMesh& cache_resource(std::string key)
 	return it->second;
 }
 
-ShadedMeshRef::ShadedMeshRef(ShadedMesh& mesh) : 
-	reference_to_cache(&mesh) 
+ShadedMeshRef::ShadedMeshRef(ShadedMesh& mesh, RenderBucket bucket) :
+	reference_to_cache(&mesh),
+	renderBucket(bucket)
 {};

@@ -1,22 +1,22 @@
 // Header
-#include "ground.hpp"
+#include "wall.hpp"
 #include "render.hpp"
 #include "tiles/tiles.hpp"
 
-ECS::Entity GroundTile::createGroundTile(vec2 position)
+ECS::Entity WallTile::createWallTile(vec2 position)
 {
 	auto entity = ECS::Entity();
 
-	std::string key = "ground";
+	std::string key = "wall";
 	ShadedMesh& resource = cache_resource(key);
 	if (resource.mesh.vertices.size() == 0)
 	{
-		resource.mesh.loadFromOBJFile(mesh_path("ground.obj"));
+		resource.mesh.loadFromOBJFile(mesh_path("wall.obj"));
 		RenderSystem::createColoredMesh(resource, "tile");
 	}
 
 	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
-	ECS::registry<ShadedMeshRef>.emplace(entity, resource);
+	ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::TILE);
 
 	// Setting initial motion values
 	Motion& motion = ECS::registry<Motion>.emplace(entity);
@@ -25,8 +25,8 @@ ECS::Entity GroundTile::createGroundTile(vec2 position)
 	motion.velocity = { 0.f, 0.f };
 	motion.scale = { TileSystem::getScale(), -TileSystem::getScale() };
 
-	// Create an (empty) GroundTile component
-	ECS::registry<GroundTile>.emplace(entity);
+	// Create an (empty) WallTile component
+	ECS::registry<WallTile>.emplace(entity);
 
 	return entity;
 }

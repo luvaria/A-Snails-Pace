@@ -17,7 +17,7 @@ ECS::Entity Fish::createFish(vec2 position)
 	}
 
 	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
-	ECS::registry<ShadedMeshRef>.emplace(entity, resource);
+	ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::CHARACTER);
 
 	// Initialize the position, scale, and physics components
 	auto& motion = ECS::registry<Motion>.emplace(entity);
