@@ -44,17 +44,20 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 	}
 
 	// Move the entities who are not at their destinations
-	for (auto& motion : ECS::registry<Motion>.components)
+	auto& destReg = ECS::registry<Destination>;
+	for (size_t i = 0; i < destReg.components.size(); i++)
     {
-	    if (motion.position != motion.dest)
+	    auto& entity = destReg.entities[i];
+	    auto& dest = destReg.components[i];
+	    auto& motion = ECS::registry<Motion>.get(entity);
+	    if (motion.position != dest.position)
         {
 	        vec2 newPos = motion.position + (motion.velocity * step_seconds);
-	        if ((normalize(newPos - motion.dest) != (normalize(motion.position - motion.dest)))
-	            || (motion.dest == newPos))
+	        if ((dot(motion.position - newPos, dest.position - newPos) > 0) || (dest.position == newPos))
             {
 	            // overshot or perfectly hit destination
 	            // set velocity back to 0 stop moving
-	            motion.position = motion.dest;
+	            motion.position = dest.position;
 	            motion.velocity = {0.f, 0.f};
             }
 	        else

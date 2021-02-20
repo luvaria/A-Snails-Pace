@@ -28,6 +28,9 @@ ECS::Entity Spider::createSpider(vec2 position)
 	motion.scale.y *= -1; // fix orientation
     motion.lastDirection = DIRECTION_WEST;
 
+    Destination& dest = ECS::registry<Destination>.emplace(entity);
+    dest.position = motion.position;
+
 	// Create and (empty) Spider component to be able to refer to all spiders
 	ECS::registry<Spider>.emplace(entity);
 
