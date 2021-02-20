@@ -33,16 +33,37 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 	
 	//for (auto& motion : ECS::registry<Motion>.components)
 
-	//just start by moving the projectile!
+    float step_seconds = 1.0f * (elapsed_ms / 1000.f);
+
+    // move the projectile!
 	for (auto entity: ECS::registry<Projectile>.entities)
 	{
 		auto& motion = ECS::registry<Motion>.get(entity);
-		float step_seconds = 1.0f * (elapsed_ms / 1000.f);
 		vec2 velocity = motion.velocity;
 		motion.position += velocity * step_seconds;
 	}
-	
-	(void)elapsed_ms; // placeholder to silence unused warning until implemented
+
+	// Move the entities who are not at their destinations
+	for (auto& motion : ECS::registry<Motion>.components)
+    {
+	    if (motion.position != motion.dest)
+        {
+	        vec2 newPos = motion.position + (motion.velocity * step_seconds);
+	        if ((normalize(newPos - motion.dest) != (normalize(motion.position - motion.dest)))
+	            || (motion.dest == newPos))
+            {
+	            // overshot or perfectly hit destination
+	            // set velocity back to 0 stop moving
+	            motion.position = motion.dest;
+	            motion.velocity = {0.f, 0.f};
+            }
+	        else
+            {
+	            motion.position = newPos;
+            }
+        }
+    }
+
 	(void)window_size_in_game_units;
 
 	// Visualization for debugging the position and scale of objects

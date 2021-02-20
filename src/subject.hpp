@@ -4,6 +4,8 @@
 #include "tiny_ecs.hpp"
 #include "observer.hpp"
 
+#include <list>
+
 class Subject
 {
 private:
