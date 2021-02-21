@@ -338,11 +338,12 @@ void WorldSystem::changeDirection(Motion &motion, TileSystem::Tile &currTile, Ti
         rotate(currTile, motion, nextTile);
         doY(motion, currTile, nextTile);
     }
-    vec2& dest = ECS::registry<Destination>.get(entity).position;
-    dest = {nextTile.x, nextTile.y};
+    Destination& dest = ECS::registry<Destination>.emplace(entity);
+    dest.position = {nextTile.x, nextTile.y};
+
     // give velocity to reach destination in set time
     // this velocity will be set to 0 once destination is reached in physics.cpp
-    motion.velocity = (dest - motion.position)/MOVE_S;
+    motion.velocity = (dest.position - motion.position)/MOVE_S;
 }
 
 void WorldSystem::goLeft(ECS::Entity &entity, int &snail_move) {
@@ -516,7 +517,6 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		// NEW: Added motion here. I am assuming some sort of rectangular/square level for now
 		// this function might get quite messy as time goes on so maybe we will need a decent 
 		// amount of helper functions when we get there.
-		auto& mot = ECS::registry<Motion>.get(player_snail);
 		// CHANGE: Removed salmonX and salmonY. Salmon's position is tracked by using its Motion
 		// Component. Had to divide by 100 since starting screen position is (100, 200) which is 
 		// associated with the tile at tiles[1][2]. Added snail_move that tracks how many moves
@@ -551,9 +551,12 @@ void WorldSystem::on_key(int key, int, int action, int mod)
                 {
                     float scale = TileSystem::getScale();
 
-                    auto& snail_dest = ECS::registry<Destination>.get(player_snail);
-                    int xCoord = static_cast<int>(snail_dest.position.x / scale);
-                    int yCoord = static_cast<int>(snail_dest.position.y / scale);
+                    vec2& snail_position = ECS::registry<Destination>.has(player_snail) ?
+                            ECS::registry<Destination>.get(player_snail).position :
+                            ECS::registry<Motion>.get(player_snail).position;
+
+                    int xCoord = static_cast<int>(snail_position.x / scale);
+                    int yCoord = static_cast<int>(snail_position.y / scale);
                     
                     auto& motEntity = ECS::registry<Motion>.get(entity);
                     int xCoordEntity = static_cast<int>(motEntity.position.x / scale);

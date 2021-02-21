@@ -28,8 +28,6 @@ ECS::Entity Snail::createSnail(vec2 position)
 	motion.scale.y *= -1; // fix orientation
     motion.lastDirection = DIRECTION_EAST;
 
-    Destination& dest = ECS::registry<Destination>.emplace(entity);
-    dest.position = motion.position;
 	// Create an (empty) Snail component
 	ECS::registry<Snail>.emplace(entity);
 
