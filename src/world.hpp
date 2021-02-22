@@ -68,7 +68,7 @@ private:
     
     void rotate(TileSystem::Tile &currTile, Motion &motion, TileSystem::Tile &nextTile);
     
-    void changeDirection(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile, int defaultDirection);
+    void changeDirection(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile, int defaultDirection, ECS::Entity& entity);
 
     // Input callback functions
 	void on_key(int key, int, int action, int mod);

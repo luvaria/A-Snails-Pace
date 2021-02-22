@@ -50,3 +50,7 @@ struct Motion {
 	vec2 scale = { 10, 10 };
     int lastDirection = DIRECTION_NORTH;
 };
+
+struct Destination {
+    vec2 position = { 0, 0 };
+};

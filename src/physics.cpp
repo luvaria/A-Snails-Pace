@@ -4,6 +4,8 @@
 #include "tiny_ecs.hpp"
 #include "debug.hpp"
 
+#include <memory>
+
 // Returns the local bounding coordinates scaled by the current size of the entity 
 vec2 get_bounding_box(const Motion& motion)
 {
@@ -33,16 +35,45 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 	
 	//for (auto& motion : ECS::registry<Motion>.components)
 
-	//just start by moving the projectile!
+    float step_seconds = 1.0f * (elapsed_ms / 1000.f);
+
+    // move the projectile!
 	for (auto entity: ECS::registry<Projectile>.entities)
 	{
 		auto& motion = ECS::registry<Motion>.get(entity);
-		float step_seconds = 1.0f * (elapsed_ms / 1000.f);
 		vec2 velocity = motion.velocity;
 		motion.position += velocity * step_seconds;
 	}
-	
-	(void)elapsed_ms; // placeholder to silence unused warning until implemented
+
+	// Move the entities who are not at their destinations
+	auto& destReg = ECS::registry<Destination>;
+	std::vector<std::shared_ptr<ECS::Entity>> toRemove;
+	for (size_t i = 0; i < destReg.components.size(); i++)
+    {
+	    auto& entity = destReg.entities[i];
+	    auto& dest = destReg.components[i];
+	    auto& motion = ECS::registry<Motion>.get(entity);
+        vec2 newPos = motion.position + (motion.velocity * step_seconds);
+        if ((dot(motion.position - newPos, dest.position - newPos) > 0) || (dest.position == newPos))
+        {
+            // overshot or perfectly hit destination
+            // set velocity back to 0 stop moving
+            motion.position = dest.position;
+            motion.velocity = {0.f, 0.f};
+            toRemove.push_back(std::make_shared<ECS::Entity>(entity));
+        }
+        else
+        {
+            motion.position = newPos;
+        }
+    }
+	// remove all that reached destination
+	// someone tell me (emily) if this is dumb and if there's a better way to do this
+	for (auto entityPtr : toRemove)
+    {
+	    destReg.remove(*entityPtr);
+    }
+
 	(void)window_size_in_game_units;
 
 	// Visualization for debugging the position and scale of objects
