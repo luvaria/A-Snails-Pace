@@ -4,6 +4,8 @@
 #include "tiny_ecs.hpp"
 #include "debug.hpp"
 
+#include <memory>
+
 // Returns the local bounding coordinates scaled by the current size of the entity 
 vec2 get_bounding_box(const Motion& motion)
 {
