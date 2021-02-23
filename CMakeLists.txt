@@ -25,7 +25,7 @@ endif()
 # Create executable target
 
 # You can switch to use the file GLOB for simplicity but at your own risk
-file(GLOB SOURCE_FILES src/*.cpp src/*.hpp)
+file(GLOB SOURCE_FILES src/*.cpp src/*.hpp src/tiles/*.cpp src/tiles/*.hpp src/menus/*.cpp src/menus/*.hpp)
 
 # external libraries will be installed into /usr/local/include and /usr/local/lib but that folder is not automatically included in the search on MACs
 if (IS_OS_MAC)
@@ -33,7 +33,7 @@ if (IS_OS_MAC)
   link_directories(/usr/local/lib)
 endif()
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILES} "src/tiles/wall.cpp" "src/tiles/wall.hpp" "src/tiles/water.cpp" "src/tiles/water.hpp" "src/tiles/vine.cpp" "src/tiles/vine.hpp" "src/projectile.cpp" "src/projectile.hpp" "src/level_loader.hpp" "src/level_loader.cpp" "src/tiles/tiles.hpp" "src/tiles/tiles.cpp" "src/event.hpp")
+add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 target_include_directories(${PROJECT_NAME} PUBLIC src/)
 
 # Added this so policy CMP0065 doesn't scream

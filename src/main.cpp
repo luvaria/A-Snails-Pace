@@ -13,10 +13,11 @@
 #include "physics.hpp"
 #include "ai.hpp"
 #include "debug.hpp"
+#include "menus/menus.hpp"
 
 using Clock = std::chrono::high_resolution_clock;
 
-const ivec2 window_size_in_px = {1200, 800};
+const ivec2 window_size_in_px = { 1200, 800 };
 const vec2 window_size_in_game_units = { 1200, 800 };
 // Note, here the window will show a width x height part of the game world, measured in px. 
 // You could also define a window to show 1.5 x 1 part of your game world, where the aspect ratio depends on your window size.
@@ -31,15 +32,21 @@ int main()
 {
 	// Initialize the main systems
 	WorldSystem world(window_size_in_px);
+	MenuSystem menus(*world.window);
 	RenderSystem renderer(*world.window);
 	PhysicsSystem physics;
 	AISystem ai;
 
 	// Set all states to default
-	world.restart();
+	TileSystem::setScale(100.f);
+	menus.start();
 	auto t = Clock::now();
 	// Variable timestep loop
 
+	// add the world system as an observer of the menu system to notify when to start the game
+	menus.addObserver(&world);
+	// add the menu system as an observer of the world to pause and unpause
+	world.addObserver(&menus);
 	// add the world system as an observer of the physics systems to handle collisions
 	physics.addObserver(&world);
 
@@ -54,6 +61,7 @@ int main()
 		t = now;
 
 		DebugSystem::clearDebugComponents();
+		menus.step(window_size_in_game_units);
 		ai.step(elapsed_ms, window_size_in_game_units);
 		world.step(elapsed_ms, window_size_in_game_units);
 		physics.step(elapsed_ms, window_size_in_game_units);

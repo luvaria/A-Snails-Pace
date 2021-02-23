@@ -106,8 +106,8 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 			if (collides(motion_i, motion_j))
 			{
 				//notify both entities of collision
-				notify(entity_i, Event(Event::COLLISION_EVENT, entity_j));
-				notify(entity_j, Event(Event::COLLISION_EVENT, entity_i));
+				notify(Event(Event::COLLISION, entity_i, entity_j));
+				notify(Event(Event::COLLISION, entity_j, entity_i));
 			}
 		}
 	}

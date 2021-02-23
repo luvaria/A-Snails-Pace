@@ -1,0 +1,183 @@
+#include "start_menu.hpp"
+#include "text.hpp"
+#include "snail.hpp"
+#include "../tiles/tiles.hpp"
+#include "../tiles/wall.hpp"
+#include "../tiles/vine.hpp"
+
+// text colours
+const vec3 TITLE_COLOUR = { 0.984f, 0.690f, 0.231f };
+const vec3 DEFAULT_COLOUR = { 1.f, 1.f, 1.f };
+const vec3 HIGHLIGHT_COLOUR = { 0.988f, 0.933f, 0.129f };
+
+// start menu button size (since you can't tell based on the Text component)
+const vec2 buttonScale = { 250.f, 33.3f };
+
+StartMenu::StartMenu(GLFWwindow& window) : Menu(window)
+{
+	setActive();
+}
+
+void StartMenu::setActive()
+{
+	Menu::setActive();
+	loadEntities();
+}
+
+void StartMenu::step(vec2 window_size_in_game_units)
+{
+	// update button colour based on mouseover
+	auto& buttonContainer = ECS::registry<Button>;
+	auto& textContainer = ECS::registry<Text>;
+	for (unsigned int i = 0; i < buttonContainer.components.size(); i++)
+	{
+		Button& button = buttonContainer.components[i];
+		ECS::Entity buttonEntity = buttonContainer.entities[i];
+		Text& buttonText = textContainer.get(buttonEntity);
+
+		if (button.mouseover)
+			buttonText.colour = HIGHLIGHT_COLOUR;
+		else
+			buttonText.colour = DEFAULT_COLOUR;
+	}
+}
+
+void StartMenu::loadEntities()
+{
+	// a big boi
+	ECS::Entity snail = Snail::createSnail({ 350, 460 });
+	Motion& motion = ECS::registry<Motion>.get(snail);
+	motion.scale *= 6;
+	ECS::registry<StartMenuTag>.emplace(snail);
+
+	// decorative tiles
+	// assuming 1200 x 800
+	float scale = TileSystem::getScale();
+	// bottom platform
+	for (int x = 0; x < 12; x++)
+	{
+		ECS::Entity wall = WallTile::createWallTile({ (x + 0.5f) * scale, 7.5f * scale });
+		ECS::registry<StartMenuTag>.emplace(wall);
+	}
+	// vines
+	for (int x = 0; x < 12; x++)
+	{
+		if (x == 0 || x == 1 || x == 10 || x == 11)
+		{
+			for (int y = 1; y < 7; y++)
+			{
+				ECS::Entity vine = VineTile::createVineTile({ (x + 0.5f) * scale, (y + 0.5f) * scale });
+				ECS::registry<StartMenuTag>.emplace(vine);
+			}
+		}
+	}
+
+	auto font = Font::load("data/fonts/Noto/NotoSans-Regular.ttf");
+
+	// title text
+	// probably best to replace with a png/mesh
+	auto titleTextEntity = ECS::Entity();
+	ECS::registry<Text>.insert(
+		titleTextEntity,
+		Text("A Snail's Pace", font, { 600.0f, 300.0f })
+	);
+	Text& titleText = ECS::registry<Text>.get(titleTextEntity);
+	titleText.colour = TITLE_COLOUR;
+	ECS::registry<StartMenuTag>.emplace(titleTextEntity);
+
+	// start game button
+	auto startGameEntity = ECS::Entity();
+	ECS::registry<Text>.insert(
+		startGameEntity,
+		Text("Start", font, { 650.0f, 350.0f })
+	);
+	Text& startText = ECS::registry<Text>.get(startGameEntity);
+	startText.colour = DEFAULT_COLOUR;
+	startText.scale *= 0.8f;
+	ECS::registry<Button>.emplace(startGameEntity, ButtonEventType::START_GAME);
+	ECS::registry<StartMenuTag>.emplace(startGameEntity);
+
+	// level select button
+	auto selectLevelEntity = ECS::Entity();
+	ECS::registry<Text>.insert(
+		selectLevelEntity,
+		Text("Select level", font, { 650.0f, 400.0f })
+	);
+	Text& selectText = ECS::registry<Text>.get(selectLevelEntity);
+	selectText.colour = DEFAULT_COLOUR;
+	selectText.scale *= 0.8f;
+	ECS::registry<Button>.emplace(selectLevelEntity, ButtonEventType::SELECT_LEVEL);
+	ECS::registry<StartMenuTag>.emplace(selectLevelEntity);
+}
+
+void StartMenu::removeEntities()
+{
+	for (ECS::Entity entity : ECS::registry<StartMenuTag>.entities)
+	{
+		ECS::ContainerInterface::remove_all_components_of(entity);
+	}
+}
+
+void StartMenu::exit()
+{
+	removeEntities();
+	notify(Event(Event::MENU_CLOSE, Event::MenuType::START_MENU));
+}
+
+// On key callback
+// Check out https://www.glfw.org/docs/3.3/input_guide.html
+void StartMenu::on_key(int key, int, int action, int mod)
+{
+	(void)key;
+	(void)action;
+	(void)mod;
+}
+
+void StartMenu::on_mouse_button(int button, int action, int /*mods*/)
+{
+
+	if (action == GLFW_RELEASE && button == GLFW_MOUSE_BUTTON_LEFT)
+	{
+		auto& buttonContainer = ECS::registry<Button>;
+		auto& textContainer = ECS::registry<Text>;
+		for (unsigned int i = 0; i < buttonContainer.components.size(); i++)
+		{
+			Button& button = buttonContainer.components[i];
+			ECS::Entity buttonEntity = buttonContainer.entities[i];
+
+			// perform action for button being hovered over (and pressed)
+			if (button.mouseover)
+			{
+				switch (button.event)
+				{
+				case ButtonEventType::START_GAME:
+					// exit menu and start game
+					exit();
+					break;
+				case ButtonEventType::SELECT_LEVEL:
+					// don't overlay level select on top (text render order issues; always on top)
+					removeEntities();
+					notify(Event(Event::MENU_OPEN, Event::LEVEL_SELECT));
+					break;
+				default:
+					break;
+				}
+			}
+		}
+	}
+}
+
+void StartMenu::on_mouse_move(vec2 mouse_pos)
+{
+	auto& buttonContainer = ECS::registry<Button>;
+	auto& textContainer = ECS::registry<Text>;
+	for (unsigned int i = 0; i < buttonContainer.components.size(); i++)
+	{
+		Button& button = buttonContainer.components[i];
+		ECS::Entity buttonEntity = buttonContainer.entities[i];
+		Text& buttonText = textContainer.get(buttonEntity);
+
+		// check whether button is being hovered over
+		button.mouseover = mouseover(vec2(buttonText.position.x, buttonText.position.y), buttonScale, mouse_pos);
+	}
+}

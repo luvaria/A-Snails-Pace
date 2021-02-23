@@ -498,7 +498,7 @@ void drawText(const Text& text, glm::ivec2 frameBufferSize) {
         // compute the on-screen texture coordinates from the cursor's
         // baseline origin
 		const auto xpos = cursor.x + ch.Bearing.x * text.scale;
-		const auto ypos = cursor.y + (ch.Bearing.y - ch.Size.y) * text.scale;
+		const auto ypos = frameBufferSize.y - cursor.y + (ch.Bearing.y - ch.Size.y) * text.scale;
 
 		const auto w = ch.Size.x * text.scale;
 		const auto h = ch.Size.y * text.scale;

@@ -29,6 +29,9 @@ const size_t SPIDER_DELAY_MS = 2000;
 const size_t FISH_DELAY_MS = 5000;
 const float MOVE_S = 0.1f;
 
+std::string level = "demo.json";
+bool running = false;
+
 // Create the fish world
 // Note, this has a lot of OpenGL specific things, could be moved to the renderer; but it also defines the callbacks to the mouse and keyboard. That is why it is called here.
 WorldSystem::WorldSystem(ivec2 window_size_px) :
@@ -63,23 +66,11 @@ WorldSystem::WorldSystem(ivec2 window_size_px) :
 	if (window == nullptr)
 		throw std::runtime_error("Failed to glfwCreateWindow");
 
-	// Setting callbacks to member functions (that's why the redirect is needed)
-	// Input is handled using GLFW, for more info see
-	// http://www.glfw.org/docs/latest/input_guide.html
-	glfwSetWindowUserPointer(window, this);
-	auto key_redirect = [](GLFWwindow* wnd, int _0, int _1, int _2, int _3) { ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_key(_0, _1, _2, _3); };
-	auto cursor_pos_redirect = [](GLFWwindow* wnd, double _0, double _1) { ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_move({ _0, _1 }); };
-    auto mouse_button_redirect = [](GLFWwindow* wnd, int _0, int _1, int _2) { ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_button(_0, _1, _2); };
-
-	glfwSetKeyCallback(window, key_redirect);
-	glfwSetCursorPosCallback(window, cursor_pos_redirect);
-    glfwSetMouseButtonCallback(window, mouse_button_redirect);
-
-
     // Might want to enforce having only one camera
     // For now we will just have this
     auto cameraEntity = ECS::Entity();
     ECS::registry<Camera>.emplace(cameraEntity);
+    ECS::registry<Camera>.get(cameraEntity).offset = { 0.f, 0.f };
 
 
 	// Playing background music indefinitely
@@ -130,6 +121,10 @@ void WorldSystem::init_audio()
 // Update our game world
 void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 {
+    // exit early if no game currently running
+    if (!running)
+        return;
+
 	// Updating window title with moves remaining
 	std::stringstream title_ss;
 	title_ss << "Moves taken: " << turn_number;
@@ -172,14 +167,14 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 		{
 			ECS::registry<DeathTimer>.remove(entity);
 			screen.darken_screen_factor = 0;
-			restart();
+			restart(level);
 			return;
 		}
 	}
 }
 
 // Reset the world state to its initial state
-void WorldSystem::restart()
+void WorldSystem::restart(std::string newLevel)
 {
 	// Debugging for memory/component leaks
 	ECS::ContainerInterface::list_all_components();
@@ -202,43 +197,51 @@ void WorldSystem::restart()
 	ECS::ContainerInterface::list_all_components();
 
 	// Load level from data/levels
-	LevelLoader::loadLevel("demo.json");
+    level = newLevel;
+	LevelLoader::loadLevel(newLevel);
     // can't access player_snail in level loader
     player_snail = ECS::registry<Snail>.entities[0];
 
 	// Initializing turns and amount of tiles snail can move.
 	snail_move = 1;
 	turn_number = 1;
+
+    setGLFWCallbacks();
 }
 
-void WorldSystem::onNotify(const ECS::Entity& entity, Event event) {
+void WorldSystem::onNotify(Event event) {
 
-	if (event.type == Event::COLLISION_EVENT) {
+    if (event.type == Event::UNPAUSE)
+    {
+        setGLFWCallbacks();
+        running = true;
+    }
+	else if (event.type == Event::COLLISION) {
 
 		// For now, we are only interested in collisions that involve the snail
-		if (ECS::registry<Snail>.has(entity))
+		if (ECS::registry<Snail>.has(event.entity))
 		{
 			// Checking Snail - Spider collisions
 			if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<WaterTile>.has(event.other_entity))
 			{
 				// initiate death unless already dying
-				if (!ECS::registry<DeathTimer>.has(entity))
+				if (!ECS::registry<DeathTimer>.has(event.entity))
 				{
 					// Scream, reset timer, and make the snail sink
-					ECS::registry<DeathTimer>.emplace(entity);
+					ECS::registry<DeathTimer>.emplace(event.entity);
 					Mix_PlayChannel(-1, salmon_dead_sound, 0);
 				}
 			}
 		}
 
 		//collisions involving the projectiles
-		if (ECS::registry<Projectile>.has(entity))
+		if (ECS::registry<Projectile>.has(event.entity))
 		{
 			// Checking Projectile - Spider collisions
 			if (ECS::registry<Spider>.has(event.other_entity))
 			{
 				//remove both the spider and the projectile
-				ECS::ContainerInterface::remove_all_components_of(entity);
+				ECS::ContainerInterface::remove_all_components_of(event.entity);
 				ECS::ContainerInterface::remove_all_components_of(event.other_entity);
 			}
 
@@ -246,10 +249,26 @@ void WorldSystem::onNotify(const ECS::Entity& entity, Event event) {
 			if (ECS::registry<WallTile>.has(event.other_entity))
 			{
 				//remove the Projectile
-				ECS::ContainerInterface::remove_all_components_of(entity);
+				ECS::ContainerInterface::remove_all_components_of(event.entity);
 			}
 		}
 	}
+    else if (event.type == Event::LOAD_LEVEL)
+    {
+        running = true;
+        switch (event.level)
+        {
+        case Event::Level::DEMO:
+            level = "demo.json";
+            break;
+        case Event::Level::DEMO_2:
+            level = "demo-2.json";
+            break;
+        default:
+            throw std::runtime_error("Could not load unknown level.");
+        }
+        restart(level);
+    }
 }
 
 // Should the game be over ?
@@ -683,15 +702,13 @@ void WorldSystem::on_key(int key, int, int action, int mod)
                 break;
 			case GLFW_KEY_A:
                     goLeft(player_snail, snail_move);
-                    //std::cout << mot.angle << std::endl;
-                    //std::cout << mot.scale.x << ", " << mot.scale.y << std::endl;
-                    //std::cout << mot.lastDirection << std::endl;
 				break;
             case GLFW_KEY_SPACE:
-                    fallDown(player_snail, snail_move);
-                    //std::cout << mot.angle << std::endl;
-                    //std::cout << mot.scale.x << ", " << mot.scale.y << std::endl;
-                    //std::cout << mot.lastDirection << std::endl;
+                fallDown(player_snail, snail_move);
+                break;
+            case GLFW_KEY_ESCAPE:
+                running = false;
+                notify(Event(Event::PAUSE));
                 break;
 			}
 		}
@@ -763,7 +780,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		int w, h;
 		glfwGetWindowSize(window, &w, &h);
 		
-		restart();
+        restart(level);
 	}
 
 	// NEW: Next turn button. Might be temporary since we will probably have 
@@ -858,4 +875,19 @@ void WorldSystem::on_mouse_move(vec2 mouse_pos)
 	{
 		(void)mouse_pos;
 	}
+}
+
+void  WorldSystem::setGLFWCallbacks()
+{
+    // Setting callbacks to member functions (that's why the redirect is needed)
+    // Input is handled using GLFW, for more info see
+    // http://www.glfw.org/docs/latest/input_guide.html
+    glfwSetWindowUserPointer(window, this);
+    auto key_redirect = [](GLFWwindow* wnd, int _0, int _1, int _2, int _3) { ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_key(_0, _1, _2, _3); };
+    auto cursor_pos_redirect = [](GLFWwindow* wnd, double _0, double _1) { ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_move({ _0, _1 }); };
+    auto mouse_button_redirect = [](GLFWwindow* wnd, int _0, int _1, int _2) { ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_button(_0, _1, _2); };
+
+    glfwSetKeyCallback(window, key_redirect);
+    glfwSetCursorPosCallback(window, cursor_pos_redirect);
+    glfwSetMouseButtonCallback(window, mouse_button_redirect);
 }

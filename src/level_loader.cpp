@@ -24,6 +24,9 @@ void LevelLoader::loadLevel(std::string levelFileName)
 	float scale = level["scale"];
 	TileSystem::setScale(scale);
 
+	// clear tiles (if previously already loaded a level)
+	TileSystem::resetGrid();
+
 	// load tile types row by row
 	std::string row;
 	auto& tiles = TileSystem::getTiles();

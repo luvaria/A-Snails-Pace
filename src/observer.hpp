@@ -8,5 +8,5 @@ class Observer
 {
 public:
 	 ~Observer() {}
-	virtual void onNotify(const ECS::Entity& entity, Event event) = 0;
+	virtual void onNotify(Event event) = 0;
 };

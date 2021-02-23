@@ -5,10 +5,12 @@
 #include "snail.hpp"
 #include "tiles/tiles.hpp"
 #include "observer.hpp"
+#include "subject.hpp"
 
 // stlib
 #include <vector>
 #include <random>
+#include <string>
 
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
@@ -16,7 +18,7 @@
 
 // Container for all our entities and game logic. Individual rendering / update is 
 // deferred to the relative update() methods
-class WorldSystem : public Observer
+class WorldSystem : public Observer, public Subject
 {
 public:
 	// Creates a window
@@ -26,20 +28,17 @@ public:
 	~WorldSystem();
 
 	// restart level
-	void restart();
+	void restart(std::string level);
 
 	// Steps the game ahead by ms milliseconds
 	void step(float elapsed_ms, vec2 window_size_in_game_units);
-
-	// Renders our scene
-	void draw();
 
 	// Should the game be over ?
 	bool is_over() const;
 
 	void shootProjectile(vec2 mouse_pos);
 
-	void onNotify(const ECS::Entity& entity, Event event);
+	void onNotify(Event event);
 
 	// NEW: Defining what tile types are possible, could be used to render correct tile types
 	// and to check if can be moved. EMPTY = nothing is on the tile and you can move to it, 
@@ -71,6 +70,7 @@ private:
     void changeDirection(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile, int defaultDirection, ECS::Entity& entity);
 
     // Input callback functions
+	void setGLFWCallbacks();
 	void on_key(int key, int, int action, int mod);
 	void on_mouse_move(vec2 mouse_pos);
 	void on_mouse_button(int button, int action, int /*mods*/);

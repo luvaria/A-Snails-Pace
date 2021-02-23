@@ -11,7 +11,7 @@ private:
 	std::list<Observer*> observers;
 
 protected:
-	void notify(const ECS::Entity& entity, Event event);
+	void notify(Event event);
 
 public:
 	void addObserver(Observer* observer);
