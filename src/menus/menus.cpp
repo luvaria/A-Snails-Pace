@@ -9,9 +9,10 @@ MenuSystem::MenuSystem(GLFWwindow& window) : window(window) {}
 void MenuSystem::start()
 {
 	assert(menus.empty());
-	// reset scale and grid (may have been changed due to previous level load)
+	// reset scale, grid, and camera (may have been changed due to previous level load)
 	TileSystem::resetGrid();
 	TileSystem::setScale(100.f);
+	ECS::registry<Camera>.components[0].offset = { 0.f, 0.f };
 	openMenu(Event::START_MENU);
 }
 
