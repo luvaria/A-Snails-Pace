@@ -100,7 +100,8 @@ struct Effect
 // Mesh datastructure for storing vertex and index buffers
 struct Mesh
 {
-	void loadFromOBJFile(std::string obj_path);
+	void loadFromOBJFile(std::string obj_path); //only use one of this function or the next one.
+	void loadFromMinOBJFile(std::string obj_path);
 	vec2 original_size = {1.f,1.f};
 	GLResource<BUFFER> vbo;
 	GLResource<BUFFER> ibo;
@@ -143,6 +144,13 @@ struct ShadedMeshRef
 	ShadedMesh* reference_to_cache;
 	RenderBucket renderBucket;
 	ShadedMeshRef(ShadedMesh& mesh, RenderBucket bucket);
+};
+
+struct MinShadedMeshRef 
+{
+	ShadedMesh* reference_to_cache;
+	RenderBucket renderBucket;
+	MinShadedMeshRef(ShadedMesh& mesh, RenderBucket bucket);
 };
 
 struct Camera

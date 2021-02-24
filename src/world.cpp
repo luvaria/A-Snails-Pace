@@ -244,13 +244,6 @@ void WorldSystem::onNotify(Event event) {
 				ECS::ContainerInterface::remove_all_components_of(event.entity);
 				ECS::ContainerInterface::remove_all_components_of(event.other_entity);
 			}
-
-			// Checking Projectile - Wall collisions
-			if (ECS::registry<WallTile>.has(event.other_entity))
-			{
-				//remove the Projectile
-				ECS::ContainerInterface::remove_all_components_of(event.entity);
-			}
 		}
 	}
     else if (event.type == Event::LOAD_LEVEL)

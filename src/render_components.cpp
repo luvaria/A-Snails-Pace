@@ -284,3 +284,104 @@ ShadedMeshRef::ShadedMeshRef(ShadedMesh& mesh, RenderBucket bucket) :
 	reference_to_cache(&mesh),
 	renderBucket(bucket)
 {};
+
+MinShadedMeshRef::MinShadedMeshRef(ShadedMesh& mesh, RenderBucket bucket) :
+	reference_to_cache(&mesh),
+	renderBucket(bucket)
+{};
+
+// Very, VERY simple OBJ loader adapted from https://github.com/opengl-tutorials/ogl tutorial 7
+// (modified to also read vertex color and omit uv and normals)
+void Mesh::loadFromMinOBJFile(std::string obj_path) {
+	std::cout << "Loading OBJ file " << obj_path << std::endl;
+
+	// Note: normal and UV indices are currently not used
+	auto out_uv_indices = std::vector<uint16_t>{};
+	auto out_normal_indices = std::vector<uint16_t>{};
+	auto out_uvs = std::vector<glm::vec2>{};
+	auto out_normals = std::vector<glm::vec3>{};
+
+	// make sure we start from scratch
+	this->vertices.clear();
+	this->vertex_indices.clear();
+
+	auto obj_file = std::ifstream{ obj_path };
+	if (!obj_file) {
+		throw std::runtime_error("Could not open OBJ file " + obj_path);
+	}
+
+	auto line = std::string{};
+
+	while (std::getline(obj_file, line)) {
+		auto ss = std::istringstream{ line };
+
+		auto firstWord = std::string{};
+		ss >> firstWord;
+
+		if (!ss) {
+			continue;
+		}
+
+		if (firstWord == "v") {
+			auto vertex = ColoredVertex{};
+			ss >> vertex.position.x >> vertex.position.y >> vertex.position.z;
+			ss >> vertex.color.x >> vertex.color.y >> vertex.color.z;
+			vertices.push_back(vertex);
+		}
+		else if (firstWord == "vt") {
+			auto uv = glm::vec2{};
+			ss >> uv.x >> uv.y;
+			uv.y = -uv.y; // Invert V coordinate since we will only use DDS texture, which are inverted. Remove if you want to use TGA or BMP loaders.
+			out_uvs.push_back(uv);
+		}
+		else if (firstWord == "vn") {
+			auto normal = glm::vec3{};
+			ss >> normal.x >> normal.y >> normal.z;
+			out_normals.push_back(normal);
+		}
+		else if (firstWord == "f") {
+			while (1 == 1)
+			{
+				//read however many entries there are.
+				auto vi = std::uint16_t{};
+				auto ni = std::uint16_t{};
+				ss >> vi >> consumeSlashSlash >> ni;
+				if (vi == 0 || ni == 0 || !ss) 
+				{
+					break;
+				}
+				// -1 since .obj starts counting at 1 and OpenGL starts at 0
+				--vi;
+				--ni;
+				this->vertex_indices.push_back(vi);
+				out_normal_indices.push_back(ni);
+			}
+		}
+		else {
+			// Probably a comment
+		}
+	}
+
+	// Compute bounds of the mesh
+	constexpr auto float_min = std::numeric_limits<float>::min();
+	constexpr auto float_max = std::numeric_limits<float>::max();
+
+	auto max_position = vec3{ float_min, float_min, float_min };
+	auto min_position = vec3{ float_max, float_max, float_max };
+	for (auto& pos : vertices) {
+		max_position = glm::max(max_position, pos.position);
+		min_position = glm::min(min_position, pos.position);
+	}
+
+	// don't scale z direction
+	min_position.z = 0;
+	max_position.z = 1;
+
+	auto extent = max_position - min_position;
+	this->original_size = extent;
+
+	// Normalize mesh to range -0.5 ... 0.5
+	for (auto& pos : vertices) {
+		pos.position = ((pos.position - min_position) / extent) - vec3(0.5f, 0.5f, 0.0f);
+	}
+}
