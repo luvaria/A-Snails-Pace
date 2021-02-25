@@ -29,7 +29,7 @@ void bounceProjectileOffWall(Motion& projectileMotion, std::vector<ColoredVertex
 	float miny = -1;
 	float maxx = -1;
 	float maxy = -1;
-	for each (const auto& point in wallVertices)
+	for (const auto& point : wallVertices)
 	{
 		auto pos = point.position;
 		minx = (minx == -1) ? pos.x : min(minx, pos.x);
@@ -57,7 +57,7 @@ void bounceProjectileOffWall(Motion& projectileMotion, std::vector<ColoredVertex
 	// the velocity to get it out of the bounding box.
 	float maxDistance = 0;
 	Geometry::Line reflectingLine{};
-	for each (const auto& point in projectileVertices)
+	for (const auto& point : projectileVertices)
 	{
 		if (Geometry::pointInsideConvexHull(vec2(point.position.x, point.position.y), wallLines))
 		{
@@ -66,7 +66,7 @@ void bounceProjectileOffWall(Motion& projectileMotion, std::vector<ColoredVertex
 			Geometry::Line projectileLine = { point.position.x, point.position.y, point2.x, point2.y };
 			//go through every wall line and find the one which intersects, then calculate the distance to that point.
 			bool foundWall = false;
-			for each (auto wallLine in wallLines)
+			for (auto wallLine : wallLines)
 			{
 				if (Geometry::linesIntersect(projectileLine, wallLine))
 				{
@@ -199,9 +199,9 @@ bool collides(ECS::Entity& entity1, ECS::Entity& entity2, Motion& motion1, Motio
 	}
 
 	// go over every pair of lines and see if they intersect.
-	for each (auto line1 in lines1)
+	for (auto line1 : lines1)
 	{
-		for each (auto line2 in lines2)
+		for (auto line2 : lines2)
 		{
 			if (Geometry::linesIntersect(line1, line2)) 
 			{

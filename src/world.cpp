@@ -616,15 +616,8 @@ void WorldSystem::fallDown(ECS::Entity& entity, int& snail_move) {
             // this velocity will be set to 0 once destination is reached in physics.cpp
             motion.velocity = (dest.position - motion.position)/MOVE_S;
 
-            if (motion.angle == PI / 2) {
-                if (motion.lastDirection == DIRECTION_NORTH) {
-                    motion.angle = 0;
-                    motion.scale = { motion.scale.y, motion.scale.x };
-                    snail_move--;
-                }
-                else {
-                    goDown(entity, snail_move);
-                }
+            if (abs(motion.angle) == PI / 2) {
+                goDown(entity, snail_move);
             }
             else if (motion.angle == -PI) {
                 if (motion.lastDirection == DIRECTION_EAST) {
@@ -635,10 +628,6 @@ void WorldSystem::fallDown(ECS::Entity& entity, int& snail_move) {
                     motion.scale = { motion.scale.y, -motion.scale.x };
                     goDown(entity, snail_move);
                 }
-            }
-            // for some reason this works for both DIRECTION_NORTH and DIRECTION_SOUTH
-            else if (motion.angle == -PI / 2) {
-                goDown(entity, snail_move);
             }
             else if (motion.angle == PI) {
                 if (motion.lastDirection == DIRECTION_WEST) {

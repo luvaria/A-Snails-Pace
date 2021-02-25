@@ -137,7 +137,7 @@ vec2 Geometry::intersectionOfLines(Geometry::Line line, Geometry::Line otherLine
 bool Geometry::pointInsideConvexHull(vec2 point, std::vector<Geometry::Line> lines)
 {
 	std::vector<bool> sides = std::vector<bool>();
-	for each (auto line in lines)
+	for (auto line : lines)
 	{
 		float A = line.y1 - line.y0; //dy
 		float B = line.x0 - line.x1; //-dx
@@ -168,8 +168,7 @@ bool Geometry::pointInsideConvexHull(vec2 point, std::vector<Geometry::Line> lin
 	}
 
 	//check if all the sides are the same
-	bool firstVal = sides[0];
-	if (std::all_of(sides.begin(), sides.end(), [firstVal](bool val) {return val == firstVal; }))
+	if (std::all_of(sides.begin(), sides.end(), [sides](bool val) {return val == sides[0]; }))
 	{
 		return true;
 	}
