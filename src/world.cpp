@@ -166,7 +166,6 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 		if (counter.counter_ms < 0)
 		{
 			ECS::registry<DeathTimer>.remove(entity);
-			screen.darken_screen_factor = 0;
 			restart(level);
 			return;
 		}
@@ -183,6 +182,9 @@ void WorldSystem::restart(std::string newLevel)
 	// Reset the game speed
 	current_speed = 1.f;
 
+    // Reset screen darken factor (manual restart can remove DeathTimer without resetting)
+    auto& screen = ECS::registry<ScreenState>.components[0];
+    screen.darken_screen_factor = 0;
   
     // Reset Camera
     ECS::registry<Camera>.components[0].offset = { 0.f, 0.f };
