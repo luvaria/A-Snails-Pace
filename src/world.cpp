@@ -28,6 +28,7 @@ const size_t MAX_FISH = 5;
 const size_t SPIDER_DELAY_MS = 2000;
 const size_t FISH_DELAY_MS = 5000;
 const float MOVE_S = 0.1f;
+const size_t PROJECTILE_PREVIEW_DELAY_MS = 200;
 
 std::string level = "demo.json";
 bool running = false;
@@ -37,7 +38,8 @@ bool running = false;
 WorldSystem::WorldSystem(ivec2 window_size_px) :
 	points(0),
 	next_spider_spawn(0.f),
-	next_fish_spawn(0.f)
+	next_fish_spawn(0.f),
+	left_mouse_pressed(false)
 {
 	// Seeding rng with random device
 	rng = std::default_random_engine(std::random_device()());
@@ -149,6 +151,16 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 		}
 	}
 
+	if (left_mouse_pressed && (std::chrono::high_resolution_clock::now() > can_show_projectile_preview_time))
+    {
+        double mouse_pos_x, mouse_pos_y;
+        glfwGetCursorPos(window, &mouse_pos_x, &mouse_pos_y);
+        vec2 mouse_pos = vec2(mouse_pos_x, mouse_pos_y);
+	    shootProjectile(mouse_pos, true);
+        can_show_projectile_preview_time = std::chrono::high_resolution_clock::now()
+                + std::chrono::milliseconds{PROJECTILE_PREVIEW_DELAY_MS};
+    }
+
 	// Processing the snail state
 	assert(ECS::registry<ScreenState>.components.size() <= 1);
 	auto& screen = ECS::registry<ScreenState>.components[0];
@@ -220,7 +232,7 @@ void WorldSystem::onNotify(Event event) {
     }
 	else if (event.type == Event::COLLISION) {
 
-		// For now, we are only interested in collisions that involve the snail
+        // Collisions involving snail
 		if (ECS::registry<Snail>.has(event.entity))
 		{
 			// Checking Snail - Spider collisions
@@ -239,13 +251,17 @@ void WorldSystem::onNotify(Event event) {
 		//collisions involving the projectiles
 		if (ECS::registry<Projectile>.has(event.entity))
 		{
-			// Checking Projectile - Spider collisions
-			if (ECS::registry<Spider>.has(event.other_entity))
-			{
-				//remove both the spider and the projectile
-				ECS::ContainerInterface::remove_all_components_of(event.entity);
-				ECS::ContainerInterface::remove_all_components_of(event.other_entity);
-			}
+            // Don't collide with a preview projectile (ie. all enemies should fall under here)
+            if (!ECS::registry<Projectile::Preview>.has(entity))
+            {
+                // Checking Projectile - Spider collisions
+                if (ECS::registry<Spider>.has(event.other_entity))
+                {
+                    //remove both the spider and the projectile
+                    ECS::ContainerInterface::remove_all_components_of(entity);
+                    ECS::ContainerInterface::remove_all_components_of(event.other_entity);
+                }
+            }
 		}
 	}
     else if (event.type == Event::LOAD_LEVEL)
@@ -755,6 +771,8 @@ void WorldSystem::on_key(int key, int, int action, int mod)
                     }
                 }
             }
+            // presumably the snail moved therefore, remove any projectile preview
+            Projectile::Preview::removeCurrent();
         }
 	}
 
@@ -779,6 +797,9 @@ void WorldSystem::on_key(int key, int, int action, int mod)
         // Could eventually move vertically
         // where direction could be loaded from file as per Rebecca's suggestion
         ECS::registry<Camera>.components[0].offset.x += TileSystem::getScale();
+
+        // Remove any projectile previews if turn ended
+        Projectile::Preview::removeCurrent();
 
 		// Can be more than 1 tile per turn. Will probably gain a different amount
 		// depending on snail's status
@@ -805,6 +826,12 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 	current_speed = std::max(0.f, current_speed);
 }
 
+void WorldSystem::on_mouse_move(vec2 mouse_pos)
+{
+    // Remove current previews if mouse moves
+    Projectile::Preview::removeCurrent();
+}
+
 void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
 {
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
@@ -820,17 +847,29 @@ void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
             cameraOffset = possibleOffset;
         }
     }
-	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) 
+	else if (button == GLFW_MOUSE_BUTTON_LEFT)
 	{
 		double mouse_pos_x;
 		double mouse_pos_y;
 		glfwGetCursorPos(window, &mouse_pos_x, &mouse_pos_y);
 		vec2 mouse_pos = vec2(mouse_pos_x, mouse_pos_y);
-		shootProjectile(mouse_pos);
+		if (action == GLFW_RELEASE)
+        {
+            shootProjectile(mouse_pos);
+            left_mouse_pressed = false;
+            Projectile::Preview::removeCurrent();
+
+        }
+		else if (action == GLFW_PRESS)
+        {
+            left_mouse_pressed = true;
+            can_show_projectile_preview_time = std::chrono::high_resolution_clock::now()
+                    + std::chrono::milliseconds{PROJECTILE_PREVIEW_DELAY_MS};
+        }
 	}
 }
 
-void WorldSystem::shootProjectile(vec2 mousePos) 
+void WorldSystem::shootProjectile(vec2 mousePos, bool preview /* = false */)
 {
 
 	//first we get the position of the mouse_pos relative to the start of the level.
@@ -845,11 +884,12 @@ void WorldSystem::shootProjectile(vec2 mousePos)
 	projectileVelocity.y = (projectileVelocity.y / length) * 100;
 	if (projectileVelocity != vec2(0, 0))
 	{
-		Projectile::createProjectile(snailPosition, projectileVelocity);
+		Projectile::createProjectile(snailPosition, projectileVelocity, preview);
 	}
 	
 	//shooting a projectile takes your turn.
-	snail_move--;
+    if (!preview)
+        snail_move--;
 }
 
 

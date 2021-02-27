@@ -5,6 +5,8 @@
 #include "observer.hpp"
 #include <list>
 
+#include <list>
+
 class Subject
 {
 private:

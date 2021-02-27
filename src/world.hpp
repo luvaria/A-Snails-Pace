@@ -10,7 +10,7 @@
 // stlib
 #include <vector>
 #include <random>
-#include <string>
+#include <chrono>
 
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
@@ -36,7 +36,7 @@ public:
 	// Should the game be over ?
 	bool is_over() const;
 
-	void shootProjectile(vec2 mouse_pos);
+	void shootProjectile(vec2 mouse_pos, bool preview = false);
 
 	void onNotify(Event event);
 
@@ -86,6 +86,9 @@ private:
 	float next_spider_spawn;
 	float next_fish_spawn;
 	ECS::Entity player_snail;
+
+    std::chrono::time_point<std::chrono::high_resolution_clock> can_show_projectile_preview_time;
+	bool left_mouse_pressed;
 
 	// NEW: turn_number is not used for now, but will probably be used to keep track
 	// of what day it is on the calendar. snail_move is how many tiles the snail can

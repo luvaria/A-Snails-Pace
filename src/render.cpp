@@ -78,7 +78,11 @@ void RenderSystem::drawTexturedMesh(ECS::Entity entity, const mat3& projection)
 	// Getting uniform locations for glUniform* calls
 	GLint color_uloc = glGetUniformLocation(texmesh.effect.program, "fcolor");
 	glUniform3fv(color_uloc, 1, (float*)&texmesh.texture.color);
+
+    GLint alpha_uloc = glGetUniformLocation(texmesh.effect.program, "falpha");
 	gl_has_errors();
+    glUniform1f(alpha_uloc, texmesh.texture.alpha);
+    gl_has_errors();
 
 	// Get number of indices from index buffer, which has elements uint16_t
 	GLint size = 0;

@@ -3,12 +3,12 @@
 #include "render.hpp"
 #include "world.hpp"
 
-ECS::Entity Projectile::createProjectile(vec2 position, vec2 velocity)
+ECS::Entity Projectile::createProjectile(vec2 position, vec2 velocity, bool preview /* = false */)
 {
 	auto entity = ECS::Entity();
 
 	// Create rendering primitives
-	std::string key = "projectile";
+	std::string key = preview ? "projectile_preview" : "projectile";
 	ShadedMesh& resource = cache_resource(key);
 	if (resource.mesh.vertices.size() == 0)
 	{
@@ -39,6 +39,23 @@ ECS::Entity Projectile::createProjectile(vec2 position, vec2 velocity)
 
 	// Create and (empty) Projectile component to be able to refer to all projectiles
 	ECS::registry<Projectile>.emplace(entity);
+	if (preview)
+    {
+	    ECS::registry<Preview>.emplace(entity);
+        resource.texture.alpha = 0.5f;
+        motion.scale *= 0.5f;
+        motion.velocity *= 6.f;
+    }
 
 	return entity;
 }
+
+void Projectile::Preview::removeCurrent()
+{
+    for (auto& entity : ECS::registry<Projectile::Preview>.entities)
+    {
+        ECS::ContainerInterface::remove_all_components_of(entity);
+    }
+}
+
+
