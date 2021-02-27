@@ -9,6 +9,7 @@
 // stlib
 #include <vector>
 #include <random>
+#include <chrono>
 
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
