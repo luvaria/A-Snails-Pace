@@ -252,13 +252,13 @@ void WorldSystem::onNotify(Event event) {
 		if (ECS::registry<Projectile>.has(event.entity))
 		{
             // Don't collide with a preview projectile (ie. all enemies should fall under here)
-            if (!ECS::registry<Projectile::Preview>.has(entity))
+            if (!ECS::registry<Projectile::Preview>.has(event.entity))
             {
                 // Checking Projectile - Spider collisions
                 if (ECS::registry<Spider>.has(event.other_entity))
                 {
                     //remove both the spider and the projectile
-                    ECS::ContainerInterface::remove_all_components_of(entity);
+                    ECS::ContainerInterface::remove_all_components_of(event.entity);
                     ECS::ContainerInterface::remove_all_components_of(event.other_entity);
                 }
             }
@@ -890,15 +890,6 @@ void WorldSystem::shootProjectile(vec2 mousePos, bool preview /* = false */)
 	//shooting a projectile takes your turn.
     if (!preview)
         snail_move--;
-}
-
-
-void WorldSystem::on_mouse_move(vec2 mouse_pos)
-{
-	if (!ECS::registry<DeathTimer>.has(player_snail))
-	{
-		(void)mouse_pos;
-	}
 }
 
 void  WorldSystem::setGLFWCallbacks()
