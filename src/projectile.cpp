@@ -33,9 +33,9 @@ ECS::Entity Projectile::createProjectile(vec2 position, vec2 velocity, bool prev
 	if (preview)
     {
 	    ECS::registry<Preview>.emplace(entity);
-        resource.texture.alpha = 0.25f;
+        resource.texture.alpha = 0.5f;
         motion.scale *= 0.5f;
-        motion.velocity *= 3.f;
+        motion.velocity *= 6.f;
     }
 
 	return entity;
