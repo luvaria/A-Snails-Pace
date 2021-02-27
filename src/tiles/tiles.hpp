@@ -24,6 +24,9 @@ public:
 	static float getScale();
 	static void setScale(float s);
 
+	// reset tile grid (for level loading)
+	static void resetGrid();
+
 	// tile grid
 	static std::vector<std::vector<TileSystem::Tile>>& getTiles();
 };

@@ -3,6 +3,7 @@
 #include "common.hpp"
 #include "tiny_ecs.hpp"
 #include "observer.hpp"
+#include <list>
 
 #include <list>
 
@@ -12,7 +13,7 @@ private:
 	std::list<Observer*> observers;
 
 protected:
-	void notify(const ECS::Entity& entity, Event event);
+	void notify(Event event);
 
 public:
 	void addObserver(Observer* observer);

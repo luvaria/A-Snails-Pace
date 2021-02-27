@@ -6,4 +6,5 @@ static std::vector<std::vector<TileSystem::Tile>> tiles;
 
 float TileSystem::getScale() { return scale; }
 void TileSystem::setScale(float s) { scale = s; }
+void TileSystem::resetGrid() { tiles.clear(); };
 std::vector<std::vector<TileSystem::Tile>>& TileSystem::getTiles() { return tiles; }

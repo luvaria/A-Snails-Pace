@@ -5,6 +5,7 @@
 #include "snail.hpp"
 #include "tiles/tiles.hpp"
 #include "observer.hpp"
+#include "subject.hpp"
 
 // stlib
 #include <vector>
@@ -17,7 +18,7 @@
 
 // Container for all our entities and game logic. Individual rendering / update is 
 // deferred to the relative update() methods
-class WorldSystem : public Observer
+class WorldSystem : public Observer, public Subject
 {
 public:
 	// Creates a window
@@ -27,20 +28,17 @@ public:
 	~WorldSystem();
 
 	// restart level
-	void restart();
+	void restart(std::string level);
 
 	// Steps the game ahead by ms milliseconds
 	void step(float elapsed_ms, vec2 window_size_in_game_units);
-
-	// Renders our scene
-	void draw();
 
 	// Should the game be over ?
 	bool is_over() const;
 
 	void shootProjectile(vec2 mouse_pos, bool preview = false);
 
-	void onNotify(const ECS::Entity& entity, Event event);
+	void onNotify(Event event);
 
 	// NEW: Defining what tile types are possible, could be used to render correct tile types
 	// and to check if can be moved. EMPTY = nothing is on the tile and you can move to it, 
@@ -60,6 +58,8 @@ private:
     void goUp(ECS::Entity &entity, int &snail_move);
     
     void goDown(ECS::Entity &entity, int &snail_move);
+
+	void fallDown(ECS::Entity& entity, int& snail_move);
     
     void doX(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile, int defaultDirection );
     
@@ -67,9 +67,10 @@ private:
     
     void rotate(TileSystem::Tile &currTile, Motion &motion, TileSystem::Tile &nextTile);
     
-    void changeDirection(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile, int defaultDirection);
+    void changeDirection(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile, int defaultDirection, ECS::Entity& entity);
 
     // Input callback functions
+	void setGLFWCallbacks();
 	void on_key(int key, int, int action, int mod);
 	void on_mouse_move(vec2 mouse_pos);
 	void on_mouse_button(int button, int action, int /*mods*/);

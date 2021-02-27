@@ -5,7 +5,7 @@
 #include "spider.hpp"
 #include "projectile.hpp"
 #include "fish.hpp"
-#include "tiles/ground.hpp"
+#include "tiles/wall.hpp"
 #include "tiles/water.hpp"
 #include "tiles/vine.hpp"
 #include "pebbles.hpp"
@@ -27,8 +27,11 @@ const size_t MAX_SPIDERS = 1;
 const size_t MAX_FISH = 5;
 const size_t SPIDER_DELAY_MS = 2000;
 const size_t FISH_DELAY_MS = 5000;
+const float MOVE_S = 0.1f;
 const size_t PROJECTILE_PREVIEW_DELAY_MS = 200;
 
+std::string level = "demo.json";
+bool running = false;
 
 // Create the fish world
 // Note, this has a lot of OpenGL specific things, could be moved to the renderer; but it also defines the callbacks to the mouse and keyboard. That is why it is called here.
@@ -65,23 +68,11 @@ WorldSystem::WorldSystem(ivec2 window_size_px) :
 	if (window == nullptr)
 		throw std::runtime_error("Failed to glfwCreateWindow");
 
-	// Setting callbacks to member functions (that's why the redirect is needed)
-	// Input is handled using GLFW, for more info see
-	// http://www.glfw.org/docs/latest/input_guide.html
-	glfwSetWindowUserPointer(window, this);
-	auto key_redirect = [](GLFWwindow* wnd, int _0, int _1, int _2, int _3) { ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_key(_0, _1, _2, _3); };
-	auto cursor_pos_redirect = [](GLFWwindow* wnd, double _0, double _1) { ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_move({ _0, _1 }); };
-    auto mouse_button_redirect = [](GLFWwindow* wnd, int _0, int _1, int _2) { ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_button(_0, _1, _2); };
-
-	glfwSetKeyCallback(window, key_redirect);
-	glfwSetCursorPosCallback(window, cursor_pos_redirect);
-    glfwSetMouseButtonCallback(window, mouse_button_redirect);
-
-
     // Might want to enforce having only one camera
     // For now we will just have this
     auto cameraEntity = ECS::Entity();
     ECS::registry<Camera>.emplace(cameraEntity);
+    ECS::registry<Camera>.get(cameraEntity).offset = { 0.f, 0.f };
 
 
 	// Playing background music indefinitely
@@ -132,6 +123,10 @@ void WorldSystem::init_audio()
 // Update our game world
 void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 {
+    // exit early if no game currently running
+    if (!running)
+        return;
+
 	// Updating window title with moves remaining
 	std::stringstream title_ss;
 	title_ss << "Moves taken: " << turn_number;
@@ -183,15 +178,14 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 		if (counter.counter_ms < 0)
 		{
 			ECS::registry<DeathTimer>.remove(entity);
-			screen.darken_screen_factor = 0;
-			restart();
+			restart(level);
 			return;
 		}
 	}
 }
 
 // Reset the world state to its initial state
-void WorldSystem::restart()
+void WorldSystem::restart(std::string newLevel)
 {
 	// Debugging for memory/component leaks
 	ECS::ContainerInterface::list_all_components();
@@ -200,6 +194,9 @@ void WorldSystem::restart()
 	// Reset the game speed
 	current_speed = 1.f;
 
+    // Reset screen darken factor (manual restart can remove DeathTimer without resetting)
+    auto& screen = ECS::registry<ScreenState>.components[0];
+    screen.darken_screen_factor = 0;
   
     // Reset Camera
     ECS::registry<Camera>.components[0].offset = { 0.f, 0.f };
@@ -214,40 +211,48 @@ void WorldSystem::restart()
 	ECS::ContainerInterface::list_all_components();
 
 	// Load level from data/levels
-	LevelLoader::loadLevel("demo.json");
+    level = newLevel;
+	LevelLoader::loadLevel(newLevel);
     // can't access player_snail in level loader
     player_snail = ECS::registry<Snail>.entities[0];
 
 	// Initializing turns and amount of tiles snail can move.
 	snail_move = 1;
 	turn_number = 1;
+
+    setGLFWCallbacks();
 }
 
-void WorldSystem::onNotify(const ECS::Entity& entity, Event event) {
+void WorldSystem::onNotify(Event event) {
 
-	if (event.type == Event::COLLISION_EVENT) {
+    if (event.type == Event::UNPAUSE)
+    {
+        setGLFWCallbacks();
+        running = true;
+    }
+	else if (event.type == Event::COLLISION) {
 
-	    // Collisions involving snail
-		if (ECS::registry<Snail>.has(entity))
+        // Collisions involving snail
+		if (ECS::registry<Snail>.has(event.entity))
 		{
 			// Checking Snail - Spider collisions
 			if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<WaterTile>.has(event.other_entity))
 			{
 				// initiate death unless already dying
-				if (!ECS::registry<DeathTimer>.has(entity))
+				if (!ECS::registry<DeathTimer>.has(event.entity))
 				{
 					// Scream, reset timer, and make the snail sink
-					ECS::registry<DeathTimer>.emplace(entity);
+					ECS::registry<DeathTimer>.emplace(event.entity);
 					Mix_PlayChannel(-1, salmon_dead_sound, 0);
 				}
 			}
 		}
 
 		//collisions involving the projectiles
-		if (ECS::registry<Projectile>.has(entity))
+		if (ECS::registry<Projectile>.has(event.entity))
 		{
-			// Don't collide with a preview projectile (ie. all enemies should fall under here)
-		    if (!ECS::registry<Projectile::Preview>.has(entity))
+            // Don't collide with a preview projectile (ie. all enemies should fall under here)
+            if (!ECS::registry<Projectile::Preview>.has(entity))
             {
                 // Checking Projectile - Spider collisions
                 if (ECS::registry<Spider>.has(event.other_entity))
@@ -257,15 +262,24 @@ void WorldSystem::onNotify(const ECS::Entity& entity, Event event) {
                     ECS::ContainerInterface::remove_all_components_of(event.other_entity);
                 }
             }
-
-			// Checking Projectile - Wall collisions
-			if (ECS::registry<GroundTile>.has(event.other_entity))
-			{
-				//remove the Projectile
-				ECS::ContainerInterface::remove_all_components_of(entity);
-			}
 		}
 	}
+    else if (event.type == Event::LOAD_LEVEL)
+    {
+        running = true;
+        switch (event.level)
+        {
+        case Event::Level::DEMO:
+            level = "demo.json";
+            break;
+        case Event::Level::DEMO_2:
+            level = "demo-2.json";
+            break;
+        default:
+            throw std::runtime_error("Could not load unknown level.");
+        }
+        restart(level);
+    }
 }
 
 // Should the game be over ?
@@ -344,7 +358,7 @@ void WorldSystem::rotate(TileSystem::Tile &currTile, Motion &motion, TileSystem:
     }
 }
 
-void WorldSystem::changeDirection(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile, int defaultDirection) {
+void WorldSystem::changeDirection(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile, int defaultDirection, ECS::Entity& entity) {
     if(defaultDirection == DIRECTION_SOUTH || defaultDirection == DIRECTION_NORTH) {
         doY(motion, currTile, nextTile);
         rotate(currTile, motion, nextTile);
@@ -354,7 +368,16 @@ void WorldSystem::changeDirection(Motion &motion, TileSystem::Tile &currTile, Ti
         rotate(currTile, motion, nextTile);
         doY(motion, currTile, nextTile);
     }
-    motion.position = {nextTile.x, nextTile.y};
+
+    if (!ECS::registry<Destination>.has(entity))
+    {
+        ECS::registry<Destination>.emplace(entity);
+    }
+    Destination& dest = ECS::registry<Destination>.get(entity);
+    dest.position = {nextTile.x, nextTile.y};
+    // give velocity to reach destination in set time
+    // this velocity will be set to 0 once destination is reached in physics.cpp
+    motion.velocity = (dest.position - motion.position)/MOVE_S;
 }
 
 void WorldSystem::goLeft(ECS::Entity &entity, int &snail_move) {
@@ -369,9 +392,9 @@ void WorldSystem::goLeft(ECS::Entity &entity, int &snail_move) {
     }
     TileSystem::Tile currTile = tiles[yCoord][xCoord];
     TileSystem::Tile leftTile = tiles[yCoord][xCoord-1];
-    if (abs(motion.angle) != PI/2 && (leftTile.type == TileSystem::WALL || leftTile.type == TileSystem::WALL)) {
+    if (abs(motion.angle) != PI/2 && (leftTile.type == TileSystem::WALL)) {
         TileSystem::Tile nextTile = tiles[yCoord][xCoord];
-        changeDirection(motion, currTile, nextTile, DIRECTION_WEST);
+        changeDirection(motion, currTile, nextTile, DIRECTION_WEST, entity);
         if(abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
             motion.scale = {motion.scale.y, motion.scale.x};
             motion.lastDirection = motion.angle == 0 ? DIRECTION_NORTH : DIRECTION_SOUTH;
@@ -385,9 +408,20 @@ void WorldSystem::goLeft(ECS::Entity &entity, int &snail_move) {
             return;
         }
         TileSystem::Tile nextTile = tiles[abs(motion.angle) == PI ? (yCoord-1) : (yCoord+1)][xCoord-1];
-        nextTile = nextTile.type == TileSystem::WALL ? leftTile : nextTile;
-        changeDirection(motion, currTile, nextTile, DIRECTION_WEST);
+        TileSystem::Tile sideTile = tiles[abs(motion.angle) == PI ? (yCoord-1) : (yCoord+1)][(xCoord)];
+        if(!(nextTile.type == TileSystem::WALL || leftTile.type == TileSystem::VINE) && (sideTile.type == TileSystem::EMPTY || sideTile.type == TileSystem::VINE)) {
+            return;
+        }
+        nextTile = nextTile.type == TileSystem::WALL || leftTile.type == TileSystem::VINE  ? leftTile : nextTile;
+        changeDirection(motion, currTile, nextTile, DIRECTION_WEST, entity);
         snail_move--;
+    }
+    else if(abs(motion.angle) == PI/2 && leftTile.type == TileSystem::VINE) {
+        motion.scale = {motion.scale.y, motion.scale.x};
+        motion.scale.x = motion.angle == -PI/2 ? motion.lastDirection == DIRECTION_NORTH ? -motion.scale.x : motion.scale.x
+                                               : motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : -motion.scale.x;
+           motion.lastDirection = DIRECTION_WEST;
+        motion.angle=0;
     }
 }
 
@@ -403,9 +437,9 @@ void WorldSystem::goRight(ECS::Entity &entity, int &snail_move) {
     }
     TileSystem::Tile currTile = tiles[yCoord][xCoord];
     TileSystem::Tile rightTile = tiles[yCoord][xCoord+1];
-    if (abs(motion.angle) != PI/2 && (rightTile.type == TileSystem::WALL || rightTile.type == TileSystem::WALL)) {
+    if (abs(motion.angle) != PI/2 && rightTile.type == TileSystem::WALL) {
         TileSystem::Tile nextTile = tiles[yCoord][xCoord];
-        changeDirection(motion, currTile, nextTile, DIRECTION_EAST);
+        changeDirection(motion, currTile, nextTile, DIRECTION_EAST, entity);
         if(abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
             motion.scale = {motion.scale.y, motion.scale.x};
             motion.lastDirection = motion.angle == 0 ? DIRECTION_NORTH : DIRECTION_SOUTH;
@@ -422,9 +456,20 @@ void WorldSystem::goRight(ECS::Entity &entity, int &snail_move) {
             return;
         }
         TileSystem::Tile nextTile = tiles[abs(motion.angle) == PI ? (yCoord-1) : (yCoord+1)][xCoord+1];
-        nextTile = nextTile.type == TileSystem::WALL ? rightTile : nextTile;
-        changeDirection(motion, currTile, nextTile, DIRECTION_EAST);
+        TileSystem::Tile sideTile = tiles[abs(motion.angle) == PI ? (yCoord-1) : (yCoord+1)][(xCoord)];
+        if(!(nextTile.type == TileSystem::WALL || rightTile.type == TileSystem::VINE) && (sideTile.type == TileSystem::EMPTY || sideTile.type == TileSystem::VINE)) {
+            return;
+        }
+        nextTile = nextTile.type == TileSystem::WALL || rightTile.type == TileSystem::VINE ? rightTile : nextTile;
+        changeDirection(motion, currTile, nextTile, DIRECTION_EAST, entity);
         snail_move--;
+    }
+    else if(abs(motion.angle) == PI/2 && rightTile.type == TileSystem::VINE) {
+        motion.scale = {motion.scale.y, motion.scale.x};
+        motion.scale.x = motion.angle == -PI/2 ? motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : -motion.scale.x
+                                               : motion.lastDirection == DIRECTION_NORTH ? -motion.scale.x : motion.scale.x;
+        motion.lastDirection = DIRECTION_EAST;
+        motion.angle=0;
     }
 }
 
@@ -442,7 +487,7 @@ void WorldSystem::goUp(ECS::Entity &entity, int &snail_move) {
     TileSystem::Tile upTile = tiles[yCoord-1][xCoord];
     if (currTile.type == TileSystem::VINE && abs(motion.angle) == 0) {
         TileSystem::Tile nextTile = tiles[yCoord][xCoord];
-        changeDirection(motion, currTile, nextTile, motion.lastDirection);
+        changeDirection(motion, currTile, nextTile, motion.lastDirection, entity);
         if(abs(currTile.x - nextTile.x) == 0 && abs(currTile.y - nextTile.y) == 0) {
             motion.scale = {motion.scale.y, motion.scale.x};
             motion.angle = motion.lastDirection == DIRECTION_WEST ? PI/2 : -PI/2 ;
@@ -450,9 +495,18 @@ void WorldSystem::goUp(ECS::Entity &entity, int &snail_move) {
         }
         snail_move--;
     }
-    else if (upTile.type == TileSystem::WALL || upTile.type == TileSystem::WALL) {
+    else if (upTile.type == TileSystem::WALL) {
+        // This is to fix a movement bug where snail flips to weird positions when: a. it is upside down
+        // and b. W is pressed. In order to fix that bug I have written this if statement
+        // which might not be the best way to do it, but solves the bug for now.
+        if (tiles[yCoord - 1][xCoord + 1].type == TileSystem::WALL && (motion.angle == PI || motion.angle == -PI)) {
+            return;
+        }
+        if (tiles[yCoord - 1][xCoord + 1].type != TileSystem::WALL && (motion.angle == PI || motion.angle == -PI)) {
+            goRight(entity, snail_move);
+        }
         TileSystem::Tile nextTile = tiles[yCoord][xCoord];
-        changeDirection(motion, currTile, nextTile, DIRECTION_NORTH);
+        changeDirection(motion, currTile, nextTile, DIRECTION_NORTH, entity);
         if(abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
             motion.scale = {motion.scale.y, motion.scale.x};
             motion.lastDirection = motion.angle == PI/2 ? DIRECTION_EAST : DIRECTION_WEST;
@@ -467,8 +521,12 @@ void WorldSystem::goUp(ECS::Entity &entity, int &snail_move) {
             return;
         }
         TileSystem::Tile nextTile = tiles[(yCoord-1)][motion.angle == -PI/2 ? xCoord+1 : xCoord-1];
+        TileSystem::Tile sideTile = tiles[(yCoord)][motion.angle == -PI/2 ? xCoord+1 : xCoord-1];
+        if(!(nextTile.type == TileSystem::WALL || upTile.type == TileSystem::VINE) && (sideTile.type == TileSystem::EMPTY || sideTile.type == TileSystem::VINE)) {
+            return;
+        }
         nextTile = nextTile.type == TileSystem::WALL || upTile.type == TileSystem::VINE ? upTile : nextTile;
-        changeDirection(motion, currTile, nextTile, DIRECTION_NORTH);
+        changeDirection(motion, currTile, nextTile, DIRECTION_NORTH, entity);
         snail_move--;
     }
 }
@@ -477,9 +535,12 @@ void WorldSystem::goDown(ECS::Entity &entity, int &snail_move) {
     float scale = TileSystem::getScale();
     auto& tiles = TileSystem::getTiles();
 
+    // it's not like this in the others because right now it's only down where we move multiple spaces per frame (falling)
     auto& motion = ECS::registry<Motion>.get(entity);
-    int xCoord = static_cast<int>(motion.position.x / scale);
-    int yCoord = static_cast<int>(motion.position.y / scale);
+    vec2& position = ECS::registry<Destination>.has(entity) ? ECS::registry<Destination>.get(entity).position : motion.position;
+
+    int xCoord = static_cast<int>(position.x / scale);
+    int yCoord = static_cast<int>(position.y / scale);
     if(yCoord+1 > tiles.size()-1) {
         return;
     }
@@ -487,20 +548,30 @@ void WorldSystem::goDown(ECS::Entity &entity, int &snail_move) {
     TileSystem::Tile upTile = tiles[yCoord+1][xCoord];
     if (currTile.type == TileSystem::VINE && abs(motion.angle) == PI) {
         TileSystem::Tile nextTile = tiles[yCoord][xCoord];
-        changeDirection(motion, currTile, nextTile, motion.lastDirection);
+        changeDirection(motion, currTile, nextTile, motion.lastDirection, entity);
         if(abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
             motion.scale = {motion.scale.y, motion.scale.x};
             motion.angle = motion.lastDirection == DIRECTION_WEST ? PI/2 : -PI/2 ;
             motion.lastDirection = DIRECTION_SOUTH;
         }
         snail_move--;
-    } else if (upTile.type == TileSystem::WALL || upTile.type == TileSystem::WALL) {
+    } else if (upTile.type == TileSystem::WALL) {
         TileSystem::Tile nextTile = tiles[yCoord][xCoord];
-        changeDirection(motion, currTile, nextTile, DIRECTION_SOUTH);
-        if(abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
+        if(motion.angle != 0 && abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
+            changeDirection(motion, currTile, nextTile, DIRECTION_SOUTH, entity);
             motion.scale = {motion.scale.y, motion.scale.x};
             motion.lastDirection = motion.angle == -PI/2 ? DIRECTION_WEST : DIRECTION_EAST;
             motion.angle = 0;
+            snail_move--;
+        }
+    }
+    else if (currTile.type == TileSystem::VINE && abs(motion.angle) == 0) {
+        TileSystem::Tile nextTile = tiles[yCoord][xCoord];
+        changeDirection(motion, currTile, nextTile, motion.lastDirection, entity);
+        if(abs(currTile.x - nextTile.x) == 0 && abs(currTile.y - nextTile.y) == 0) {
+            motion.scale = {motion.scale.y, motion.scale.x};
+            motion.angle = motion.lastDirection == DIRECTION_WEST ? -PI/2 : PI/2 ;
+            motion.lastDirection = DIRECTION_SOUTH;
         }
         snail_move--;
     }
@@ -511,11 +582,84 @@ void WorldSystem::goDown(ECS::Entity &entity, int &snail_move) {
             return;
         }
         TileSystem::Tile nextTile = tiles[(yCoord+1)][motion.angle == -PI/2 ? xCoord+1 : xCoord-1];
+        TileSystem::Tile sideTile = tiles[(yCoord)][motion.angle == -PI/2 ? xCoord+1 : xCoord-1];
+        if(!(nextTile.type == TileSystem::WALL || upTile.type == TileSystem::VINE) && (sideTile.type == TileSystem::EMPTY || sideTile.type == TileSystem::VINE)) {
+            return;
+        }
         nextTile = nextTile.type == TileSystem::WALL || upTile.type == TileSystem::VINE ? upTile : nextTile;
-        changeDirection(motion, currTile, nextTile, DIRECTION_SOUTH);
+        changeDirection(motion, currTile, nextTile, DIRECTION_SOUTH, entity);
         snail_move--;
     }
     
+}
+
+void WorldSystem::fallDown(ECS::Entity& entity, int& snail_move) {
+    float scale = TileSystem::getScale();
+    auto& tiles = TileSystem::getTiles();
+
+    auto& motion = ECS::registry<Motion>.get(entity);
+    int xCoord = static_cast<int>(motion.position.x / scale);
+    int yCoord = static_cast<int>(motion.position.y / scale);
+
+    TileSystem::Tile currTile = tiles[yCoord][xCoord];
+    TileSystem::Tile upTile = tiles[yCoord + 1][xCoord];
+    if (upTile.type == TileSystem::WALL || currTile.type == TileSystem::VINE) {
+        return;
+    }
+    for (int i = yCoord + 1; i < tiles.size(); i++) {
+        TileSystem::Tile t = tiles[i][xCoord];
+        // this part of the code is still slightly buggy. It works fine for first iteration. After snail dies and if pressed
+        // with water tile at bottom of fall and snail being upside down, snail will flip over to top of platform
+        // instead of falling
+        // NVM I think I have fixed it, but I am keeping the message just in case someone else runs into it.
+        if (t.type == TileSystem::WATER) {
+            if (!ECS::registry<Destination>.has(entity))
+            {
+                ECS::registry<Destination>.emplace(entity);
+            }
+            Destination& dest = ECS::registry<Destination>.get(entity);
+            dest.position = {t.x, t.y};
+            // give velocity to reach destination in set time
+            // this velocity will be set to 0 once destination is reached in physics.cpp
+            motion.velocity = (dest.position - motion.position)/MOVE_S;
+        }
+        else if (t.type == TileSystem::WALL) {
+            if (!ECS::registry<Destination>.has(entity))
+            {
+                ECS::registry<Destination>.emplace(entity);
+            }
+            Destination& dest = ECS::registry<Destination>.get(entity);
+            dest.position = { tiles[i - 1][xCoord].x, tiles[i - 1][xCoord].y };
+            // give velocity to reach destination in set time
+            // this velocity will be set to 0 once destination is reached in physics.cpp
+            motion.velocity = (dest.position - motion.position)/MOVE_S;
+
+            if (abs(motion.angle) == PI / 2) {
+                goDown(entity, snail_move);
+            }
+            else if (motion.angle == -PI) {
+                if (motion.lastDirection == DIRECTION_EAST) {
+                    motion.scale = { motion.scale.y, motion.scale.x };
+                    goDown(entity, snail_move);
+                }
+                else {
+                    motion.scale = { motion.scale.y, -motion.scale.x };
+                    goDown(entity, snail_move);
+                }
+            }
+            else if (motion.angle == PI) {
+                if (motion.lastDirection == DIRECTION_WEST) {
+                    motion.scale = { motion.scale.y, -motion.scale.x };
+                    goDown(entity, snail_move);
+                }
+                else {
+                    motion.scale = { motion.scale.y, motion.scale.x };
+                    goDown(entity, snail_move);
+                }
+            }
+        }
+    }
+    return;
 }
 
 // On key callback
@@ -528,7 +672,6 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		// NEW: Added motion here. I am assuming some sort of rectangular/square level for now
 		// this function might get quite messy as time goes on so maybe we will need a decent 
 		// amount of helper functions when we get there.
-		auto& mot = ECS::registry<Motion>.get(player_snail);
 		// CHANGE: Removed salmonX and salmonY. Salmon's position is tracked by using its Motion
 		// Component. Had to divide by 100 since starting screen position is (100, 200) which is 
 		// associated with the tile at tiles[1][2]. Added snail_move that tracks how many moves
@@ -538,18 +681,35 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		{
 			switch (key)
 			{
+            // These logs are pretty useful to see what scale, angle and direction the snail should have
 			case GLFW_KEY_W:
                     goUp(player_snail, snail_move);
+                    //std::cout << mot.angle << std::endl;
+                    //std::cout << mot.scale.x << ", " << mot.scale.y << std::endl;
+                    //std::cout << mot.lastDirection << std::endl;
 				break;
 			case GLFW_KEY_S:
                     goDown(player_snail, snail_move);
+                    //std::cout << mot.angle << std::endl;
+                    //std::cout << mot.scale.x << ", " << mot.scale.y << std::endl;
+                    //std::cout << mot.lastDirection << std::endl;
                 break;
 			case GLFW_KEY_D:
                     goRight(player_snail, snail_move);
+                    //std::cout << mot.angle << std::endl;
+                    //std::cout << mot.scale.x << ", " << mot.scale.y << std::endl;
+                    //std::cout << mot.lastDirection << std::endl;
                 break;
 			case GLFW_KEY_A:
                     goLeft(player_snail, snail_move);
 				break;
+            case GLFW_KEY_SPACE:
+                fallDown(player_snail, snail_move);
+                break;
+            case GLFW_KEY_ESCAPE:
+                running = false;
+                notify(Event(Event::PAUSE));
+                break;
 			}
 		}
         
@@ -559,13 +719,16 @@ void WorldSystem::on_key(int key, int, int action, int mod)
             for (unsigned int i=0; i< registry.components.size(); i++)
             {
                 auto entity = registry.entities[i];
-                // For now, we are only interested in collisions that involve the snail
                 if (ECS::registry<Spider>.has(entity))
                 {
                     float scale = TileSystem::getScale();
 
-                    int xCoord = static_cast<int>(mot.position.x / scale);
-                    int yCoord = static_cast<int>(mot.position.y / scale);
+                    vec2& snail_position = ECS::registry<Destination>.has(player_snail) ?
+                            ECS::registry<Destination>.get(player_snail).position :
+                            ECS::registry<Motion>.get(player_snail).position;
+
+                    int xCoord = static_cast<int>(snail_position.x / scale);
+                    int yCoord = static_cast<int>(snail_position.y / scale);
                     
                     auto& motEntity = ECS::registry<Motion>.get(entity);
                     int xCoordEntity = static_cast<int>(motEntity.position.x / scale);
@@ -619,7 +782,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		int w, h;
 		glfwGetWindowSize(window, &w, &h);
 		
-		restart();
+        restart(level);
 	}
 
 	// NEW: Next turn button. Might be temporary since we will probably have 
@@ -725,8 +888,30 @@ void WorldSystem::shootProjectile(vec2 mousePos, bool preview /* = false */)
 	}
 	
 	//shooting a projectile takes your turn.
-	if (!preview)
-    {
+    if (!preview)
         snail_move--;
-    }
+}
+
+
+void WorldSystem::on_mouse_move(vec2 mouse_pos)
+{
+	if (!ECS::registry<DeathTimer>.has(player_snail))
+	{
+		(void)mouse_pos;
+	}
+}
+
+void  WorldSystem::setGLFWCallbacks()
+{
+    // Setting callbacks to member functions (that's why the redirect is needed)
+    // Input is handled using GLFW, for more info see
+    // http://www.glfw.org/docs/latest/input_guide.html
+    glfwSetWindowUserPointer(window, this);
+    auto key_redirect = [](GLFWwindow* wnd, int _0, int _1, int _2, int _3) { ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_key(_0, _1, _2, _3); };
+    auto cursor_pos_redirect = [](GLFWwindow* wnd, double _0, double _1) { ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_move({ _0, _1 }); };
+    auto mouse_button_redirect = [](GLFWwindow* wnd, int _0, int _1, int _2) { ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_button(_0, _1, _2); };
+
+    glfwSetKeyCallback(window, key_redirect);
+    glfwSetCursorPosCallback(window, cursor_pos_redirect);
+    glfwSetMouseButtonCallback(window, mouse_button_redirect);
 }

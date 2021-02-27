@@ -101,7 +101,8 @@ struct Effect
 // Mesh datastructure for storing vertex and index buffers
 struct Mesh
 {
-	void loadFromOBJFile(std::string obj_path);
+	void loadFromOBJFile(std::string obj_path); //only use one of this function or the next one.
+	void loadFromMinOBJFile(std::string obj_path);
 	vec2 original_size = {1.f,1.f};
 	GLResource<BUFFER> vbo;
 	GLResource<BUFFER> ibo;
@@ -126,11 +127,31 @@ struct ShadedMesh
 // Cache for ShadedMesh resources (mesh consisting of vertex and index buffer, the vertex and fragment shaders, and the texture)
 ShadedMesh& cache_resource(std::string key);
 
+// Enum for rendering order layers/buckets
+//	lower value = render at front
+enum RenderBucket
+{
+	DEBUG = -2,
+	FOREGROUND = -1,
+	CHARACTER = 0,
+	PROJECTILE = 1,
+	TILE = 2,
+	BACKGROUND = 3
+};
+
 // A wrapper that points to the ShadedMesh in the resource_cache
 struct ShadedMeshRef
 {
 	ShadedMesh* reference_to_cache;
-	ShadedMeshRef(ShadedMesh& mesh);
+	RenderBucket renderBucket;
+	ShadedMeshRef(ShadedMesh& mesh, RenderBucket bucket);
+};
+
+struct MinShadedMeshRef 
+{
+	ShadedMesh* reference_to_cache;
+	RenderBucket renderBucket;
+	MinShadedMeshRef(ShadedMesh& mesh, RenderBucket bucket);
 };
 
 struct Camera

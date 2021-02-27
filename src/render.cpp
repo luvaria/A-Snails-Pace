@@ -3,6 +3,8 @@
 #include "render_components.hpp"
 #include "tiny_ecs.hpp"
 
+#include "text.hpp"
+
 #include <iostream>
 
 void RenderSystem::drawTexturedMesh(ECS::Entity entity, const mat3& projection)
@@ -189,6 +191,9 @@ void RenderSystem::draw(vec2 window_size_in_game_units)
 	float ty = (-(top + bottom) / (top - bottom)) - 2 * (offset.y / bottom);
 	mat3 projection_2D{ { sx, 0.f, 0.f },{ 0.f, sy, 0.f },{ tx , ty, 1.f } };
 
+	// Sort meshes for correct asset drawing order
+	ECS::registry<ShadedMeshRef>.sort(renderCmp);
+
 	// Draw all textured meshes that have a position and size component
 	for (ECS::Entity entity : ECS::registry<ShadedMeshRef>.entities)
 	{
@@ -197,6 +202,16 @@ void RenderSystem::draw(vec2 window_size_in_game_units)
 		// Note, its not very efficient to access elements indirectly via the entity albeit iterating through all Sprites in sequence
 		drawTexturedMesh(entity, projection_2D);
 		gl_has_errors();
+	}
+
+	// Draw text components to the screen
+	// NOTE: for simplicity, text components are drawn in a second pass,
+	// on top of all texture mesh components. This should be reasonable
+	// for nearly all use cases. If you need text to appear behind meshes,
+	// consider using a depth buffer during rendering and adding a
+	// Z-component or depth index to all rendererable components.
+	for (const Text& text : ECS::registry<Text>.components) {
+		drawText(text, frame_buffer_size);
 	}
 
 	// Truely render to the screen
@@ -239,4 +254,12 @@ void gl_has_errors()
 		error = glGetError();
 	}
 	throw std::runtime_error("last OpenGL error:" + std::string(error_str));
+}
+
+bool renderCmp(ECS::Entity a, ECS::Entity b)
+{
+	RenderBucket a_bucket = ECS::registry<ShadedMeshRef>.get(a).renderBucket;
+	RenderBucket b_bucket = ECS::registry<ShadedMeshRef>.get(b).renderBucket;
+
+	return a_bucket > b_bucket;
 }

@@ -4,7 +4,7 @@
 #include "spider.hpp"
 #include "tiles/vine.hpp"
 #include "tiles/water.hpp"
-#include "tiles/ground.hpp"
+#include "tiles/wall.hpp"
 
 // stlib
 #include <string.h>
@@ -23,6 +23,9 @@ void LevelLoader::loadLevel(std::string levelFileName)
 	// get level scale
 	float scale = level["scale"];
 	TileSystem::setScale(scale);
+
+	// clear tiles (if previously already loaded a level)
+	TileSystem::resetGrid();
 
 	// load tile types row by row
 	std::string row;
@@ -45,7 +48,7 @@ void LevelLoader::loadLevel(std::string levelFileName)
 			{
 			case 'X':
 				tile.type = TileSystem::WALL;
-				GroundTile::createGroundTile({ tile.x, tile.y });
+				WallTile::createWallTile({ tile.x, tile.y });
 				break;
 			case 'W':
 				tile.type = TileSystem::WATER;

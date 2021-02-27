@@ -1,11 +1,24 @@
 #include "subject.hpp"
 
 
-void Subject::notify(const ECS::Entity& entity, Event event)
+void Subject::notify(Event event)
 {
-	for (Observer* observer: observers)
+	// to avoid modifying observer list while iterating over it
+	std::vector<Observer*> toDelete;
+
+	for (Observer* observer : observers)
 	{
-		observer->onNotify(entity, event);
+		observer->onNotify(event);
+
+		if (event.type == Event::MENU_CLOSE_ALL)
+		{
+			toDelete.push_back(observer);
+		}
+	}
+
+	for (Observer* o : toDelete)
+	{
+		removeObserver(o);
 	}
 }
 
