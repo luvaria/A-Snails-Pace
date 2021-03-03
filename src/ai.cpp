@@ -7,10 +7,10 @@
 #include "spider.hpp"
 #include "common.hpp"
 #include "world.hpp"
-#include <deque>          // std::deque
-#include <list>           // std::list
-#include <queue>
 #include "debug.hpp"
+#include <algorithm>
+#include <chrono>
+#include <iostream>
 
 void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 {
@@ -22,50 +22,65 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     int yPos = (snailPos[1] - (0.5*scale))/scale;
     vec2 snailCoord = {yPos, xPos};
     
-    auto& motionRegistry = ECS::registry<Motion>;
-    for (unsigned int i=0; i< motionRegistry.components.size(); i++)
+    auto& aiRegistry = ECS::registry<AI>;
+    for (unsigned int i=0; i< aiRegistry.components.size(); i++)
     {
-        auto entity = motionRegistry.entities[i];
-        if(ECS::registry<Spider>.entities.size() < 1) {
-            break;
-        }
-        auto& spiderEntity = ECS::registry<Spider>.entities[0];
+        auto entity = aiRegistry.entities[i];
+        auto tiles = TileSystem::getTiles();
+        auto& motion = ECS::registry<Motion>.get(entity);
+        vec2 aiPos = motion.position;
+        int xAiPos = (aiPos.x - (0.5*scale))/scale;
+        int yAiPos = (aiPos.y - (0.5*scale))/scale;
+        vec2 aiCoord = {yAiPos, xAiPos};
+        std::vector<vec2> current;
 
-        if(entity.id == spiderEntity.id) {
-            auto tiles = TileSystem::getTiles();
-            auto& motion = ECS::registry<Motion>.get(entity);
-            vec2 aiPos = motion.position;
-            int xAiPos = (aiPos.x - (0.5*scale))/scale;
-            int yAiPos = (aiPos.y - (0.5*scale))/scale;
-            vec2 aiCoord = {yAiPos, xAiPos};
-            std::vector<vec2> current = AISystem::shortestPathBFS(aiCoord, snailCoord);
-            int aiMove = 0;
-            if(WorldSystem::snailMoves != AISystem::aiMoves) {
-                if (current[1].x-yAiPos>0) {
-                    WorldSystem::goDown(entity, aiMove);
-                } else if (current[1].x-yAiPos<0) {
+        auto start = std::chrono::high_resolution_clock::now();
+        
+        if(AISystem::aiPathFindingAlgorithm == AI_PF_ALGO_A_STAR) {
+            current = AISystem::shortestPathAStar(aiCoord, snailCoord);
+        } else {
+            current = AISystem::shortestPathBFS(aiCoord, snailCoord);
+        }
+        
+        // Get ending timepoint
+        auto stop = std::chrono::high_resolution_clock::now();
+      
+        // Get duration. Substart timepoints to
+        // get durarion. To cast it to proper unit
+        // use duration cast method
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+        
+        if (DebugSystem::in_path_debug_mode) {
+            std::cout << "Time taken by function: "
+                         << duration.count() << " microseconds" << std::endl;
+        }
+        
+        
+        int aiMove = 0;
+        if(WorldSystem::snailMoves != AISystem::aiMoves) {
+            if (current[1].x-yAiPos>0) {
+                WorldSystem::goDown(entity, aiMove);
+            } else if (current[1].x-yAiPos<0) {
+                WorldSystem::goUp(entity, aiMove);
+            } else if (current[1].y-xAiPos>0) {
+                WorldSystem::goRight(entity, aiMove);
+            } else {
+                WorldSystem::goLeft(entity, aiMove);
+            }
+            if(aiMove == 0) {
+                if(motion.lastDirection == DIRECTION_NORTH) {
                     WorldSystem::goUp(entity, aiMove);
-                } else if (current[1].y-xAiPos>0) {
+                } else if(motion.lastDirection == DIRECTION_SOUTH) {
+                    WorldSystem::goDown(entity, aiMove);
+                } else if(motion.lastDirection == DIRECTION_EAST) {
                     WorldSystem::goRight(entity, aiMove);
                 } else {
                     WorldSystem::goLeft(entity, aiMove);
                 }
-                if(aiMove == 0) {
-                    if(motion.lastDirection == DIRECTION_NORTH) {
-                        WorldSystem::goUp(entity, aiMove);
-                    } else if(motion.lastDirection == DIRECTION_SOUTH) {
-                        WorldSystem::goDown(entity, aiMove);
-                    } else if(motion.lastDirection == DIRECTION_EAST) {
-                        WorldSystem::goRight(entity, aiMove);
-                    } else {
-                        WorldSystem::goLeft(entity, aiMove);
-                    }
-                }
-                if(aiMove != 0) {
-                    AISystem::aiMoves--;
-                }
             }
-            
+            if(aiMove != 0) {
+                AISystem::aiMoves--;
+            }
         }
     }
     
@@ -76,10 +91,24 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 
 std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
     auto tileMovesMap = TileSystem::getAllTileMovesMap();
-//    TileSystem::vec2Map tileMovesMap = tileMovesMapOrig;
+    std::vector<vec2> startFrontier;
+    startFrontier.push_back(start);
+    tileMovesMap.erase(start);
+    std::deque<std::vector<vec2>> frontier = {startFrontier};
+    std::vector<vec2> current = frontier.front();
     
-    auto tiles = TileSystem::getTiles();
+  while (!frontier.empty()) {
+    current = frontier.front();
+    frontier.pop_front();
+    if(checkIfReachedDestinationOrAddNeighboringNodesToFrontier(frontier, current, tileMovesMap, goal)) {
+        return current;
+    }
+  }
+    return startFrontier;
+}
 
+std::vector<vec2> AISystem::shortestPathAStar(vec2 start, vec2 goal) {
+    auto tileMovesMap = TileSystem::getAllTileMovesMap();
     std::vector<vec2> startFrontier;
     startFrontier.push_back(start);
     tileMovesMap.erase(start);
@@ -89,6 +118,34 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
   while (!frontier.empty()) {
     current = frontier.front();
     frontier.pop_front();
+    if(checkIfReachedDestinationOrAddNeighboringNodesToFrontier(frontier, current, tileMovesMap, goal)) {
+        return current;
+    }
+    sortQueue(frontier, goal);
+  }
+  return startFrontier;
+}
+  
+void AISystem::sortQueue(std::deque<std::vector<vec2>> &frontier, vec2 destCoord)
+{
+    std::vector<std::vector<vec2>> list;
+    std::vector<vec2> current;
+    while (!frontier.empty()) {
+      current = frontier.front();
+      frontier.pop_front();
+      list.push_back(current);
+    }
+    
+    sort(list.begin(), list.end(), FrontierComparator(destCoord));
+    
+    for (auto& item : list) {
+        frontier.push_back(item);
+    }
+}
+
+bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deque<std::vector<vec2>>& frontier, std::vector<vec2>& current, TileSystem::vec2Map& tileMovesMap, vec2& goal) {
+    auto tiles = TileSystem::getTiles();
+
     if (current[current.size()-1] == goal) {
         vec2 lastVec;
         int counter = 0;
@@ -116,7 +173,7 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
             lastVec = child;
             
         }
-        return current;
+        return true;
     }
     else {
         vec2 endNode = current[current.size() - 1];
@@ -331,8 +388,9 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
         }
         
     }
-  }
-    return startFrontier;
+    return false;
+
 }
 
 int AISystem::aiMoves = 0;
+std::string AISystem::aiPathFindingAlgorithm = "BFS";
