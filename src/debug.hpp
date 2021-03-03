@@ -5,10 +5,11 @@
 // Data structure for pebble-specific information
 namespace DebugSystem {
 	extern bool in_debug_mode;
+    extern bool in_path_debug_mode;
 
 	// draw a red line for debugging purposes
 	void createLine(vec2 position, vec2 size);
-
+    void createLine(vec2 position, vec2 scale, float angle);
 	// !!! TODO A2: implement debugging of bounding boxes
 	void createBox(vec2 position, vec2 size);
 

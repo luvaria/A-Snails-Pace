@@ -12,5 +12,9 @@
 class AISystem
 {
 public:
+    static int aiMoves;
 	void step(float elapsed_ms, vec2 window_size_in_game_units);
+    std::vector<vec2> shortestPathBFS(vec2 start, vec2 goal);
+
 };
+
