@@ -50,24 +50,25 @@ public:
 
 	// OpenGL window handle
 	GLFWwindow* window;
+
+	// Game running or paused
+	bool running;
+
 private:
+	// movement functions
     void goRight(ECS::Entity &entity, int &snail_move);
-    
     void goLeft(ECS::Entity &entity, int &snail_move);
-    
     void goUp(ECS::Entity &entity, int &snail_move);
-    
     void goDown(ECS::Entity &entity, int &snail_move);
 
 	void fallDown(ECS::Entity& entity, int& snail_move);
     
-    void doX(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile, int defaultDirection );
+    void doX(Motion &motion, Tile &currTile, Tile &nextTile, int defaultDirection );
+    void doY(Motion &motion, Tile &currTile, Tile &nextTile);
     
-    void doY(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile);
+    void rotate(Tile &currTile, Motion &motion, Tile &nextTile);
     
-    void rotate(TileSystem::Tile &currTile, Motion &motion, TileSystem::Tile &nextTile);
-    
-    void changeDirection(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile, int defaultDirection, ECS::Entity& entity);
+    void changeDirection(Motion &motion, Tile &currTile, Tile &nextTile, int defaultDirection, ECS::Entity& entity);
 
     // Input callback functions
 	void setGLFWCallbacks();
@@ -86,6 +87,7 @@ private:
 	float next_spider_spawn;
 	float next_fish_spawn;
 	ECS::Entity player_snail;
+	int attempts;
 
     std::chrono::time_point<std::chrono::high_resolution_clock> can_show_projectile_preview_time;
 	bool left_mouse_pressed;

@@ -5,11 +5,6 @@
 #include "../tiles/wall.hpp"
 #include "../tiles/vine.hpp"
 
-// text colours
-const vec3 TITLE_COLOUR = { 0.984f, 0.690f, 0.231f };
-const vec3 DEFAULT_COLOUR = { 1.f, 1.f, 1.f };
-const vec3 HIGHLIGHT_COLOUR = { 0.988f, 0.933f, 0.129f };
-
 // start menu button size (since you can't tell based on the Text component)
 const vec2 buttonScale = { 250.f, 33.3f };
 
@@ -24,21 +19,30 @@ void StartMenu::setActive()
 	loadEntities();
 }
 
-void StartMenu::step(vec2 window_size_in_game_units)
+void StartMenu::step(vec2 /*window_size_in_game_units*/)
 {
+	const auto ABEEZEE_REGULAR = Font::load("data/fonts/abeezee/ABeeZee-Regular.otf");
+	const auto ABEEZEE_ITALIC = Font::load("data/fonts/abeezee/ABeeZee-Italic.otf");
+
 	// update button colour based on mouseover
-	auto& buttonContainer = ECS::registry<Button>;
+	auto& buttonContainer = ECS::registry<MenuButton>;
 	auto& textContainer = ECS::registry<Text>;
 	for (unsigned int i = 0; i < buttonContainer.components.size(); i++)
 	{
-		Button& button = buttonContainer.components[i];
+		MenuButton& button = buttonContainer.components[i];
 		ECS::Entity buttonEntity = buttonContainer.entities[i];
 		Text& buttonText = textContainer.get(buttonEntity);
 
-		if (button.mouseover)
+		if (button.selected)
+		{
 			buttonText.colour = HIGHLIGHT_COLOUR;
+			buttonText.font = ABEEZEE_ITALIC;
+		}
 		else
+		{
 			buttonText.colour = DEFAULT_COLOUR;
+			buttonText.font = ABEEZEE_REGULAR;
+		}
 	}
 }
 
@@ -72,14 +76,15 @@ void StartMenu::loadEntities()
 		}
 	}
 
-	auto font = Font::load("data/fonts/Noto/NotoSans-Regular.ttf");
+	const auto ABEEZEE_REGULAR = Font::load("data/fonts/abeezee/ABeeZee-Regular.otf");
+	const auto VIGA_REGULAR = Font::load("data/fonts/viga/Viga-Regular.otf");
 
 	// title text
 	// probably best to replace with a png/mesh
 	auto titleTextEntity = ECS::Entity();
 	ECS::registry<Text>.insert(
 		titleTextEntity,
-		Text("A Snail's Pace", font, { 600.0f, 300.0f })
+		Text("A Snail's Pace", VIGA_REGULAR, { 550.0f, 300.0f })
 	);
 	Text& titleText = ECS::registry<Text>.get(titleTextEntity);
 	titleText.colour = TITLE_COLOUR;
@@ -89,25 +94,27 @@ void StartMenu::loadEntities()
 	auto startGameEntity = ECS::Entity();
 	ECS::registry<Text>.insert(
 		startGameEntity,
-		Text("Start", font, { 650.0f, 350.0f })
+		Text("Start", ABEEZEE_REGULAR, { 650.0f, 350.0f })
 	);
 	Text& startText = ECS::registry<Text>.get(startGameEntity);
 	startText.colour = DEFAULT_COLOUR;
-	startText.scale *= 0.8f;
-	ECS::registry<Button>.emplace(startGameEntity, ButtonEventType::START_GAME);
+	startText.scale = OPTION_SCALE;
+	ECS::registry<MenuButton>.emplace(startGameEntity, ButtonEventType::START_GAME);
 	ECS::registry<StartMenuTag>.emplace(startGameEntity);
+	buttonEntities.push_back(startGameEntity);
 
 	// level select button
 	auto selectLevelEntity = ECS::Entity();
 	ECS::registry<Text>.insert(
 		selectLevelEntity,
-		Text("Select level", font, { 650.0f, 400.0f })
+		Text("Select level", ABEEZEE_REGULAR, { 650.0f, 400.0f })
 	);
 	Text& selectText = ECS::registry<Text>.get(selectLevelEntity);
 	selectText.colour = DEFAULT_COLOUR;
-	selectText.scale *= 0.8f;
-	ECS::registry<Button>.emplace(selectLevelEntity, ButtonEventType::SELECT_LEVEL);
+	selectText.scale *= OPTION_SCALE;
+	ECS::registry<MenuButton>.emplace(selectLevelEntity, ButtonEventType::SELECT_LEVEL);
 	ECS::registry<StartMenuTag>.emplace(selectLevelEntity);
+	buttonEntities.push_back(selectLevelEntity);
 }
 
 void StartMenu::removeEntities()
@@ -121,63 +128,93 @@ void StartMenu::removeEntities()
 void StartMenu::exit()
 {
 	removeEntities();
+	resetButtons();
 	notify(Event(Event::MENU_CLOSE, Event::MenuType::START_MENU));
 }
 
 // On key callback
 // Check out https://www.glfw.org/docs/3.3/input_guide.html
-void StartMenu::on_key(int key, int, int action, int mod)
+void StartMenu::on_key(int key, int, int action, int /*mod*/)
 {
-	(void)key;
-	(void)action;
-	(void)mod;
+	if (action == GLFW_PRESS)
+	{
+		switch (key)
+		{
+		case GLFW_KEY_DOWN:
+			selectNextButton();
+			break;
+		case GLFW_KEY_UP:
+			selectPreviousButton();
+			break;
+		case GLFW_KEY_ENTER:
+			selectedKeyEvent();
+			break;
+		}
+	}
 }
 
 void StartMenu::on_mouse_button(int button, int action, int /*mods*/)
 {
-
 	if (action == GLFW_RELEASE && button == GLFW_MOUSE_BUTTON_LEFT)
-	{
-		auto& buttonContainer = ECS::registry<Button>;
-		auto& textContainer = ECS::registry<Text>;
-		for (unsigned int i = 0; i < buttonContainer.components.size(); i++)
-		{
-			Button& button = buttonContainer.components[i];
-			ECS::Entity buttonEntity = buttonContainer.entities[i];
+		selectedKeyEvent();
+}
 
-			// perform action for button being hovered over (and pressed)
-			if (button.mouseover)
+void StartMenu::on_mouse_move(vec2 mouse_pos)
+{
+	// remove keyboard-selected button
+	activeButtonIndex = -1;
+
+	auto& buttonContainer = ECS::registry<MenuButton>;
+	auto& textContainer = ECS::registry<Text>;
+	for (unsigned int i = 0; i < buttonContainer.components.size(); i++)
+	{
+		MenuButton& button = buttonContainer.components[i];
+		ECS::Entity buttonEntity = buttonContainer.entities[i];
+		Text& buttonText = textContainer.get(buttonEntity);
+
+		// check whether button is being hovered over
+		button.selected = mouseover(vec2(buttonText.position.x, buttonText.position.y), buttonScale, mouse_pos);
+		// track for deselect on key press
+		if (button.selected)
+		{
+			activeButtonEntity = buttonEntity;
+
+			// find and set index of this active button in the button entities vector
+			for (int j = 0; j < buttonEntities.size(); j++)
 			{
-				switch (button.event)
-				{
-				case ButtonEventType::START_GAME:
-					// exit menu and start game
-					exit();
-					break;
-				case ButtonEventType::SELECT_LEVEL:
-					// don't overlay level select on top (text render order issues; always on top)
-					removeEntities();
-					notify(Event(Event::MENU_OPEN, Event::LEVEL_SELECT));
-					break;
-				default:
-					break;
-				}
+				if (buttonEntity.id == buttonEntities[j].id)
+					activeButtonIndex = j;
 			}
 		}
 	}
 }
 
-void StartMenu::on_mouse_move(vec2 mouse_pos)
+void StartMenu::selectedKeyEvent()
 {
-	auto& buttonContainer = ECS::registry<Button>;
-	auto& textContainer = ECS::registry<Text>;
+	auto& buttonContainer = ECS::registry<MenuButton>;
 	for (unsigned int i = 0; i < buttonContainer.components.size(); i++)
 	{
-		Button& button = buttonContainer.components[i];
+		MenuButton& button = buttonContainer.components[i];
 		ECS::Entity buttonEntity = buttonContainer.entities[i];
-		Text& buttonText = textContainer.get(buttonEntity);
 
-		// check whether button is being hovered over
-		button.mouseover = mouseover(vec2(buttonText.position.x, buttonText.position.y), buttonScale, mouse_pos);
+		// perform action for button being hovered over (and pressed)
+		if (button.selected)
+		{
+			switch (button.event)
+			{
+			case ButtonEventType::START_GAME:
+				// exit menu and start game
+				exit();
+				break;
+			case ButtonEventType::SELECT_LEVEL:
+				// don't overlay level select on top (text render order issues; always on top)
+				removeEntities();
+				resetButtons();
+				notify(Event(Event::MENU_OPEN, Event::LEVEL_SELECT));
+				break;
+			default:
+				break;
+			}
+		}
 	}
 }

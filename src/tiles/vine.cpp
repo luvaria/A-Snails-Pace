@@ -1,12 +1,15 @@
 // Header
 #include "vine.hpp"
 #include "render.hpp"
-#include "tiles/tiles.hpp"
 
-ECS::Entity VineTile::createVineTile(vec2 position)
+ECS::Entity VineTile::createVineTile(Tile& tile, ECS::Entity entity)
 {
-	auto entity = ECS::Entity();
+	ECS::registry<Tile>.insert(entity, std::move(tile));
+	return createVineTile(vec2(tile.x, tile.y), entity);
+}
 
+ECS::Entity VineTile::createVineTile(vec2 position, ECS::Entity entity)
+{
 	std::string key = "vine";
 	ShadedMesh& resource = cache_resource(key);
 	if (resource.mesh.vertices.size() == 0)

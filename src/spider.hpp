@@ -7,5 +7,5 @@
 struct Spider
 {
 	// Creates all the associated render resources and default transform
-	static ECS::Entity createSpider(vec2 position);
+	static ECS::Entity createSpider(vec2 position, ECS::Entity entity = ECS::Entity());
 };

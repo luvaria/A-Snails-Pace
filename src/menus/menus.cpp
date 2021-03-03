@@ -1,18 +1,35 @@
+// internal
 #include "menus.hpp"
 #include "menus/start_menu.hpp"
 #include "menus/level_select.hpp"
 #include "menus/pause_menu.hpp"
 #include "tiles/tiles.hpp"
+#include "text.hpp"
+
+// stlib
+#include <sstream>
 
 MenuSystem::MenuSystem(GLFWwindow& window) : window(window) {}
 
 void MenuSystem::start()
 {
+	ECS::registry<ScreenState>.components[0].darken_screen_factor = 0.f;
+
+	// Update window title
+	std::stringstream title_ss;
+	title_ss << "A Snail's Pace";
+	glfwSetWindowTitle(&window, title_ss.str().c_str());
+
 	assert(menus.empty());
 	// reset scale, grid, and camera (may have been changed due to previous level load)
 	TileSystem::resetGrid();
 	TileSystem::setScale(100.f);
 	ECS::registry<Camera>.components[0].offset = { 0.f, 0.f };
+	// clear everything visible
+	while (ECS::registry<Motion>.entities.size() > 0)
+		ECS::ContainerInterface::remove_all_components_of(ECS::registry<Motion>.entities.back());
+	while (ECS::registry<Text>.entities.size() > 0)
+		ECS::ContainerInterface::remove_all_components_of(ECS::registry<Text>.entities.back());
 	openMenu(Event::START_MENU);
 }
 
@@ -119,9 +136,6 @@ void MenuSystem::openMenu(Event::MenuType menu)
 	switch (menu)
 	{
 	case Event::MenuType::START_MENU:
-		// clear everything; start menu is starting point of game
-		while (ECS::registry<Motion>.entities.size() > 0)
-			ECS::ContainerInterface::remove_all_components_of(ECS::registry<Motion>.entities.back());
 		newMenu = new StartMenu(window);
 		break;
 	case Event::MenuType::LEVEL_SELECT:

@@ -185,11 +185,17 @@ void RenderSystem::draw(vec2 window_size_in_game_units)
 	float bottom = window_size_in_game_units.y;
 
 	vec2 offset = ECS::registry<Camera>.components[0].offset;
+
 	float sx = 2.f / (right - left);
 	float sy = 2.f / (top - bottom);
 	float tx = (-(right + left) / (right - left)) - 2 * (offset.x / right);
 	float ty = (-(top + bottom) / (top - bottom)) - 2 * (offset.y / bottom);
-	mat3 projection_2D{ { sx, 0.f, 0.f },{ 0.f, sy, 0.f },{ tx , ty, 1.f } };
+	mat3 projection_2D{ { sx, 0.f, 0.f },{ 0.f, sy, 0.f },{ tx, ty, 1.f } };
+
+	// stationary entities that don't move with camera
+	tx = -(right + left) / (right - left);
+	ty = -(top + bottom) / (top - bottom);
+	mat3 overlay_projection_2D{ { sx, 0.f, 0.f },{ 0.f, sy, 0.f },{ tx, ty, 1.f } };
 
 	// Sort meshes for correct asset drawing order
 	ECS::registry<ShadedMeshRef>.sort(renderCmp);
@@ -199,8 +205,13 @@ void RenderSystem::draw(vec2 window_size_in_game_units)
 	{
 		if (!ECS::registry<Motion>.has(entity))
 			continue;
+		
 		// Note, its not very efficient to access elements indirectly via the entity albeit iterating through all Sprites in sequence
-		drawTexturedMesh(entity, projection_2D);
+		if (!ECS::registry<Overlay>.has(entity))
+			drawTexturedMesh(entity, projection_2D);
+		else
+			drawTexturedMesh(entity, overlay_projection_2D);
+
 		gl_has_errors();
 	}
 
