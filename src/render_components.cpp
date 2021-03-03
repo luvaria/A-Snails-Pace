@@ -340,7 +340,7 @@ void Mesh::loadFromMinOBJFile(std::string obj_path) {
 			out_normals.push_back(normal);
 		}
 		else if (firstWord == "f") {
-			while (1 == 1)
+			while (true)
 			{
 				//read however many entries there are.
 				auto vi = std::uint16_t{};

@@ -4,10 +4,8 @@
 #include "tiles/tiles.hpp"
 #include "common.hpp"
 
-ECS::Entity Snail::createSnail(vec2 position)
+ECS::Entity Snail::createSnail(vec2 position, ECS::Entity entity)
 {
-	auto entity = ECS::Entity();
-
 	std::string key = "snail";
 	ShadedMesh& resource = cache_resource(key);
 	if (resource.mesh.vertices.size() == 0)
@@ -35,8 +33,7 @@ ECS::Entity Snail::createSnail(vec2 position)
 	motion.velocity = { 0.f, 0.f };
     motion.scale = resource.mesh.original_size / resource.mesh.original_size.x * TileSystem::getScale();
 	motion.scale.y *= -1; // fix orientation
-	motion.scale.x *= 0.9;
-	motion.scale.y *= 0.9;
+	motion.scale *= 0.9f;
     motion.lastDirection = DIRECTION_EAST;
 
 	// Create an (empty) Snail component

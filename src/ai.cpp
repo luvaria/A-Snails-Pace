@@ -103,11 +103,11 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
                 scale_vertical_line.x *= 0.03f;
                 if (abs(child.x-lastVec.x)>0) {
                     float scaleFac = child.x-lastVec.x > 0 ? TileSystem::getScale()/2 : -TileSystem::getScale()/2;
-                    TileSystem::Tile t = tiles[lastVec.x][lastVec.y];
+                    Tile t = tiles[lastVec.x][lastVec.y];
                     DebugSystem::createLine({t.x, t.y + scaleFac}, scale_vertical_line);
                 } else {
                     float scaleFac = child.y-lastVec.y > 0 ? TileSystem::getScale()/2 : -TileSystem::getScale()/2;
-                    TileSystem::Tile t = tiles[lastVec.x][lastVec.y];
+                    Tile t = tiles[lastVec.x][lastVec.y];
                     DebugSystem::createLine({t.x + scaleFac, t.y}, scale_horizontal_line);
                 }
             }
@@ -123,10 +123,10 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
         std::vector<vec2> next = current;
 
         // wall above
-        if(tiles[endNode.x-1][endNode.y].type == TileSystem::WALL) {
+        if(tiles[endNode.x-1][endNode.y].type == WALL) {
             
             if (tileMovesMap.find({endNode.x-1, endNode.y-1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x][endNode.y-1].type == TileSystem::EMPTY) {
+                if(tiles[endNode.x][endNode.y-1].type == EMPTY) {
                     next.push_back({endNode.x, endNode.y-1});
                     next.push_back({endNode.x-1, endNode.y-1});
                     frontier.push_back(next);
@@ -135,7 +135,7 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
                 }
             }
             if (tileMovesMap.find({endNode.x-1, endNode.y+1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x][endNode.y+1].type == TileSystem::EMPTY) {
+                if(tiles[endNode.x][endNode.y+1].type == EMPTY) {
                     next.push_back({endNode.x, endNode.y+1});
                     next.push_back({endNode.x-1, endNode.y+1});
                     frontier.push_back(next);
@@ -146,7 +146,7 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
             
             // left tile
             if (tileMovesMap.find({endNode.x, endNode.y-1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x-1][endNode.y-1].type == TileSystem::WALL) {
+                if(tiles[endNode.x-1][endNode.y-1].type == WALL) {
                     next.push_back({endNode.x, endNode.y-1});
                     frontier.push_back(next);
                     next = current;
@@ -156,7 +156,7 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
             
             // right tile
             if (tileMovesMap.find({endNode.x, endNode.y+1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x-1][endNode.y+1].type == TileSystem::WALL) {
+                if(tiles[endNode.x-1][endNode.y+1].type == WALL) {
                     next.push_back({endNode.x, endNode.y+1});
                     frontier.push_back(next);
                     next = current;
@@ -166,9 +166,9 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
             
         }
         // wall on the right
-        if(tiles[endNode.x][endNode.y+1].type == TileSystem::WALL) {
+        if(tiles[endNode.x][endNode.y+1].type == WALL) {
             if (tileMovesMap.find({endNode.x+1, endNode.y+1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x+1][endNode.y].type == TileSystem::EMPTY) {
+                if(tiles[endNode.x+1][endNode.y].type == EMPTY) {
                     next.push_back({endNode.x+1, endNode.y});
                     next.push_back({endNode.x+1, endNode.y+1});
                     frontier.push_back(next);
@@ -177,7 +177,7 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
                 }
             }
             if (tileMovesMap.find({endNode.x-1, endNode.y+1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x-1][endNode.y].type == TileSystem::EMPTY) {
+                if(tiles[endNode.x-1][endNode.y].type == EMPTY) {
                     next.push_back({endNode.x-1, endNode.y});
                     next.push_back({endNode.x-1, endNode.y+1});
                     frontier.push_back(next);
@@ -187,7 +187,7 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
             }
             // up tile
             if (tileMovesMap.find({endNode.x-1, endNode.y}) != tileMovesMap.end()) {
-                if(tiles[endNode.x-1][endNode.y+1].type == TileSystem::WALL) {
+                if(tiles[endNode.x-1][endNode.y+1].type == WALL) {
                     next.push_back({endNode.x-1, endNode.y});
                     frontier.push_back(next);
                     next = current;
@@ -197,7 +197,7 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
             
             // down tile
             if (tileMovesMap.find({endNode.x+1, endNode.y}) != tileMovesMap.end()) {
-                if(tiles[endNode.x+1][endNode.y+1].type == TileSystem::WALL) {
+                if(tiles[endNode.x+1][endNode.y+1].type == WALL) {
                     next.push_back({endNode.x+1, endNode.y});
                     frontier.push_back(next);
                     next = current;
@@ -206,9 +206,9 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
             }
         }
         // wall on the left
-        if(tiles[endNode.x][endNode.y-1].type == TileSystem::WALL) {
+        if(tiles[endNode.x][endNode.y-1].type == WALL) {
             if (tileMovesMap.find({endNode.x-1, endNode.y-1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x-1][endNode.y].type == TileSystem::EMPTY) {
+                if(tiles[endNode.x-1][endNode.y].type == EMPTY) {
                     next.push_back({endNode.x-1, endNode.y});
                     next.push_back({endNode.x-1, endNode.y-1});
                     frontier.push_back(next);
@@ -217,7 +217,7 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
                 }
             }
             if (tileMovesMap.find({endNode.x+1, endNode.y-1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x+1][endNode.y].type == TileSystem::EMPTY) {
+                if(tiles[endNode.x+1][endNode.y].type == EMPTY) {
                     next.push_back({endNode.x+1, endNode.y});
                     next.push_back({endNode.x+1, endNode.y-1});
                     frontier.push_back(next);
@@ -228,7 +228,7 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
             
             // up tile
             if (tileMovesMap.find({endNode.x-1, endNode.y}) != tileMovesMap.end()) {
-                if(tiles[endNode.x-1][endNode.y-1].type == TileSystem::WALL) {
+                if(tiles[endNode.x-1][endNode.y-1].type == WALL) {
                     next.push_back({endNode.x-1, endNode.y});
                     frontier.push_back(next);
                     next = current;
@@ -238,7 +238,7 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
             
             // down tile
             if (tileMovesMap.find({endNode.x+1, endNode.y}) != tileMovesMap.end()) {
-                if(tiles[endNode.x+1][endNode.y-1].type == TileSystem::WALL) {
+                if(tiles[endNode.x+1][endNode.y-1].type == WALL) {
                     next.push_back({endNode.x+1, endNode.y});
                     frontier.push_back(next);
                     next = current;
@@ -247,9 +247,9 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
             }
         }
         // wall below
-        if(tiles[endNode.x+1][endNode.y].type == TileSystem::WALL) {
+        if(tiles[endNode.x+1][endNode.y].type == WALL) {
             if (tileMovesMap.find({endNode.x+1, endNode.y+1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x][endNode.y+1].type == TileSystem::EMPTY) {
+                if(tiles[endNode.x][endNode.y+1].type == EMPTY) {
                     next.push_back({endNode.x, endNode.y+1});
                     next.push_back({endNode.x+1, endNode.y+1});
                     frontier.push_back(next);
@@ -258,7 +258,7 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
                 }
             }
             if (tileMovesMap.find({endNode.x+1, endNode.y-1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x][endNode.y-1].type == TileSystem::EMPTY) {
+                if(tiles[endNode.x][endNode.y-1].type == EMPTY) {
                     next.push_back({endNode.x, endNode.y-1});
                     next.push_back({endNode.x+1, endNode.y-1});
                     frontier.push_back(next);
@@ -268,7 +268,7 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
             }
             // left tile
             if (tileMovesMap.find({endNode.x, endNode.y-1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x+1][endNode.y-1].type == TileSystem::WALL) {
+                if(tiles[endNode.x+1][endNode.y-1].type == WALL) {
                     next.push_back({endNode.x, endNode.y-1});
                     frontier.push_back(next);
                     next = current;
@@ -278,7 +278,7 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
             
             // right tile
             if (tileMovesMap.find({endNode.x, endNode.y+1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x+1][endNode.y+1].type == TileSystem::WALL) {
+                if(tiles[endNode.x+1][endNode.y+1].type == WALL) {
                     next.push_back({endNode.x, endNode.y+1});
                     frontier.push_back(next);
                     next = current;
@@ -291,7 +291,7 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
         // INDIVIDUAL //
         // left vine tile
         if (tileMovesMap.find({endNode.x, endNode.y-1}) != tileMovesMap.end()) {
-            if(tiles[endNode.x][endNode.y-1].type == TileSystem::VINE) {
+            if(tiles[endNode.x][endNode.y-1].type == VINE) {
                 next.push_back({endNode.x, endNode.y-1});
                 frontier.push_back(next);
                 next = current;
@@ -302,7 +302,7 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
         
         // right vine tile
         if (tileMovesMap.find({endNode.x, endNode.y+1}) != tileMovesMap.end()) {
-            if(tiles[endNode.x][endNode.y+1].type == TileSystem::VINE) {
+            if(tiles[endNode.x][endNode.y+1].type == VINE) {
                 next.push_back({endNode.x, endNode.y+1});
                 frontier.push_back(next);
                 next = current;
@@ -312,7 +312,7 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
         
         // up vine tile
         if (tileMovesMap.find({endNode.x-1, endNode.y}) != tileMovesMap.end()) {
-            if(tiles[endNode.x-1][endNode.y].type == TileSystem::VINE) {
+            if(tiles[endNode.x-1][endNode.y].type == VINE) {
                 next.push_back({endNode.x-1, endNode.y});
                 frontier.push_back(next);
                 next = current;
@@ -322,7 +322,7 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
         
         // down vine tile
         if (tileMovesMap.find({endNode.x+1, endNode.y}) != tileMovesMap.end()) {
-            if(tiles[endNode.x+1][endNode.y].type == TileSystem::VINE) {
+            if(tiles[endNode.x+1][endNode.y].type == VINE) {
                 next.push_back({endNode.x+1, endNode.y});
                 frontier.push_back(next);
                 next = current;

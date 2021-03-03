@@ -78,7 +78,7 @@ void bounceProjectileOffWall(Motion& projectileMotion, std::vector<ColoredVertex
 					assert(Geometry::pointIsOnLine(intersectionPoint, wallLine));
 
 					float distance = glm::length(vec2(point.position.x, point.position.y) - intersectionPoint);
-					if (distance > maxDistance) 
+					if (distance > maxDistance)
 					{
 						maxDistance = distance;
 						reflectingLine = wallLine;
@@ -90,18 +90,18 @@ void bounceProjectileOffWall(Motion& projectileMotion, std::vector<ColoredVertex
 	}
 	// take the velocity as a unit vector, multiply it by the negative of the maxDistance, and add that to the position.
 	float velocityLength = glm::length(projectileMotion.velocity);
-	if (velocityLength != 0) 
+	if (velocityLength != 0)
 	{
 		projectileMotion.position.x -= ((projectileMotion.velocity.x / velocityLength) * (maxDistance + 0.01)); //avoid collision
 		projectileMotion.position.y -= ((projectileMotion.velocity.y / velocityLength) * (maxDistance + 0.01));
 	}
 
 	//reflect off the wall you colided with, which is either a vertical or a horizontal line.
-	if (reflectingLine == bottomLine || reflectingLine == upperLine) 
+	if (reflectingLine == bottomLine || reflectingLine == upperLine)
 	{
 		projectileMotion.velocity.y *= -1;
 	}
-	else 
+	else
 	{
 		projectileMotion.velocity.x *= -1;
 	}
@@ -110,12 +110,12 @@ void bounceProjectileOffWall(Motion& projectileMotion, std::vector<ColoredVertex
 bool collides(ECS::Entity& entity1, ECS::Entity& entity2, Motion& motion1, Motion& motion2, bool doPenetrationFree)
 {
 	//first we get bounding boxes, and see if the meshes have a chance to collide
-	float other_r = std::sqrt(std::pow(get_bounding_box(motion1).x/2.0f, 2.f) + std::pow(get_bounding_box(motion1).y/2.0f, 2.f));
-	float my_r = std::sqrt(std::pow(get_bounding_box(motion2).x/2.0f, 2.f) + std::pow(get_bounding_box(motion2).y/2.0f, 2.f));
+	float other_r = std::sqrt(std::pow(get_bounding_box(motion1).x / 2.0f, 2.f) + std::pow(get_bounding_box(motion1).y / 2.0f, 2.f));
+	float my_r = std::sqrt(std::pow(get_bounding_box(motion2).x / 2.0f, 2.f) + std::pow(get_bounding_box(motion2).y / 2.0f, 2.f));
 	auto dp = motion1.position - motion2.position;
 	auto lengthdp = glm::length(dp);
 	auto radiusSum = other_r + my_r;
-	if (radiusSum < lengthdp) 
+	if (radiusSum < lengthdp)
 	{
 		//bounding boxes don't collide, so no chance for meshes to.
 		return false;
@@ -134,7 +134,7 @@ bool collides(ECS::Entity& entity1, ECS::Entity& entity2, Motion& motion1, Motio
 	transform1.translate(motion1.position);
 	transform1.scale(motion1.scale);
 	transform1.rotate(motion1.angle);
-	for (int i = 0; i < vertices1.size(); i++) 
+	for (int i = 0; i < vertices1.size(); i++)
 	{
 		vec3 position = vec3(vertices1[i].position.x, vertices1[i].position.y, 1.0);
 		vertices1[i].position = transform1.mat * position;
@@ -151,26 +151,26 @@ bool collides(ECS::Entity& entity1, ECS::Entity& entity2, Motion& motion1, Motio
 
 	//go over all the indices for the first mesh and make the lines between the vertices.
 	std::vector<Geometry::Line> lines1 = std::vector<Geometry::Line>();
-	for (int i = 0; i < indices1.size() - 1; i ++) 
+	for (int i = 0; i < indices1.size() - 1; i++)
 	{
 		auto vertex1 = vertices1[indices1[i]].position;
 		auto vertex2 = vertices1[indices1[i + 1]].position;
-		Geometry::Line line = { vertex1.x, vertex1.y, vertex2.x, vertex2.y }; //x0,y0,x1,y1
-		lines1.push_back(line);
+		Geometry::Line line1 = { vertex1.x, vertex1.y, vertex2.x, vertex2.y }; //x0,y0,x1,y1
+		lines1.push_back(line1);
 	}
 	auto vertex1 = vertices1[indices1.back()].position;
 	auto vertex2 = vertices1[indices1[0]].position;
-	Geometry::Line line = { vertex1.x, vertex1.y, vertex2.x, vertex2.y }; //x0,y0,x1,y1
-	lines1.push_back(line);
+	Geometry::Line line1 = { vertex1.x, vertex1.y, vertex2.x, vertex2.y }; //x0,y0,x1,y1
+	lines1.push_back(line1);
 
 	//go over all the indices for the second mesh and make the lines between the vertices.
 	std::vector<Geometry::Line> lines2 = std::vector<Geometry::Line>();
 	for (int i = 0; i < indices2.size() - 1; i++)
 	{
-		auto vertex1 = vertices2[indices2[i]].position;
-		auto vertex2 = vertices2[indices2[i + 1]].position;
-		Geometry::Line line = { vertex1.x, vertex1.y, vertex2.x, vertex2.y }; //x0,y0,x1,y1
-		lines2.push_back(line);
+		auto vertex3 = vertices2[indices2[i]].position;
+		auto vertex4 = vertices2[indices2[i + 1]].position;
+		Geometry::Line line2 = { vertex3.x, vertex3.y, vertex4.x, vertex4.y }; //x0,y0,x1,y1
+		lines2.push_back(line2);
 	}
 	auto vertex3 = vertices2[indices2.back()].position;
 	auto vertex4 = vertices2[indices2[0]].position;
@@ -199,11 +199,11 @@ bool collides(ECS::Entity& entity1, ECS::Entity& entity2, Motion& motion1, Motio
 	}
 
 	// go over every pair of lines and see if they intersect.
-	for (auto line1 : lines1)
+	for (auto line3 : lines1)
 	{
-		for (auto line2 : lines2)
+		for (auto line4 : lines2)
 		{
-			if (Geometry::linesIntersect(line1, line2)) 
+			if (Geometry::linesIntersect(line3, line4)) 
 			{
 				if (doPenetrationFree)
 				{
@@ -227,7 +227,7 @@ bool collides(ECS::Entity& entity1, ECS::Entity& entity2, Motion& motion1, Motio
 }
 
 //returns true if entity_i and entity_j is a (Projectile,WallTile) pair in either order
-bool isProjectileAndWall(ECS::Entity entity_i, ECS::Entity entity_j) 
+bool isProjectileAndWall(ECS::Entity entity_i, ECS::Entity entity_j)
 {
 	return (ECS::registry<Projectile>.has(entity_i) && ECS::registry<WallTile>.has(entity_j)) ||
 		(ECS::registry<WallTile>.has(entity_i) && ECS::registry<Projectile>.has(entity_j));
@@ -255,13 +255,13 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 {
 	// Move entities based on how much time has passed, this is to (partially) avoid
 	// having entities move at different speed based on the machine.
-	
+
 	//for (auto& motion : ECS::registry<Motion>.components)
 
-    float step_seconds = 1.0f * (elapsed_ms / 1000.f);
+	float step_seconds = 1.0f * (elapsed_ms / 1000.f);
 
-    // move the projectile!
-	for (auto entity: ECS::registry<Projectile>.entities)
+	// move the projectile!
+	for (auto entity : ECS::registry<Projectile>.entities)
 	{
 		auto& motion = ECS::registry<Motion>.get(entity);
 		vec2 velocity = motion.velocity;
@@ -272,38 +272,46 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 	auto& destReg = ECS::registry<Destination>;
 	std::vector<std::shared_ptr<ECS::Entity>> toRemove;
 	for (size_t i = 0; i < destReg.components.size(); i++)
-    {
-	    auto& entity = destReg.entities[i];
-	    auto& dest = destReg.components[i];
-	    auto& motion = ECS::registry<Motion>.get(entity);
-        vec2 newPos = motion.position + (motion.velocity * step_seconds);
-        if ((dot(motion.position - newPos, dest.position - newPos) > 0) || (dest.position == newPos))
-        {
-            // overshot or perfectly hit destination
-            // set velocity back to 0 stop moving
-            motion.position = dest.position;
-            motion.velocity = {0.f, 0.f};
-            toRemove.push_back(std::make_shared<ECS::Entity>(entity));
-        }
-        else
-        {
-            motion.position = newPos;
-        }
-    }
+	{
+		auto& entity = destReg.entities[i];
+		auto& dest = destReg.components[i];
+		auto& motion = ECS::registry<Motion>.get(entity);
+		vec2 newPos = motion.position + (motion.velocity * step_seconds);
+		if ((dot(motion.position - newPos, dest.position - newPos) > 0) || (dest.position == newPos))
+		{
+			// overshot or perfectly hit destination
+			// set velocity back to 0 stop moving
+			motion.position = dest.position;
+			motion.velocity = { 0.f, 0.f };
+			toRemove.push_back(std::make_shared<ECS::Entity>(entity));
+		}
+		else
+		{
+			motion.position = newPos;
+		}
+	}
 	// remove all that reached destination
 	// someone tell me (emily) if this is dumb and if there's a better way to do this
 	for (auto entityPtr : toRemove)
-    {
-	    destReg.remove(*entityPtr);
-    }
+	{
+		destReg.remove(*entityPtr);
+	}
 
 	(void)window_size_in_game_units;
 
 	// Visualization for debugging the position and scale of objects
 	if (DebugSystem::in_debug_mode)
 	{
-		for (auto& motion : ECS::registry<Motion>.components)
+		auto& motion_container = ECS::registry<Motion>;
+		for (int i = motion_container.components.size() - 1; i >= 0; i--)
 		{
+			Motion& motion = motion_container.components[i];
+			ECS::Entity entity = motion_container.entities[i];
+
+			// ignore overlays
+			if (ECS::registry<Overlay>.has(entity))
+				continue;
+
 			// draw a cross at the position of all objects
 			auto scale_horizontal_line = motion.scale;
 			scale_horizontal_line.y *= 0.1f;
@@ -317,11 +325,11 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 	// Check for collisions between all moving entities
 	auto& motion_container = ECS::registry<Motion>;
 	// for (auto [i, motion_i] : enumerate(motion_container.components)) // in c++ 17 we will be able to do this instead of the next three lines
-	for (unsigned int i=0; i<motion_container.components.size(); i++)
+	for (unsigned int i = 0; i < motion_container.components.size(); i++)
 	{
 		Motion& motion_i = motion_container.components[i];
 		ECS::Entity entity_i = motion_container.entities[i];
-		for (unsigned int j=i+1; j<motion_container.components.size(); j++)
+		for (unsigned int j = i + 1; j < motion_container.components.size(); j++)
 		{
 			Motion& motion_j = motion_container.components[j];
 			ECS::Entity entity_j = motion_container.entities[j];

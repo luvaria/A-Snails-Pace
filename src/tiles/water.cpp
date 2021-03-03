@@ -1,12 +1,15 @@
 // Header
 #include "water.hpp"
 #include "render.hpp"
-#include "tiles/tiles.hpp"
 
-ECS::Entity WaterTile::createWaterTile(vec2 position)
+ECS::Entity WaterTile::createWaterTile(Tile& tile, ECS::Entity entity)
 {
-	auto entity = ECS::Entity();
+	ECS::registry<Tile>.insert(entity, std::move(tile));
+	return createWaterTile(vec2(tile.x, tile.y), entity);
+}
 
+ECS::Entity WaterTile::createWaterTile(vec2 position, ECS::Entity entity)
+{
 	std::string key = "water";
 	ShadedMesh& resource = cache_resource(key);
 	if (resource.mesh.vertices.size() == 0)

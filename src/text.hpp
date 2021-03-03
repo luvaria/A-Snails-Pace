@@ -151,3 +151,17 @@ private:
  * not to be used otherwise.
  */
 void drawText(const Text& text, glm::ivec2 frameBufferSize);
+
+// text colours
+const vec3 TITLE_COLOUR = { 0.984f, 0.690f, 0.231f };
+const vec3 DEFAULT_COLOUR = { 1.f, 1.f, 1.f };
+const vec3 HIGHLIGHT_COLOUR = { 0.988f, 0.933f, 0.129f };
+const vec3 OVERLAY_COLOUR = { 0.f, 0.f, 0.f };
+
+// text scale
+const float TITLE_SCALE = 1.f;
+const float SUBTITLE_SCALE = 0.8f;
+const float OPTION_SCALE = 0.65f;
+const float OVERLAY_SCALE = 0.55f;
+const float DIALOGUE_SCALE = 0.5f;
+const float LEVEL_NAME_SCALE = 0.45f;

@@ -4,7 +4,7 @@
 #include "tiny_ecs.hpp"
 #include "subject.hpp"
 
-static class Geometry
+class Geometry
 {
 public:
 	struct Line

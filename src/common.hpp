@@ -54,3 +54,9 @@ struct Motion {
 struct Destination {
     vec2 position = { 0, 0 };
 };
+
+// renders independent of camera offset
+struct Overlay
+{
+	// empty; tag component
+};

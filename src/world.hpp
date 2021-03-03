@@ -48,30 +48,28 @@ public:
 	// return true if a given point is off screen, false otherwise
 	static bool offScreen(vec2 const& pos, vec2 window_size_in_game_units, vec2 cameraOffset);
 
-    static void goRight(ECS::Entity &entity, int &snail_move);
-    
-    static void goLeft(ECS::Entity &entity, int &snail_move);
-    
-    static void goUp(ECS::Entity &entity, int &snail_move);
-    
-    static void goDown(ECS::Entity &entity, int &snail_move);
-    
-    static void fallDown(ECS::Entity& entity, int& snail_move);
-    
-    static void doX(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile, int defaultDirection );
-    
-    static void doY(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile);
-    
-    static void rotate(TileSystem::Tile &currTile, Motion &motion, TileSystem::Tile &nextTile);
-    
-    static void changeDirection(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile, int defaultDirection, ECS::Entity& entity);
-    
 	// OpenGL window handle
 	GLFWwindow* window;
+
+	// Game running or paused
+	bool running;
+
+	// movement functions
+	static void goRight(ECS::Entity& entity, int& snail_move);
+	static void goLeft(ECS::Entity& entity, int& snail_move);
+	static void goUp(ECS::Entity& entity, int& snail_move);
+	static void goDown(ECS::Entity& entity, int& snail_move);
+
+	static void fallDown(ECS::Entity& entity, int& snail_move);
+
+	static void doX(Motion& motion, Tile& currTile, Tile& nextTile, int defaultDirection);
+	static void doY(Motion& motion, Tile& currTile, Tile& nextTile);
+
+	static void rotate(Tile& currTile, Motion& motion, Tile& nextTile);
+
+	static void changeDirection(Motion& motion, Tile& currTile, Tile& nextTile, int defaultDirection, ECS::Entity& entity);
+
 private:
-
-	
-
     // Input callback functions
 	void setGLFWCallbacks();
 	void on_key(int key, int, int action, int mod);
@@ -89,6 +87,7 @@ private:
 	float next_spider_spawn;
 	float next_fish_spawn;
 	ECS::Entity player_snail;
+	int attempts;
 
     std::chrono::time_point<std::chrono::high_resolution_clock> can_show_projectile_preview_time;
 	bool left_mouse_pressed;

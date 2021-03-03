@@ -136,7 +136,8 @@ enum RenderBucket
 	CHARACTER = 0,
 	PROJECTILE = 1,
 	TILE = 2,
-	BACKGROUND = 3
+	BACKGROUND = 3,
+	BACKGROUND_2 = 4
 };
 
 // A wrapper that points to the ShadedMesh in the resource_cache

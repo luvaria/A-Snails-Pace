@@ -3,10 +3,8 @@
 #include "render.hpp"
 #include "tiles/tiles.hpp"
 
-ECS::Entity Spider::createSpider(vec2 position)
+ECS::Entity Spider::createSpider(vec2 position, ECS::Entity entity)
 {
-	auto entity = ECS::Entity();
-
 	// Create rendering primitives
 	std::string key = "spider";
 	ShadedMesh& resource = cache_resource(key);
@@ -35,8 +33,7 @@ ECS::Entity Spider::createSpider(vec2 position)
 	motion.position = position;
     motion.scale = resource.mesh.original_size / resource.mesh.original_size.x * TileSystem::getScale();
 	motion.scale.y *= -1; // fix orientation
-	motion.scale.x *= 0.9;
-	motion.scale.y *= 0.9;
+	motion.scale *= 0.9f;
     motion.lastDirection = DIRECTION_WEST;
 
 	// Create and (empty) Spider component to be able to refer to all spiders
