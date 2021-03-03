@@ -18,9 +18,12 @@
 
 // Container for all our entities and game logic. Individual rendering / update is 
 // deferred to the relative update() methods
+
 class WorldSystem : public Observer, public Subject
 {
+
 public:
+
 	// Creates a window
 	WorldSystem(ivec2 window_size_px);
 
@@ -39,35 +42,35 @@ public:
 	void shootProjectile(vec2 mouse_pos, bool preview = false);
 
 	void onNotify(Event event);
-
-	// NEW: Defining what tile types are possible, could be used to render correct tile types
-	// and to check if can be moved. EMPTY = nothing is on the tile and you can move to it, 
-	// OCCUPIED = something is on the tile, UNUSED = don't render anything/tile is not going
-	// to be used
+    
+    static int snailMoves;
 
 	// return true if a given point is off screen, false otherwise
 	static bool offScreen(vec2 const& pos, vec2 window_size_in_game_units, vec2 cameraOffset);
 
+    static void goRight(ECS::Entity &entity, int &snail_move);
+    
+    static void goLeft(ECS::Entity &entity, int &snail_move);
+    
+    static void goUp(ECS::Entity &entity, int &snail_move);
+    
+    static void goDown(ECS::Entity &entity, int &snail_move);
+    
+    static void fallDown(ECS::Entity& entity, int& snail_move);
+    
+    static void doX(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile, int defaultDirection );
+    
+    static void doY(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile);
+    
+    static void rotate(TileSystem::Tile &currTile, Motion &motion, TileSystem::Tile &nextTile);
+    
+    static void changeDirection(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile, int defaultDirection, ECS::Entity& entity);
+    
 	// OpenGL window handle
 	GLFWwindow* window;
 private:
-    void goRight(ECS::Entity &entity, int &snail_move);
-    
-    void goLeft(ECS::Entity &entity, int &snail_move);
-    
-    void goUp(ECS::Entity &entity, int &snail_move);
-    
-    void goDown(ECS::Entity &entity, int &snail_move);
 
-	void fallDown(ECS::Entity& entity, int& snail_move);
-    
-    void doX(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile, int defaultDirection );
-    
-    void doY(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile);
-    
-    void rotate(TileSystem::Tile &currTile, Motion &motion, TileSystem::Tile &nextTile);
-    
-    void changeDirection(Motion &motion, TileSystem::Tile &currTile, TileSystem::Tile &nextTile, int defaultDirection, ECS::Entity& entity);
+	
 
     // Input callback functions
 	void setGLFWCallbacks();
@@ -95,7 +98,6 @@ private:
 	// move during the current turn.
 
 	int turn_number;
-	int snail_move;
 	
 	// music references
 	Mix_Music* background_music;
