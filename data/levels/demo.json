@@ -25,5 +25,6 @@
         "y": 3
       }
     ]
-  }
+  },
+  "AI-PathFinding-Algorithm": "A*"
 }

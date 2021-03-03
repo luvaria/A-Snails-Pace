@@ -1,6 +1,7 @@
 // Header
 #include "spider.hpp"
 #include "render.hpp"
+#include "ai.hpp"
 #include "tiles/tiles.hpp"
 
 ECS::Entity Spider::createSpider(vec2 position, ECS::Entity entity)
@@ -37,6 +38,7 @@ ECS::Entity Spider::createSpider(vec2 position, ECS::Entity entity)
     motion.lastDirection = DIRECTION_WEST;
 
 	// Create and (empty) Spider component to be able to refer to all spiders
+    ECS::registry<AI>.emplace(entity);
 	ECS::registry<Spider>.emplace(entity);
 
 	return entity;

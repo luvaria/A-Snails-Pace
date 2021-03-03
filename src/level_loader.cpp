@@ -2,6 +2,7 @@
 #include "level_loader.hpp"
 #include "snail.hpp"
 #include "spider.hpp"
+#include "ai.hpp"
 #include "tiles/vine.hpp"
 #include "tiles/water.hpp"
 #include "tiles/wall.hpp"
@@ -24,8 +25,13 @@ void LevelLoader::loadLevel(std::string levelFileName, bool preview, vec2 offset
 	std::ifstream i(levels_path(levelFileName));
 	json level = json::parse(i);
 
+    AISystem::aiPathFindingAlgorithm = level["AI-PathFinding-Algorithm"];
+    
 	// level scale
-	float scale = (!preview) ? level["scale"] : previewScale;
+    float prevScale = previewScale;
+    float levelScale = level["scale"];
+
+    float scale = preview ? prevScale : levelScale;
 	TileSystem::setScale(scale);
 
 	// clear tiles (if previously already loaded a level)

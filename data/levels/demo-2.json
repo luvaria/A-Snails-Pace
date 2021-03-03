@@ -33,5 +33,6 @@
         "y": 11
       }
     ]
-  }
+  },
+  "AI-PathFinding-Algorithm": "BFS"
 }
