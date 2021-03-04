@@ -22,7 +22,7 @@ struct FrontierComparator {
         float distanceA = a.size() + abs(a[a.size() - 1].x - destCoord.x) + abs(a[a.size() - 1].y - destCoord.y);
         float distanceB = b.size() + abs(b[b.size() - 1].x - destCoord.x) + abs(b[b.size() - 1].y - destCoord.y);
 
-        return distanceA <= distanceB;
+        return distanceA < distanceB;
     }
 
     vec2 destCoord;
