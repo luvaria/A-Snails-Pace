@@ -58,11 +58,12 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
         
         int aiMove = 0;
         if(WorldSystem::snailMoves != AISystem::aiMoves) {
-            if (current.size() > 1 && current[1].x-yAiPos>0) {
+            vec2 currPos = current.size() > 1 ? current[1] : current[0];
+            if (currPos.x-yAiPos>0) {
                 WorldSystem::goDown(entity, aiMove);
-            } else if (current[1].x-yAiPos<0) {
+            } else if (currPos.x-yAiPos<0) {
                 WorldSystem::goUp(entity, aiMove);
-            } else if (current[1].y-xAiPos>0) {
+            } else if (currPos.y-xAiPos>0) {
                 WorldSystem::goRight(entity, aiMove);
             } else {
                 WorldSystem::goLeft(entity, aiMove);
