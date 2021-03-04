@@ -180,7 +180,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
         std::vector<vec2> next = current;
 
         // wall above
-        if(tiles[endNode.x-1][endNode.y].type == WALL) {
+        if(endNode.x-1 >= 0 && endNode.x-1 < tiles.size() && endNode.y >= 0 && endNode.y < tiles[endNode.x-1].size() && tiles[endNode.x-1][endNode.y].type == WALL) {
             
             if (tileMovesMap.find({endNode.x-1, endNode.y-1}) != tileMovesMap.end()) {
                 if(tiles[endNode.x][endNode.y-1].type == EMPTY) {
@@ -223,7 +223,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
             
         }
         // wall on the right
-        if(tiles[endNode.x][endNode.y+1].type == WALL) {
+        if(endNode.x >= 0 && endNode.x < tiles.size() && endNode.y+1 >= 0 && endNode.y+1 < tiles[endNode.x].size() && tiles[endNode.x][endNode.y+1].type == WALL) {
             if (tileMovesMap.find({endNode.x+1, endNode.y+1}) != tileMovesMap.end()) {
                 if(tiles[endNode.x+1][endNode.y].type == EMPTY) {
                     next.push_back({endNode.x+1, endNode.y});
@@ -263,7 +263,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
             }
         }
         // wall on the left
-        if(tiles[endNode.x][endNode.y-1].type == WALL) {
+        if(endNode.x >= 0 && endNode.x < tiles.size() && endNode.y-1 >= 0 && endNode.y-1 < tiles[endNode.x].size() && tiles[endNode.x][endNode.y-1].type == WALL) {
             if (tileMovesMap.find({endNode.x-1, endNode.y-1}) != tileMovesMap.end()) {
                 if(tiles[endNode.x-1][endNode.y].type == EMPTY) {
                     next.push_back({endNode.x-1, endNode.y});
@@ -304,7 +304,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
             }
         }
         // wall below
-        if(tiles[endNode.x+1][endNode.y].type == WALL) {
+        if(endNode.x+1 >= 0 && endNode.x+1 < tiles.size() && endNode.y >= 0 && endNode.y < tiles[endNode.x+1].size() && tiles[endNode.x+1][endNode.y].type == WALL) {
             if (tileMovesMap.find({endNode.x+1, endNode.y+1}) != tileMovesMap.end()) {
                 if(tiles[endNode.x][endNode.y+1].type == EMPTY) {
                     next.push_back({endNode.x, endNode.y+1});

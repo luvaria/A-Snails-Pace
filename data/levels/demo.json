@@ -26,5 +26,5 @@
       }
     ]
   },
-  "AI-PathFinding-Algorithm": "A*"
+  "AI-PathFinding-Algorithm": "Astar"
 }
