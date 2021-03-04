@@ -42,7 +42,7 @@ struct Transform {
 #define DIRECTION_EAST  3
 
 #define AI_PF_ALGO_BFS  "BFS"
-#define AI_PF_ALGO_A_STAR "A*"
+#define AI_PF_ALGO_A_STAR "Astar"
 
 // All data relevant to the shape and motion of entities
 struct Motion {
