@@ -21,7 +21,7 @@ static const float PI = 3.14159265359f;
 
 // Simple utility functions to avoid mistyping directory name
 inline std::string data_path() { return "data"; };
-inline std::string shader_path(const std::string& name) { return data_path() + "/shaders/" + name;};
+inline std::string shader_path(const std::string& name) { return data_path() + "/shaders/" + name; };
 inline std::string textures_path(const std::string& name) { return data_path() + "/textures/" + name; };
 inline std::string audio_path(const std::string& name) { return data_path() + "/audio/" + name; };
 inline std::string mesh_path(const std::string& name) { return data_path() + "/meshes/" + name; };
@@ -41,6 +41,8 @@ struct Transform {
 #define DIRECTION_SOUTH 1
 #define DIRECTION_EAST  3
 
+#define AI_PF_ALGO_BFS  "BFS"
+#define AI_PF_ALGO_A_STAR "Astar"
 
 // All data relevant to the shape and motion of entities
 struct Motion {
@@ -48,11 +50,11 @@ struct Motion {
 	float angle = 0;
 	vec2 velocity = { 0, 0 };
 	vec2 scale = { 10, 10 };
-    int lastDirection = DIRECTION_NORTH;
+	int lastDirection = DIRECTION_NORTH;
 };
 
 struct Destination {
-    vec2 position = { 0, 0 };
+	vec2 position = { 0, 0 };
 };
 
 // renders independent of camera offset

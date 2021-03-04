@@ -11,9 +11,13 @@
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // DON'T WORRY ABOUT THIS CLASS UNTIL ASSIGNMENT 2
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-namespace DebugSystem 
+namespace DebugSystem
 {
 	void createLine(vec2 position, vec2 scale) {
+		createLine(position, scale, 0.f);
+	}
+
+	void createLine(vec2 position, vec2 scale, float angle) {
 		auto entity = ECS::Entity();
 
 		std::string key = "thick_line";
@@ -25,7 +29,7 @@ namespace DebugSystem
 
 			// Corner points
 			ColoredVertex v;
-			v.position = {-0.5,-0.5,z};
+			v.position = { -0.5,-0.5,z };
 			v.color = red;
 			resource.mesh.vertices.push_back(v);
 			v.position = { -0.5,0.5,z };
@@ -54,7 +58,7 @@ namespace DebugSystem
 
 		// Create motion
 		auto& motion = ECS::registry<Motion>.emplace(entity);
-		motion.angle = 0.f;
+		motion.angle = angle;
 		motion.velocity = { 0, 0 };
 		motion.position = position;
 		motion.scale = scale;
@@ -66,8 +70,10 @@ namespace DebugSystem
 		// Clear old debugging visualizations
 		while (ECS::registry<DebugComponent>.entities.size() > 0) {
 			ECS::ContainerInterface::remove_all_components_of(ECS::registry<DebugComponent>.entities.back());
-        }
+		}
 	}
 
 	bool in_debug_mode = false;
+	bool in_path_debug_mode = false;
+
 }
