@@ -73,8 +73,8 @@ int main()
 			// TRY TO SEE IF THIS CAN BE REPLACED WITH AN OBSERVER PATTERN
 			while (addAI == false) {
 				auto& aiRegistry = ECS::registry<AI>;
-				//std::cout << "here" << std::endl;
-				//std::cout << aiRegistry.components.size() << std::endl;
+				std::cout << "here" << std::endl;
+				std::cout << aiRegistry.components.size() << std::endl;
 				std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>();
 				std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ lfs }));
 				for (unsigned int i = 0; i < aiRegistry.components.size(); i++) {

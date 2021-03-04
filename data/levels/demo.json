@@ -23,11 +23,8 @@
       {
         "x": 7,
         "y": 3
-      },
-      {
-        "x": 6,
-        "y": 3
       }
     ]
-  }
+  },
+  "AI-PathFinding-Algorithm": "Astar"
 }

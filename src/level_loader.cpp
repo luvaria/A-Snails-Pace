@@ -2,6 +2,7 @@
 #include "level_loader.hpp"
 #include "snail.hpp"
 #include "spider.hpp"
+#include "ai.hpp"
 #include "tiles/vine.hpp"
 #include "tiles/water.hpp"
 #include "tiles/wall.hpp"
@@ -11,6 +12,7 @@
 #include <fstream>
 #include <vector>
 #include <../ext/nlohmann_json/single_include/nlohmann/json.hpp>
+#include <iostream>
 
 // for convenience
 using json = nlohmann::json;
@@ -23,8 +25,13 @@ void LevelLoader::loadLevel(std::string levelFileName, bool preview, vec2 offset
 	std::ifstream i(levels_path(levelFileName));
 	json level = json::parse(i);
 
+	AISystem::aiPathFindingAlgorithm = level["AI-PathFinding-Algorithm"];
+
 	// level scale
-	float scale = (!preview) ? level["scale"] : previewScale;
+	float prevScale = previewScale;
+	float levelScale = level["scale"];
+
+	float scale = preview ? prevScale : levelScale;
 	TileSystem::setScale(scale);
 
 	// clear tiles (if previously already loaded a level)
@@ -43,6 +50,7 @@ void LevelLoader::loadLevel(std::string levelFileName, bool preview, vec2 offset
 	// load tile types row by row
 	std::string row;
 	auto& tiles = TileSystem::getTiles();
+
 	for (int y = 0; y < level["tiles"].size(); y++)
 	{
 		// limit preview dimensions (centre snail)
@@ -71,8 +79,8 @@ void LevelLoader::loadLevel(std::string levelFileName, bool preview, vec2 offset
 
 			Tile tile;
 
-			tile.x = (float) (x * scale + 0.5 * scale) + offset.x;
-			tile.y = (float) (y * scale + 0.5 * scale) + offset.y;
+			tile.x = (float)(x * scale + 0.5 * scale) + offset.x;
+			tile.y = (float)(y * scale + 0.5 * scale) + offset.y;
 
 			auto entity = ECS::Entity();
 			if (preview)
@@ -102,13 +110,57 @@ void LevelLoader::loadLevel(std::string levelFileName, bool preview, vec2 offset
 		tiles.push_back(tileRow);
 	}
 
-	// load characters
+	TileSystem::vec2Map& tileMovesMap = TileSystem::getAllTileMovesMap();
+	int y = 0;
+	for (auto& rows : tiles) // Iterating over rows
+	{
+		int x = 0;
+		for (auto& elem : rows)
+		{
+			if (elem.type == WALL) {
+				if (y - 1 > 0 && (tiles[y - 1][x].type == VINE || tiles[y - 1][x].type == EMPTY)) {
+					auto& elem2 = tiles[y - 1][x];
+					tileMovesMap.insert({ {y - 1, x}, elem2 });
+				}
+				if (x - 1 > 0 && (tiles[y][x - 1].type == VINE || tiles[y][x - 1].type == EMPTY)) {
+					auto& elem2 = tiles[y][x - 1];
+					tileMovesMap.insert({ {y, x - 1}, elem2 });
+				}
+				if (y + 1 < tiles.size() && (tiles[y + 1][x].type == VINE || tiles[y + 1][x].type == EMPTY)) {
+					auto& elem2 = tiles[y + 1][x];
+					tileMovesMap.insert({ {y + 1, x}, elem2 });
+				}
+				if (x + 1 < tiles[y].size() && (tiles[y][x + 1].type == VINE || tiles[y][x + 1].type == EMPTY))
+				{
+					auto& elem2 = tiles[y][x + 1];
+					tileMovesMap.insert({ {y, x + 1}, elem2 });
+				}
+			}
+			else if (elem.type == VINE) {
+				tileMovesMap.insert({ {y, x}, elem });
+			}
+			x++;
+		}
+		y++;
+	}
+
+	//    for (auto itr = tileMovesMap.begin(); itr != tileMovesMap.end(); itr++) {
+	//        std::cout << itr->first[0] << "," << itr->first[0]
+	//              << '\t' << itr->second.type << '\n';
+	//    }
+
+
+		// load characters
 	for (auto it = level["characters"].begin(); it != level["characters"].end(); ++it)
 	{
+		auto entity = ECS::Entity();
+		if (preview)
+			ECS::registry<LevelSelectTag>.emplace(entity);
+
 		switch (hashit(it.key()))
 		{
 		case eSnail:
-			for (auto &snail : it.value())
+			for (auto& snail : it.value())
 			{
 				ivec2 snailPos = { snail["x"], snail["y"] };
 				if (preview && (xNotInPreviewArea(snailPos.x, previewOrigin) || yNotInPreviewArea(snailPos.y, previewOrigin)))
@@ -116,7 +168,7 @@ void LevelLoader::loadLevel(std::string levelFileName, bool preview, vec2 offset
 				Tile& tile = tiles[snail["y"]][snail["x"]];
 				// may not want this for snail location depending on enemy type and AI
 				tile.occupied = true;
-				Snail::createSnail({ tile.x, tile.y }, createTaggedEntity(preview));
+				Snail::createSnail({ tile.x, tile.y }, entity);
 			}
 			break;
 		case eSpider:
@@ -127,7 +179,7 @@ void LevelLoader::loadLevel(std::string levelFileName, bool preview, vec2 offset
 					continue;
 				Tile& tile = tiles[spider["y"]][spider["x"]];
 				tile.occupied = true;
-				Spider::createSpider({ tile.x, tile.y }, createTaggedEntity(preview));
+				Spider::createSpider({ tile.x, tile.y }, entity);
 			}
 			break;
 		default:
@@ -159,12 +211,4 @@ bool LevelLoader::xNotInPreviewArea(int xPos, vec2 previewOrigin)
 bool LevelLoader::yNotInPreviewArea(int yPos, vec2 previewOrigin)
 {
 	return !((yPos >= previewOrigin.y - previewDimensions.y / 2) && (yPos < previewOrigin.y + previewDimensions.y / 2));
-}
-
-ECS::Entity LevelLoader::createTaggedEntity(bool preview)
-{
-	auto entity = ECS::Entity();
-	if (preview)
-		ECS::registry<LevelSelectTag>.emplace(entity);
-	return entity;
 }
