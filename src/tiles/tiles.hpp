@@ -41,7 +41,7 @@ public:
     };
 
 
-    typedef std::unordered_map<ivec2,Tile,KeyFuncs,KeyFuncs> vec2Map;
+    typedef std::unordered_map<ivec2, Tile, KeyFuncs, KeyFuncs> vec2Map;
 	// tile grid
 	static std::vector<std::vector<Tile>>& getTiles();
     static vec2Map& getAllTileMovesMap();

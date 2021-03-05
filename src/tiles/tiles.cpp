@@ -11,5 +11,5 @@ float TileSystem::getScale() { return scale; }
 void TileSystem::setScale(float s) { scale = s; }
 void TileSystem::resetGrid() { tiles.clear(); };
 std::vector<std::vector<Tile>>& TileSystem::getTiles() { return tiles; }
-TileSystem::vec2Map& TileSystem::getAllTileMovesMap() {return tileMovesMap;}
+TileSystem::vec2Map& TileSystem::getAllTileMovesMap() { return tileMovesMap; }
 

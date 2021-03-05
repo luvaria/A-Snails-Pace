@@ -747,58 +747,6 @@ void WorldSystem::on_key(int key, int, int action, int mod)
             }
 
 		}
-        
-//        if (snail_move < tempSnailMove && action == GLFW_PRESS)
-//        {
-//            auto& registry = ECS::registry<Motion>;
-//            for (unsigned int i=0; i< registry.components.size(); i++)
-//            {
-//                auto entity = registry.entities[i];
-//                if (ECS::registry<Spider>.has(entity))
-//                {
-//                    float scale = TileSystem::getScale();
-//
-//                    vec2& snail_position = ECS::registry<Destination>.has(player_snail) ?
-//                            ECS::registry<Destination>.get(player_snail).position :
-//                            ECS::registry<Motion>.get(player_snail).position;
-//
-//                    int xCoord = static_cast<int>(snail_position.x / scale);
-//                    int yCoord = static_cast<int>(snail_position.y / scale);
-//
-//                    auto& motEntity = ECS::registry<Motion>.get(entity);
-//                    int xCoordEntity = static_cast<int>(motEntity.position.x / scale);
-//                    int yCoordEntity = static_cast<int>(motEntity.position.y / scale);
-//
-//                    int ai_move=0;
-//                    int tmp_move = ai_move;
-//                    if (xCoordEntity-xCoord==0 && yCoordEntity-yCoord==0) {
-//                    // dont move
-//                    }else {
-//                        if (xCoordEntity-xCoord>=0) {
-//                            goLeft(entity, ai_move);
-//                            if(ai_move == tmp_move){
-//                                if(yCoordEntity-yCoord>0) {
-//                                    goUp(entity, ai_move);
-//                                } else {
-//                                    goDown(entity, ai_move);
-//                                }
-//                            }
-//                        }
-//                        if(ai_move == tmp_move) {
-//                            goRight(entity, ai_move);
-//                            if(ai_move == tmp_move){
-//                                if(yCoordEntity-yCoord>0) {
-//                                    goUp(entity, ai_move);
-//                                } else {
-//                                    goDown(entity, ai_move);
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//            // presumably the snail moved therefore, remove any projectile preview
-//        }
 	}
 
 	// Resetting game
@@ -831,7 +779,6 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		// depending on snail's status
 		WorldSystem::snailMoves = 1;
         AISystem::aiMoves = 1;
-
 	}
 
     // toggle controls overlay

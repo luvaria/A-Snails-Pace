@@ -181,11 +181,6 @@ void LevelLoader::loadLevel(std::string levelFileName, bool preview, vec2 offset
 		}
 		y++;
 	}
-
-	//    for (auto itr = tileMovesMap.begin(); itr != tileMovesMap.end(); itr++) {
-	//        std::cout << itr->first[0] << "," << itr->first[0]
-	//              << '\t' << itr->second.type << '\n';
-	//    }
 }
 
 void LevelLoader::previewLevel(std::string levelFileName, vec2 offset)
