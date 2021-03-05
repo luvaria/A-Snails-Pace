@@ -596,12 +596,12 @@ void WorldSystem::goUp(ECS::Entity& entity, int& moves) {
         // This is to fix a movement bug where snail flips to weird positions when: a. it is upside down
         // and b. W is pressed. In order to fix that bug I have written this if statement
         // which might not be the best way to do it, but solves the bug for now.
-        if (tiles[yCoord - 1][xCoord + 1].type == WALL && (motion.angle == PI || motion.angle == -PI)) {
-            return;
-        }
+        //if (tiles[yCoord - 1][xCoord + 1].type == WALL && (motion.angle == PI || motion.angle == -PI)) {
+          //  return;
+        //}
 
-        if (tiles[yCoord - 1][xCoord + 1].type != WALL && currTile.type == VINE &&
-            (motion.angle == PI || motion.angle == -PI)) {
+        //if (tiles[yCoord - 1][xCoord + 1].type != WALL && currTile.type == VINE &&
+            //(motion.angle == PI || motion.angle == -PI)) {
             /*
             Tile nextTile = tiles[yCoord - 1][xCoord + 1];
             Destination& dest = ECS::registry<Destination>.has(entity) ? ECS::registry<Destination>.get(entity) : ECS::registry<Destination>.emplace(entity);
@@ -613,12 +613,12 @@ void WorldSystem::goUp(ECS::Entity& entity, int& moves) {
             motion.angle = PI / 2;
             motion.lastDirection = DIRECTION_NORTH;
             */
-            return;
-        }
+           // return;
+        //}
 
-        if (tiles[yCoord - 1][xCoord + 1].type != WALL && (motion.angle == PI || motion.angle == -PI)) {
-            return;
-        }
+        //if (tiles[yCoord - 1][xCoord + 1].type != WALL && (motion.angle == PI || motion.angle == -PI)) {
+            //return;
+        //}
         nextTile = tiles[yCoord][xCoord];
         changeDirection(motion, currTile, nextTile, DIRECTION_NORTH, entity);
         if (abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {

@@ -26,81 +26,25 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     auto& aiRegistry = ECS::registry<AI>;
     for (unsigned int i=0; i< aiRegistry.components.size(); i++)
     {
-        std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>();
-        std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ lfs }));
+        //std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>();
+        //std::shared_ptr <BTNode> npp = std::make_unique<NoPathsPossible>();
+        //std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ lfs }));
 
         auto entity = aiRegistry.entities[i];
-        //auto& tree = aiRegistry.components[i].tree;
+        auto& tree = aiRegistry.components[i].tree;
         auto state = tree->process(entity);
-        /*
-        auto tiles = TileSystem::getTiles();
-        auto& motion = ECS::registry<Motion>.get(entity);
-        vec2 aiPos = motion.position;
-        int xAiPos = (aiPos.x - (0.5*scale))/scale;
-        int yAiPos = (aiPos.y - (0.5*scale))/scale;
-        vec2 aiCoord = {yAiPos, xAiPos};
-        std::vector<vec2> current;
-
-        auto start = std::chrono::high_resolution_clock::now();
-        
-        if(AISystem::aiPathFindingAlgorithm == AI_PF_ALGO_A_STAR) {
-            current = AISystem::shortestPathAStar(aiCoord, snailCoord);
-        } else {
-            current = AISystem::shortestPathBFS(aiCoord, snailCoord);
-        }
-        
-        // Get ending timepoint
-        auto stop = std::chrono::high_resolution_clock::now();
-      
-        // Get duration. Substart timepoints to
-        // get durarion. To cast it to proper unit
-        // use duration cast method
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-        
-        if (DebugSystem::in_path_debug_mode) {
-            std::cout << "Time taken by function: "
-                         << duration.count() << " microseconds" << std::endl;
-        }
-
-        if(ECS::registry<Turn>.components[0].type == ENEMY && !aiMoved) {
-            int aiMove = current.size() == 1 ? 1 : 0;
-            vec2 currPos = current.size() > 1 ? current[1] : current[0];
-            if(aiMove == 0) {
-                if (currPos.x-yAiPos>0) {
-                    WorldSystem::goDown(entity, aiMove);
-                } else if (currPos.x-yAiPos<0) {
-                    WorldSystem::goUp(entity, aiMove);
-                } else if (currPos.y-xAiPos>0) {
-                    WorldSystem::goRight(entity, aiMove);
-                } else {
-                    WorldSystem::goLeft(entity, aiMove);
-                }
-            }
-            if(aiMove == 0) {
-                if(motion.lastDirection == DIRECTION_NORTH) {
-                    WorldSystem::goUp(entity, aiMove);
-                } else if(motion.lastDirection == DIRECTION_SOUTH) {
-                    WorldSystem::goDown(entity, aiMove);
-                } else if(motion.lastDirection == DIRECTION_EAST) {
-                    WorldSystem::goRight(entity, aiMove);
-                } else {
-                    WorldSystem::goLeft(entity, aiMove);
-                }
-            }
-            aiMovedThisStep = true;
-        }
-        */
+        //std::cout << state << std::endl;
         
         if (state != BTState::Running) {
             aiMovedThisStep = true;
         }
         
     }
+    
     if (aiMovedThisStep) {
         aiMoved = true;
     }
-    //if (aiMovedThisStep)
-            //aiMoved = true;
+    
     
 	(void)elapsed_ms; // placeholder to silence unused warning until implemented
 	(void)window_size_in_game_units; // placeholder to silence unused warning until implemented
@@ -483,10 +427,15 @@ BTState LookForSnail::process(ECS::Entity e) {
                 WorldSystem::goLeft(entity, aiMove);
             }
         }
-        return BTState::Success;
+        return BTState::Failure;
     }
     
     return BTState::Running;
+}
+
+BTState NoPathsPossible::process(ECS::Entity e) {
+    std::cout << "in npp" << std::endl;
+    return BTState::Success;
 }
 
 bool AISystem::aiMoved = false;

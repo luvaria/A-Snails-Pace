@@ -6,6 +6,7 @@
 #include <queue>
 #include <memory>
 #include <type_traits>
+#include <iostream>
 
 #include "common.hpp"
 #include "tiles/tiles.hpp"
@@ -14,9 +15,6 @@
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // DON'T WORRY ABOUT THIS CLASS UNTIL ASSIGNMENT 3
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-struct AI {
-    //std::shared_ptr <BTNode> tree;
-};
 
 struct FrontierComparator {
     explicit FrontierComparator(vec2 destCoord_)
@@ -43,6 +41,10 @@ class BTNode {
     public:
         virtual void init(ECS::Entity e) {};
         virtual BTState process(ECS::Entity e) = 0;
+};
+
+struct AI {
+    std::shared_ptr <BTNode> tree;
 };
 
 // loops through all children and exits when one fails.
@@ -76,12 +78,14 @@ private:
 
         // select a new active child and initialize its internal state
         if (state == BTState::Success) {
+            std::cout << m_index << std::endl;
             ++m_index;
             if (m_index >= m_children.size()) {
                 return BTState::Success;
             }
             else {
                 const auto& nextChild = m_children[m_index];
+                //std::cout << m_index << std::endl;
                 assert(nextChild);
                 nextChild->init(e);
                 return BTState::Running;
@@ -118,7 +122,9 @@ public:
 
     }
 private:
-    void init(ECS::Entity e) override;
+    void init(ECS::Entity e) override {
+    
+    }
 
     BTState process(ECS::Entity e) override;
 };
