@@ -14,9 +14,6 @@
 
 void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 {
-    if (aiMoved)
-        return;
-
     auto& snailEntity = ECS::registry<Snail>.entities[0];
     float scale = TileSystem::getScale();
     
@@ -25,12 +22,13 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     int yPos = (snailPos[1] - (0.5*scale))/scale;
     vec2 snailCoord = {yPos, xPos};
 
-    std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>();
-    std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ lfs }));
     bool aiMovedThisStep = false;
     auto& aiRegistry = ECS::registry<AI>;
     for (unsigned int i=0; i< aiRegistry.components.size(); i++)
     {
+        std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>();
+        std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ lfs }));
+
         auto entity = aiRegistry.entities[i];
         //auto& tree = aiRegistry.components[i].tree;
         auto state = tree->process(entity);
