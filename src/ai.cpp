@@ -25,15 +25,74 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>();
     std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ lfs }));
     bool aiMoved = false;
-    
     auto& aiRegistry = ECS::registry<AI>;
     for (unsigned int i=0; i< aiRegistry.components.size(); i++)
     {
-        // bt code here
         auto entity = aiRegistry.entities[i];
-        auto state = tree->process(entity);
-        //aiMoved = true;
+        auto tiles = TileSystem::getTiles();
+        auto& motion = ECS::registry<Motion>.get(entity);
+        vec2 aiPos = motion.position;
+        int xAiPos = (aiPos.x - (0.5*scale))/scale;
+        int yAiPos = (aiPos.y - (0.5*scale))/scale;
+        vec2 aiCoord = {yAiPos, xAiPos};
+        std::vector<vec2> current;
+
+        auto start = std::chrono::high_resolution_clock::now();
+        
+        if(AISystem::aiPathFindingAlgorithm == AI_PF_ALGO_A_STAR) {
+            current = AISystem::shortestPathAStar(aiCoord, snailCoord);
+        } else {
+            current = AISystem::shortestPathBFS(aiCoord, snailCoord);
+        }
+        
+        // Get ending timepoint
+        auto stop = std::chrono::high_resolution_clock::now();
+      
+        // Get duration. Substart timepoints to
+        // get durarion. To cast it to proper unit
+        // use duration cast method
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+        
+        if (DebugSystem::in_path_debug_mode) {
+            std::cout << "Time taken by function: "
+                         << duration.count() << " microseconds" << std::endl;
+        }
+        
+        
+        int aiMove = 0;
+        if(WorldSystem::snailMoves != AISystem::aiMoves) {
+            int aiMove = current.size() == 1 ? 1 : 0;
+            vec2 currPos = current.size() > 1 ? current[1] : current[0];
+            if(aiMove == 0) {
+                if (currPos.x-yAiPos>0) {
+                    WorldSystem::goDown(entity, aiMove);
+                } else if (currPos.x-yAiPos<0) {
+                    WorldSystem::goUp(entity, aiMove);
+                } else if (currPos.y-xAiPos>0) {
+                    WorldSystem::goRight(entity, aiMove);
+                } else {
+                    WorldSystem::goLeft(entity, aiMove);
+                }
+            }
+            if(aiMove == 0) {
+                if(motion.lastDirection == DIRECTION_NORTH) {
+                    WorldSystem::goUp(entity, aiMove);
+                } else if(motion.lastDirection == DIRECTION_SOUTH) {
+                    WorldSystem::goDown(entity, aiMove);
+                } else if(motion.lastDirection == DIRECTION_EAST) {
+                    WorldSystem::goRight(entity, aiMove);
+                } else {
+                    WorldSystem::goLeft(entity, aiMove);
+                }
+            }
+            aiMoved = true;
+        }
     }
+    if(aiMoved) {
+        aiMoved = false;
+        AISystem::aiMoves--;
+    }
+  
 	(void)elapsed_ms; // placeholder to silence unused warning until implemented
 	(void)window_size_in_game_units; // placeholder to silence unused warning until implemented
 }
@@ -45,6 +104,7 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
     tileMovesMap.erase(start);
     std::deque<std::vector<vec2>> frontier = {startFrontier};
     std::vector<vec2> current = frontier.front();
+
   while (!frontier.empty()) {
     current = frontier.front();
     frontier.pop_front();
@@ -340,7 +400,6 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
 
 }
 
-
 BTState LookForSnail::process(ECS::Entity e) {
     // before for loop
     auto& snailEntity = ECS::registry<Snail>.entities[0];
@@ -426,5 +485,6 @@ BTState LookForSnail::process(ECS::Entity e) {
     }
     return BTState::Running;
 }
+
 int AISystem::aiMoves = 0;
 std::string AISystem::aiPathFindingAlgorithm = "BFS";

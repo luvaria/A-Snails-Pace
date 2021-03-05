@@ -30,7 +30,6 @@ void LevelLoader::loadLevel(std::string levelFileName, bool preview, vec2 offset
 	// level scale
 	float prevScale = previewScale;
 	float levelScale = level["scale"];
-
 	float scale = preview ? prevScale : levelScale;
 	TileSystem::setScale(scale);
 
@@ -109,48 +108,8 @@ void LevelLoader::loadLevel(std::string levelFileName, bool preview, vec2 offset
 		}
 		tiles.push_back(tileRow);
 	}
-
-	TileSystem::vec2Map& tileMovesMap = TileSystem::getAllTileMovesMap();
-	int y = 0;
-	for (auto& rows : tiles) // Iterating over rows
-	{
-		int x = 0;
-		for (auto& elem : rows)
-		{
-			if (elem.type == WALL) {
-				if (y - 1 > 0 && (tiles[y - 1][x].type == VINE || tiles[y - 1][x].type == EMPTY)) {
-					auto& elem2 = tiles[y - 1][x];
-					tileMovesMap.insert({ {y - 1, x}, elem2 });
-				}
-				if (x - 1 > 0 && (tiles[y][x - 1].type == VINE || tiles[y][x - 1].type == EMPTY)) {
-					auto& elem2 = tiles[y][x - 1];
-					tileMovesMap.insert({ {y, x - 1}, elem2 });
-				}
-				if (y + 1 < tiles.size() && (tiles[y + 1][x].type == VINE || tiles[y + 1][x].type == EMPTY)) {
-					auto& elem2 = tiles[y + 1][x];
-					tileMovesMap.insert({ {y + 1, x}, elem2 });
-				}
-				if (x + 1 < tiles[y].size() && (tiles[y][x + 1].type == VINE || tiles[y][x + 1].type == EMPTY))
-				{
-					auto& elem2 = tiles[y][x + 1];
-					tileMovesMap.insert({ {y, x + 1}, elem2 });
-				}
-			}
-			else if (elem.type == VINE) {
-				tileMovesMap.insert({ {y, x}, elem });
-			}
-			x++;
-		}
-		y++;
-	}
-
-	//    for (auto itr = tileMovesMap.begin(); itr != tileMovesMap.end(); itr++) {
-	//        std::cout << itr->first[0] << "," << itr->first[0]
-	//              << '\t' << itr->second.type << '\n';
-	//    }
-
-
-		// load characters
+    
+	// load characters
 	for (auto it = level["characters"].begin(); it != level["characters"].end(); ++it)
 	{
 		auto entity = ECS::Entity();
@@ -186,6 +145,44 @@ void LevelLoader::loadLevel(std::string levelFileName, bool preview, vec2 offset
 			throw std::runtime_error("Failed to spawn character " + it.key());
 			break;
 		}
+	}
+
+	// no moves map if preview
+	if (preview)
+		return;
+
+	TileSystem::vec2Map& tileMovesMap = TileSystem::getAllTileMovesMap();
+	int y = 0;
+	for (auto& rows : tiles) // Iterating over rows
+	{
+		int x = 0;
+		for (auto& elem : rows)
+		{
+			if (elem.type == WALL) {
+				if (y - 1 > 0 && (tiles[y - 1][x].type == VINE || tiles[y - 1][x].type == EMPTY)) {
+					auto& elem2 = tiles[y - 1][x];
+					tileMovesMap.insert({ {y - 1, x}, elem2 });
+				}
+				if (x - 1 > 0 && (tiles[y][x - 1].type == VINE || tiles[y][x - 1].type == EMPTY)) {
+					auto& elem2 = tiles[y][x - 1];
+					tileMovesMap.insert({ {y, x - 1}, elem2 });
+				}
+				if (y + 1 < tiles.size() && (tiles[y + 1][x].type == VINE || tiles[y + 1][x].type == EMPTY)) {
+					auto& elem2 = tiles[y + 1][x];
+					tileMovesMap.insert({ {y + 1, x}, elem2 });
+				}
+				if (x + 1 < tiles[y].size() && (tiles[y][x + 1].type == VINE || tiles[y][x + 1].type == EMPTY))
+				{
+					auto& elem2 = tiles[y][x + 1];
+					tileMovesMap.insert({ {y, x + 1}, elem2 });
+				}
+			}
+			else if (elem.type == VINE) {
+				tileMovesMap.insert({ {y, x}, elem });
+			}
+			x++;
+		}
+		y++;
 	}
 }
 

@@ -27,7 +27,8 @@ public:
 
     // reset tile grid (for level loading)
     static void resetGrid();
-    struct KeyFuncs
+
+  struct KeyFuncs
     {
         size_t operator()(const ivec2& k)const
         {
@@ -42,6 +43,7 @@ public:
 
 
     typedef std::unordered_map<ivec2, Tile, KeyFuncs, KeyFuncs> vec2Map;
+
     // tile grid
     static std::vector<std::vector<Tile>>& getTiles();
     static vec2Map& getAllTileMovesMap();
