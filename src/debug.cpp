@@ -13,7 +13,7 @@
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 namespace DebugSystem 
 {
-	void createLine(vec2 position, vec2 scale) {
+ 	void createLine(vec2 position, vec2 scale, float angle) {
 		auto entity = ECS::Entity();
 
 		std::string key = "thick_line";
@@ -54,7 +54,7 @@ namespace DebugSystem
 
 		// Create motion
 		auto& motion = ECS::registry<Motion>.emplace(entity);
-		motion.angle = 0.f;
+		motion.angle = angle;
 		motion.velocity = { 0, 0 };
 		motion.position = position;
 		motion.scale = scale;
@@ -70,4 +70,6 @@ namespace DebugSystem
 	}
 
 	bool in_debug_mode = false;
+    bool in_path_debug_mode = false;
+
 }
