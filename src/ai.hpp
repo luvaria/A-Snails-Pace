@@ -31,24 +31,6 @@ struct FrontierComparator {
     vec2 destCoord;
 };
 
-struct AI {
-};
-
-struct FrontierComparator {
-    explicit FrontierComparator(vec2 destCoord_)
-    : destCoord(destCoord_) {}
-
-    bool operator ()(std::vector<vec2> const& a, std::vector<vec2> const& b) const {
-        float distanceA = a.size() + abs(a[a.size() - 1].x - destCoord.x) + abs(a[a.size() - 1].y - destCoord.y);
-        float distanceB = b.size() + abs(b[b.size() - 1].x - destCoord.x) + abs(b[b.size() - 1].y - destCoord.y);
-
-        return distanceA < distanceB;
-    }
-
-    vec2 destCoord;
-};
-
-
 // The return type of behaviour tree processing
 enum class BTState {
     Running,
