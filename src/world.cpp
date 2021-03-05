@@ -842,8 +842,8 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 	// CHANGE: Switched debug key to V so it would not trigger when moving to the right
 	if (action == GLFW_PRESS && key == GLFW_KEY_V)
 		DebugSystem::in_debug_mode = !DebugSystem::in_debug_mode;
-    if (key == GLFW_KEY_P)
-        DebugSystem::in_path_debug_mode = (action != GLFW_RELEASE);
+    if (action == GLFW_PRESS && key == GLFW_KEY_P)
+        DebugSystem::in_path_debug_mode = !DebugSystem::in_path_debug_mode;
 
 	// Control the current speed with `<` `>`
 	if (action == GLFW_RELEASE && (mod & GLFW_MOD_SHIFT) && key == GLFW_KEY_COMMA)

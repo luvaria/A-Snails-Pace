@@ -74,6 +74,11 @@ private:
 
 	
 
+	static void rotate(Tile& currTile, Motion& motion, Tile& nextTile);
+
+	static void changeDirection(Motion& motion, Tile& currTile, Tile& nextTile, int defaultDirection, ECS::Entity& entity);
+
+private:
     // Input callback functions
 	void setGLFWCallbacks();
 	void on_key(int key, int, int action, int mod);
