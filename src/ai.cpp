@@ -24,16 +24,16 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 
     std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>();
     std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ lfs }));
+    bool aiMoved = false;
     
     auto& aiRegistry = ECS::registry<AI>;
     for (unsigned int i=0; i< aiRegistry.components.size(); i++)
     {
         // bt code here
         auto entity = aiRegistry.entities[i];
-
         auto state = tree->process(entity);
+        //aiMoved = true;
     }
-    
 	(void)elapsed_ms; // placeholder to silence unused warning until implemented
 	(void)window_size_in_game_units; // placeholder to silence unused warning until implemented
 }
@@ -45,7 +45,6 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
     tileMovesMap.erase(start);
     std::deque<std::vector<vec2>> frontier = {startFrontier};
     std::vector<vec2> current = frontier.front();
-    
   while (!frontier.empty()) {
     current = frontier.front();
     frontier.pop_front();
@@ -361,6 +360,7 @@ BTState LookForSnail::process(ECS::Entity e) {
     int xAiPos = (aiPos.x - (0.5 * scale)) / scale;
     int yAiPos = (aiPos.y - (0.5 * scale)) / scale;
     vec2 aiCoord = { yAiPos, xAiPos };
+    bool aiMoved = false;
     std::vector<vec2> current;
 
     auto start = std::chrono::high_resolution_clock::now();
@@ -418,9 +418,11 @@ BTState LookForSnail::process(ECS::Entity e) {
                 WorldSystem::goLeft(entity, aiMove);
             }
         }
-        if (aiMove != 0) {
-            AISystem::aiMoves--;
-        }
+        aiMoved = true;
+    }
+    if (aiMoved) {
+        aiMoved = false;
+        AISystem::aiMoves--;
     }
     return BTState::Running;
 }

@@ -30,5 +30,5 @@
       }
     ]
   },
-  "AI-PathFinding-Algorithm": "Astar"
+  "AI-PathFinding-Algorithm": "BFS"
 }

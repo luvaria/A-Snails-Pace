@@ -40,6 +40,12 @@ ECS::Entity Spider::createSpider(vec2 position, ECS::Entity entity)
 	// Create and (empty) Spider component to be able to refer to all spiders
 	ECS::registry<AI>.emplace(entity);
 	ECS::registry<Spider>.emplace(entity);
-
+	
+	// Adding Behaviour Tree to Spider
+	// Maybe add some registry that keeps track of trees??
+	std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>();
+	std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ lfs }));
+	tree->init(entity);
+	//ECS::registry<std::shared_ptr <BTNode>>.emplace(entity);
 	return entity;
 }

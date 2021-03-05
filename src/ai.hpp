@@ -112,6 +112,17 @@ private:
     BTState process(ECS::Entity e) override;
 };
 
+class NoPathsPossible : public BTNode {
+public:
+    NoPathsPossible() noexcept {
+
+    }
+private:
+    void init(ECS::Entity e) override;
+
+    BTState process(ECS::Entity e) override;
+};
+
 
 class AISystem
 {

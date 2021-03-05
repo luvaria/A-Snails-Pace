@@ -52,7 +52,6 @@ int main()
 	// add the world system as an observer of the physics systems to handle collisions
 	physics.addObserver(&world);
 
-	bool addAI = false;
 
 	while (!world.is_over())
 	{
@@ -69,20 +68,6 @@ int main()
 		if (world.running)
 		{
 			DebugSystem::clearDebugComponents();
-
-			// TRY TO SEE IF THIS CAN BE REPLACED WITH AN OBSERVER PATTERN
-			while (addAI == false) {
-				auto& aiRegistry = ECS::registry<AI>;
-				std::cout << "here" << std::endl;
-				std::cout << aiRegistry.components.size() << std::endl;
-				std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>();
-				std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ lfs }));
-				for (unsigned int i = 0; i < aiRegistry.components.size(); i++) {
-					// initialize behaviour trees
-					tree->init(aiRegistry.entities[i]);
-				}
-				addAI = true;
-			}
 			ai.step(elapsed_ms, window_size_in_game_units);
 			world.step(elapsed_ms, window_size_in_game_units);
 			physics.step(elapsed_ms, window_size_in_game_units);
