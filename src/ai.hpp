@@ -130,10 +130,6 @@ public:
 
     static std::string aiPathFindingAlgorithm;
     static bool aiMoved;
-    // added this variable here to see if it changed anything
-    static bool aiMovedThisStep;
-    //this variable was on a previous version
-    static int aiMoves;
 
 	  void step(float elapsed_ms, vec2 window_size_in_game_units);
     void init();

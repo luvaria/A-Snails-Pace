@@ -14,6 +14,9 @@
 
 void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 {
+    if (aiMoved)
+        return;
+
     auto& snailEntity = ECS::registry<Snail>.entities[0];
     float scale = TileSystem::getScale();
     
@@ -91,7 +94,7 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
         */
         
         if (state != BTState::Running) {
-            break;
+            aiMovedThisStep = true;
         }
         
     }
@@ -427,8 +430,6 @@ BTState LookForSnail::process(ECS::Entity e) {
     int xAiPos = (aiPos.x - (0.5 * scale)) / scale;
     int yAiPos = (aiPos.y - (0.5 * scale)) / scale;
     vec2 aiCoord = { yAiPos, xAiPos };
-    bool aiMoved = false;
-    //bool aiMovedThisStep = false;
     std::vector<vec2> current;
 
     auto start = std::chrono::high_resolution_clock::now();
@@ -453,9 +454,7 @@ BTState LookForSnail::process(ECS::Entity e) {
             << duration.count() << " microseconds" << std::endl;
     }
 
-
-    int aiMove = 0;
-    if (ECS::registry<Turn>.components[0].type == ENEMY && !aiMoved) {
+    if (ECS::registry<Turn>.components[0].type == ENEMY && !AISystem::aiMoved) {
         int aiMove = current.size() == 1 ? 1 : 0;
         vec2 currPos = current.size() > 1 ? current[1] : current[0];
         if (aiMove == 0) {
@@ -486,11 +485,7 @@ BTState LookForSnail::process(ECS::Entity e) {
                 WorldSystem::goLeft(entity, aiMove);
             }
         }
-        aiMoved = true;
-    }
-    
-    if (aiMoved) {
-        aiMoved = false;
+        return BTState::Success;
     }
     
     return BTState::Running;
