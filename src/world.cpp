@@ -513,12 +513,12 @@ void WorldSystem::goUp(ECS::Entity &entity, int &snail_move) {
     Tile currTile = tiles[yCoord][xCoord];
     Tile upTile = tiles[yCoord-1][xCoord];
     Tile nextTile = currTile;
-    if (currTile.type == VINE && abs(motion.angle) == 0) {
+    if (currTile.type == VINE && (abs(motion.angle) == 0 || abs(motion.angle) == PI)) {
         nextTile = tiles[yCoord][xCoord];
         changeDirection(motion, currTile, nextTile, motion.lastDirection, entity);
         if(abs(currTile.x - nextTile.x) == 0 && abs(currTile.y - nextTile.y) == 0) {
-            motion.scale = {motion.scale.y, motion.scale.x};
-            motion.angle = motion.lastDirection == DIRECTION_WEST ? PI/2 : -PI/2 ;
+            motion.scale = {motion.scale.y, (abs(motion.angle) == 0 ? 1 : -1) * motion.scale.x};
+            motion.angle = motion.lastDirection == DIRECTION_WEST && abs(motion.angle) == 0 ? PI/2 : -PI/2 ;
             motion.lastDirection = DIRECTION_NORTH;
         }
     }
@@ -627,7 +627,7 @@ void WorldSystem::fallDown(ECS::Entity& entity, int& snail_move) {
 
     Tile currTile = tiles[yCoord][xCoord];
     Tile upTile = tiles[yCoord + 1][xCoord];
-    if (upTile.type == WALL || currTile.type == VINE) {
+    if (upTile.type == WALL || upTile.type == VINE) {
         return;
     }
     for (int i = yCoord + 1; i < tiles.size(); i++) {
@@ -681,6 +681,7 @@ void WorldSystem::fallDown(ECS::Entity& entity, int& snail_move) {
                     goDown(entity, snail_move);
                 }
             }
+            i = tiles.size();
         }
     }
     return;
