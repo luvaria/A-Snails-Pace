@@ -13,11 +13,7 @@
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 namespace DebugSystem 
 {
-    void createLine(vec2 position, vec2 scale) {
-        createLine(position, scale, 0.f);
-    }
-    
-	void createLine(vec2 position, vec2 scale, float angle) {
+ 	void createLine(vec2 position, vec2 scale, float angle) {
 		auto entity = ECS::Entity();
 
 		std::string key = "thick_line";
