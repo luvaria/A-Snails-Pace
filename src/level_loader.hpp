@@ -3,6 +3,7 @@
 // internal
 #include "common.hpp"
 #include "tiles/tiles.hpp"
+#include "tiny_ecs.hpp"
 
 class LevelLoader
 {
@@ -25,4 +26,7 @@ private:
 	// helper for whether a character is within the preview area
 	static bool xNotInPreviewArea(int xPos, vec2 previewOrigin);
 	static bool yNotInPreviewArea(int yPos, vec2 previewOrigin);
+
+	// creates an entity, tagged with LevelSelectTag if loading a preview
+	static ECS::Entity createTaggedEntity(bool preview);
 };
