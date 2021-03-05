@@ -29,6 +29,9 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     for (unsigned int i=0; i< aiRegistry.components.size(); i++)
     {
         auto entity = aiRegistry.entities[i];
+        //auto& tree = aiRegistry.components[i].tree;
+        auto state = tree->process(entity);
+        /*
         auto tiles = TileSystem::getTiles();
         auto& motion = ECS::registry<Motion>.get(entity);
         vec2 aiPos = motion.position;
@@ -85,9 +88,18 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             }
             aiMovedThisStep = true;
         }
+        */
+        
+        if (state != BTState::Running) {
+            break;
+        }
+        
     }
-    if (aiMovedThisStep)
+    if (aiMovedThisStep) {
         aiMoved = true;
+    }
+    //if (aiMovedThisStep)
+            //aiMoved = true;
     
 	(void)elapsed_ms; // placeholder to silence unused warning until implemented
 	(void)window_size_in_game_units; // placeholder to silence unused warning until implemented
@@ -416,6 +428,7 @@ BTState LookForSnail::process(ECS::Entity e) {
     int yAiPos = (aiPos.y - (0.5 * scale)) / scale;
     vec2 aiCoord = { yAiPos, xAiPos };
     bool aiMoved = false;
+    //bool aiMovedThisStep = false;
     std::vector<vec2> current;
 
     auto start = std::chrono::high_resolution_clock::now();
@@ -475,9 +488,11 @@ BTState LookForSnail::process(ECS::Entity e) {
         }
         aiMoved = true;
     }
+    
     if (aiMoved) {
         aiMoved = false;
     }
+    
     return BTState::Running;
 }
 

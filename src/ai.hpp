@@ -15,6 +15,7 @@
 // DON'T WORRY ABOUT THIS CLASS UNTIL ASSIGNMENT 3
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 struct AI {
+    //std::shared_ptr <BTNode> tree;
 };
 
 struct FrontierComparator {
@@ -129,6 +130,10 @@ public:
 
     static std::string aiPathFindingAlgorithm;
     static bool aiMoved;
+    // added this variable here to see if it changed anything
+    static bool aiMovedThisStep;
+    //this variable was on a previous version
+    static int aiMoves;
 
 	  void step(float elapsed_ms, vec2 window_size_in_game_units);
     void init();

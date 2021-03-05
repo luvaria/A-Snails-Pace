@@ -44,6 +44,8 @@ ECS::Entity Spider::createSpider(vec2 position, ECS::Entity entity)
 	// Maybe add some registry that keeps track of trees??
 	std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>();
 	std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ lfs }));
+	//auto& ai = ECS::registry<AI>.get(entity);
+	//ai.tree = tree;
 	tree->init(entity);
 	//ECS::registry<std::shared_ptr <BTNode>>.emplace(entity);
 	return entity;
