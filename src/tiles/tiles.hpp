@@ -25,6 +25,10 @@ public:
 	static float getScale();
 	static void setScale(float s);
 
+	// number of turns before camera moves
+	static unsigned getTurnsForCameraUpdate();
+    static void setTurnsForCameraUpdate(unsigned turns);
+
 	// reset tile grid (for level loading)
 	static void resetGrid();
     struct KeyFuncs

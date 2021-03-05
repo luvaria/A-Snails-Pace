@@ -25,25 +25,20 @@
 #include <fstream>
 
 // Game configuration
-// CHANGES: Changed MAX_SPIDERS to 1 for testing purposes
-const size_t MAX_SPIDERS = 1;
-const size_t MAX_FISH = 5;
-const size_t SPIDER_DELAY_MS = 2000;
-const size_t FISH_DELAY_MS = 5000;
-const float MOVE_S = 0.1f;
-const size_t PROJECTILE_PREVIEW_DELAY_MS = 200;
+const size_t PROJECTILE_PREVIEW_DELAY_MS = 100; // frequency of projectile previews
 
 std::string level = "demo.json";
 
 // Create the fish world
 // Note, this has a lot of OpenGL specific things, could be moved to the renderer; but it also defines the callbacks to the mouse and keyboard. That is why it is called here.
 WorldSystem::WorldSystem(ivec2 window_size_px) :
-	points(0),
-	next_spider_spawn(0.f),
-	next_fish_spawn(0.f),
-	left_mouse_pressed(false),
+    running(false),
+    points(0),
     attempts(-1),
-    running(false)
+    left_mouse_pressed(false),
+    snail_move(1), // this might be something we want to load in
+    turns_per_camera_move(1),
+    projectile_turn_over_time(0.f)
 {
 	// Seeding rng with random device
 	rng = std::default_random_engine(std::random_device()());
@@ -72,11 +67,12 @@ WorldSystem::WorldSystem(ivec2 window_size_px) :
 	if (window == nullptr)
 		throw std::runtime_error("Failed to glfwCreateWindow");
 
-    // Might want to enforce having only one camera
-    // For now we will just have this
-    auto cameraEntity = ECS::Entity();
-    ECS::registry<Camera>.emplace(cameraEntity);
-    ECS::registry<Camera>.get(cameraEntity).offset = { 0.f, 0.f };
+    Camera::reset();
+    turns_per_camera_move = TileSystem::getTurnsForCameraUpdate();
+
+    auto turnEntity = ECS::Entity();
+    auto& turn = ECS::registry<Turn>.emplace(turnEntity);
+    turn.type = PLAYER_WAITING;
 
 
 	// Playing background music indefinitely
@@ -135,13 +131,18 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 	std::stringstream title_ss;
 	title_ss << "Moves taken: " << turn_number;
     title_ss << ", ";
+	title_ss << "Camera will move in " << turns_per_camera_move - (turn_number % turns_per_camera_move) << " turn(s)";
+    title_ss << ", ";
     title_ss << "Attempts: " << attempts;
 	glfwSetWindowTitle(window, title_ss.str().c_str());
 
-    // Kill snail if off screen
+    auto& cameraEntity = ECS::registry<Camera>.entities[0];
+    vec2& cameraOffset = ECS::registry<Motion>.get(cameraEntity).position;
+
+	// Kill snail if off screen
     auto& snailMotion = ECS::registry<Motion>.get(player_snail);
     if (!ECS::registry<DeathTimer>.has(player_snail)
-        && offScreen(snailMotion.position, window_size_in_game_units, ECS::registry<Camera>.components[0].offset))
+        && offScreen(snailMotion.position, window_size_in_game_units, cameraOffset))
     {
         ECS::registry<DeathTimer>.emplace(player_snail);
         Mix_PlayChannel(-1, salmon_dead_sound, 0);
@@ -151,7 +152,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 	for (auto entity: ECS::registry<Projectile>.entities) 
 	{
 		auto projectilePosition = ECS::registry<Motion>.get(entity).position;
-		if (offScreen(projectilePosition, window_size_in_game_units, ECS::registry<Camera>.components[0].offset))
+		if (offScreen(projectilePosition, window_size_in_game_units, cameraOffset))
 		{
 			ECS::ContainerInterface::remove_all_components_of(entity);
 		}
@@ -188,6 +189,63 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 			return;
 		}
 	}
+
+    TurnType& turnType = ECS::registry<Turn>.components[0].type;
+	if (turnType == PLAYER_WAITING)
+    {
+	    if (snail_move <= 0)
+        {
+	        turnType = PLAYER_UPDATE;
+        }
+    }
+	else if (turnType == PLAYER_UPDATE)
+    {
+	    Projectile::Preview::removeCurrent();
+	    if ((snail_move <= 0) && !ECS::registry<Destination>.has(player_snail))
+        {
+            turnType = ENEMY;
+            AISystem::aiMoved = false;
+            projectile_turn_over_time = k_projectile_turn_ms;
+            snail_move = 1;
+            turn_number++;
+            if ((turn_number % turns_per_camera_move) == 0)
+            {
+                Camera::update(k_move_seconds);
+            }
+        }
+    }
+	else if (turnType == ENEMY)
+    {
+	    // this works out so that the projectiles move a set amount of time per enemy turn
+	    if (ECS::registry<Projectile>.size())
+        {
+	        projectile_turn_over_time -= elapsed_ms;
+        }
+
+        // projectile done moving or no projectiles AND AI path calculated or AI all dead
+	    if (((ECS::registry<Projectile>.size() && projectile_turn_over_time <= 0) || (ECS::registry<Projectile>.size() == 0))
+            && (AISystem::aiMoved || (ECS::registry<AI>.size() == 0)))
+        {
+            // In the following two cases, if true, all the enemies will have moved
+
+            // Camera has to move
+            if ((ECS::registry<Destination>.size() == 1) && ECS::registry<Destination>.has(cameraEntity))
+            {
+                 turnType = CAMERA;
+            }
+
+            // Camera does not have to move
+            else if (ECS::registry<Destination>.size() == 0)
+            {
+                turnType = PLAYER_WAITING;
+            }
+        }
+    }
+	else if (turnType == CAMERA)
+    {
+	    if (!ECS::registry<Destination>.has(cameraEntity))
+	        turnType = PLAYER_WAITING;
+    }
 }
 
 // Reset the world state to its initial state
@@ -206,9 +264,6 @@ void WorldSystem::restart(std::string newLevel)
     // Reset screen darken factor (manual restart can remove DeathTimer without resetting)
     auto& screen = ECS::registry<ScreenState>.components[0];
     screen.darken_screen_factor = 0;
-  
-    // Reset Camera
-    ECS::registry<Camera>.components[0].offset = { 0.f, 0.f };
 
 	// Remove all entities with Motion, iterating backwards
     for (int i = ECS::registry<Motion>.entities.size() - 1; i >= 0; i--)
@@ -230,12 +285,21 @@ void WorldSystem::restart(std::string newLevel)
     // can't access player_snail in level loader
     player_snail = ECS::registry<Snail>.entities[0];
 
+    // Reset Camera
+    Camera::reset();
+    turns_per_camera_move = TileSystem::getTurnsForCameraUpdate();
+
+    // Reset Turn
+    ECS::registry<Turn>.components[0].type = PLAYER_WAITING;
+
     // for the first level, prompt controls overlay
     if (level == "demo.json" && attempts == 0)
         ControlsOverlay::addControlsPrompt();
 
-	// Initializing turns and amount of tiles snail can move.
-	turn_number = 1;
+	snail_move = 1;
+	turn_number = 0;
+
+    AISystem::aiMoved = false;
 
     setGLFWCallbacks();
 }
@@ -398,10 +462,10 @@ void WorldSystem::changeDirection(Motion &motion, Tile &currTile, Tile &nextTile
     dest.position = {nextTile.x, nextTile.y};
     // give velocity to reach destination in set time
     // this velocity will be set to 0 once destination is reached in physics.cpp
-    motion.velocity = (dest.position - motion.position)/MOVE_S;
+    motion.velocity = (dest.position - motion.position)/k_move_seconds;
 }
 
-void WorldSystem::goLeft(ECS::Entity &entity, int &snail_move) {
+void WorldSystem::goLeft(ECS::Entity &entity, int &moves) {
     float scale = TileSystem::getScale();
     auto& tiles = TileSystem::getTiles();
 
@@ -440,16 +504,16 @@ void WorldSystem::goLeft(ECS::Entity &entity, int &snail_move) {
         motion.scale = {motion.scale.y, motion.scale.x};
         motion.scale.x = motion.angle == -PI/2 ? motion.lastDirection == DIRECTION_NORTH ? -motion.scale.x : motion.scale.x
                                                : motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : -motion.scale.x;
-           motion.lastDirection = DIRECTION_WEST;
+        motion.lastDirection = DIRECTION_WEST;
         motion.angle=0;
     }
     
     if(currTile.x != nextTile.x || currTile.y != nextTile.y) {
-        snail_move--;
+        moves--;
     }
 }
 
-void WorldSystem::goRight(ECS::Entity &entity, int &snail_move) {
+void WorldSystem::goRight(ECS::Entity &entity, int &moves) {
     float scale = TileSystem::getScale();
     auto& tiles = TileSystem::getTiles();
 
@@ -496,11 +560,11 @@ void WorldSystem::goRight(ECS::Entity &entity, int &snail_move) {
     }
     
     if(currTile.x != nextTile.x || currTile.y != nextTile.y) {
-        snail_move--;
+        moves--;
     }
 }
 
-void WorldSystem::goUp(ECS::Entity &entity, int &snail_move) {
+void WorldSystem::goUp(ECS::Entity &entity, int &moves) {
     float scale = TileSystem::getScale();
     auto& tiles = TileSystem::getTiles();
 
@@ -550,11 +614,11 @@ void WorldSystem::goUp(ECS::Entity &entity, int &snail_move) {
     }
 
     if(currTile.x != nextTile.x || currTile.y != nextTile.y) {
-        snail_move--;
+        moves--;
     }
 }
 
-void WorldSystem::goDown(ECS::Entity &entity, int &snail_move) {
+void WorldSystem::goDown(ECS::Entity &entity, int &moves) {
     float scale = TileSystem::getScale();
     auto& tiles = TileSystem::getTiles();
 
@@ -612,12 +676,12 @@ void WorldSystem::goDown(ECS::Entity &entity, int &snail_move) {
     }
     
     if(currTile.x != nextTile.x || currTile.y != nextTile.y) {
-        snail_move--;
+        moves--;
     }
     
 }
 
-void WorldSystem::fallDown(ECS::Entity& entity, int& snail_move) {
+void WorldSystem::fallDown(ECS::Entity& entity, int& moves) {
     float scale = TileSystem::getScale();
     auto& tiles = TileSystem::getTiles();
 
@@ -625,11 +689,12 @@ void WorldSystem::fallDown(ECS::Entity& entity, int& snail_move) {
     int xCoord = static_cast<int>(motion.position.x / scale);
     int yCoord = static_cast<int>(motion.position.y / scale);
 
-    Tile currTile = tiles[yCoord][xCoord];
     Tile upTile = tiles[yCoord + 1][xCoord];
     if (upTile.type == WALL || upTile.type == VINE) {
         return;
     }
+
+    int tempMove = moves; // so we don't decrement moves multiple times for one fall
     for (int i = yCoord + 1; i < tiles.size(); i++) {
         Tile t = tiles[i][xCoord];
         // this part of the code is still slightly buggy. It works fine for first iteration. After snail dies and if pressed
@@ -645,7 +710,8 @@ void WorldSystem::fallDown(ECS::Entity& entity, int& snail_move) {
             dest.position = {t.x, t.y};
             // give velocity to reach destination in set time
             // this velocity will be set to 0 once destination is reached in physics.cpp
-            motion.velocity = (dest.position - motion.position)/MOVE_S;
+            motion.velocity = (dest.position - motion.position)/k_move_seconds;
+            tempMove--;
         }
         else if (t.type == WALL) {
             if (!ECS::registry<Destination>.has(entity))
@@ -656,33 +722,38 @@ void WorldSystem::fallDown(ECS::Entity& entity, int& snail_move) {
             dest.position = { tiles[i - 1][xCoord].x, tiles[i - 1][xCoord].y };
             // give velocity to reach destination in set time
             // this velocity will be set to 0 once destination is reached in physics.cpp
-            motion.velocity = (dest.position - motion.position)/MOVE_S;
+            motion.velocity = (dest.position - motion.position)/k_move_seconds;
+            tempMove--;
 
             if (abs(motion.angle) == PI / 2) {
-                goDown(entity, snail_move);
+                goDown(entity, tempMove);
             }
             else if (motion.angle == -PI) {
                 if (motion.lastDirection == DIRECTION_EAST) {
                     motion.scale = { motion.scale.y, motion.scale.x };
-                    goDown(entity, snail_move);
+                    goDown(entity, tempMove);
                 }
                 else {
                     motion.scale = { motion.scale.y, -motion.scale.x };
-                    goDown(entity, snail_move);
+                    goDown(entity, tempMove);
                 }
             }
             else if (motion.angle == PI) {
                 if (motion.lastDirection == DIRECTION_WEST) {
                     motion.scale = { motion.scale.y, -motion.scale.x };
-                    goDown(entity, snail_move);
+                    goDown(entity, tempMove);
                 }
                 else {
                     motion.scale = { motion.scale.y, motion.scale.x };
-                    goDown(entity, snail_move);
+                    goDown(entity, tempMove);
                 }
             }
             i = tiles.size();
         }
+    }
+    if (tempMove < moves)
+    {
+        moves--;
     }
     return;
 }
@@ -698,54 +769,36 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 	// Move snail if alive and has turns remaining
 	if (!ECS::registry<DeathTimer>.has(player_snail))
 	{
-		// NEW: Added motion here. I am assuming some sort of rectangular/square level for now
-		// this function might get quite messy as time goes on so maybe we will need a decent 
-		// amount of helper functions when we get there.
-		// CHANGE: Removed salmonX and salmonY. Salmon's position is tracked by using its Motion
-		// Component. Had to divide by 100 since starting screen position is (100, 200) which is 
-		// associated with the tile at tiles[1][2]. Added snail_move that tracks how many moves
-		// the snail can do this turn.
-        int tempSnailMove = 0;
-		if (action == GLFW_PRESS)
+		if ((ECS::registry<Turn>.components[0].type == PLAYER_WAITING) && (action == GLFW_PRESS))
 		{
 			switch (key)
 			{
             // These logs are pretty useful to see what scale, angle and direction the snail should have
 			case GLFW_KEY_W:
-                    goUp(player_snail, tempSnailMove);
+                    goUp(player_snail, snail_move);
                     //std::cout << mot.angle << std::endl;
                     //std::cout << mot.scale.x << ", " << mot.scale.y << std::endl;
                     //std::cout << mot.lastDirection << std::endl;
 				break;
 			case GLFW_KEY_S:
-                    goDown(player_snail, tempSnailMove);
+                    goDown(player_snail, snail_move);
                     //std::cout << mot.angle << std::endl;
                     //std::cout << mot.scale.x << ", " << mot.scale.y << std::endl;
                     //std::cout << mot.lastDirection << std::endl;
                 break;
 			case GLFW_KEY_D:
-                    goRight(player_snail, tempSnailMove);
+                    goRight(player_snail, snail_move);
                     //std::cout << mot.angle << std::endl;
                     //std::cout << mot.scale.x << ", " << mot.scale.y << std::endl;
                     //std::cout << mot.lastDirection << std::endl;
                 break;
 			case GLFW_KEY_A:
-                    goLeft(player_snail, tempSnailMove);
+                    goLeft(player_snail, snail_move);
 				break;
             case GLFW_KEY_SPACE:
-                fallDown(player_snail, tempSnailMove);
-                break;
-            case GLFW_KEY_ESCAPE:
-                running = false;
-                ControlsOverlay::removeControlsOverlay();
-                notify(Event(Event::PAUSE));
+                    fallDown(player_snail, snail_move);
                 break;
 			}
-            if(tempSnailMove == -1) {
-                Projectile::Preview::removeCurrent();
-                WorldSystem::snailMoves--;
-            }
-
 		}
 	}
 
@@ -758,32 +811,16 @@ void WorldSystem::on_key(int key, int, int action, int mod)
         restart(level);
 	}
 
-	// NEW: Next turn button. Might be temporary since we will probably have 
-	// a Button Component in the future, but this is just to get the delay
-	// agnostic requirement to work.
-
-	if (key == GLFW_KEY_N && action == GLFW_RELEASE) {
-		// flip to next turn, reset movement available, make enemies move?.
-		turn_number++;
-
-        // Move camera by 1 tile in the x-direction
-        // Could eventually move vertically
-        // where direction could be loaded from file as per Rebecca's suggestion
-        float scale = TileSystem::getScale();
-        ECS::registry<Camera>.components[0].offset.x += scale;
-
-        // Remove any projectile previews if turn ended
-        Projectile::Preview::removeCurrent();
-
-		// Can be more than 1 tile per turn. Will probably gain a different amount
-		// depending on snail's status
-		WorldSystem::snailMoves = 1;
-        AISystem::aiMoves = 1;
-	}
-
     // toggle controls overlay
     if (action == GLFW_PRESS && key == GLFW_KEY_C)
         ControlsOverlay::toggleControlsOverlay();
+
+    if (action == GLFW_PRESS && key == GLFW_KEY_ESCAPE)
+    {
+        running = false;
+        ControlsOverlay::removeControlsOverlay();
+        notify(Event(Event::PAUSE));
+    }
 
 	// Debugging
 	// CHANGE: Switched debug key to V so it would not trigger when moving to the right
@@ -818,55 +855,63 @@ void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
     if (action == GLFW_PRESS)
         ControlsOverlay::removeControlsPrompt();
 
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
+    TurnType& turnType = ECS::registry<Turn>.components[0].type;
+    if (turnType == PLAYER_WAITING)
     {
-        // Check if we would go off screen and die, and prevent that from happening
-        vec2& cameraOffset = ECS::registry<Camera>.components[0].offset;
-        float scale = TileSystem::getScale();
-        vec2 possibleOffset = { cameraOffset.x + scale, cameraOffset.y };
-        // Have to get window size this way because no access to window_size_in_game_units
-        int w, h;
-        glfwGetWindowSize(window, &w, &h);
-        if (!offScreen(ECS::registry<Motion>.get(player_snail).position, vec2(w, h), possibleOffset))
+        if ((button == GLFW_MOUSE_BUTTON_RIGHT) && (action == GLFW_RELEASE))
         {
-            cameraOffset = possibleOffset;
+            // Check if we would go off screen and die, and prevent that from happening
+            auto& cameraEntity = ECS::registry<Camera>.entities[0];
+            vec2& cameraOffset = ECS::registry<Motion>.get(cameraEntity).position;
+            float scale = TileSystem::getScale();
+            vec2 possibleOffset = { cameraOffset.x + scale, cameraOffset.y };
+            // Have to get window size this way because no access to window_size_in_game_units
+            int w, h;
+            glfwGetWindowSize(window, &w, &h);
+            if (!offScreen(ECS::registry<Motion>.get(player_snail).position, vec2(w, h), possibleOffset))
+            {
+                Camera::update(k_move_seconds);
+                ECS::registry<Turn>.components[0].type = CAMERA;
+            }
+        }
+        else if (button == GLFW_MOUSE_BUTTON_LEFT)
+        {
+            double mouse_pos_x;
+            double mouse_pos_y;
+            glfwGetCursorPos(window, &mouse_pos_x, &mouse_pos_y);
+            vec2 mouse_pos = vec2(mouse_pos_x, mouse_pos_y);
+            if (action == GLFW_RELEASE)
+            {
+                shootProjectile(mouse_pos);
+                left_mouse_pressed = false;
+                Projectile::Preview::removeCurrent();
+
+            }
+            else if (action == GLFW_PRESS)
+            {
+                left_mouse_pressed = true;
+                can_show_projectile_preview_time = std::chrono::high_resolution_clock::now()
+                                                   + std::chrono::milliseconds{PROJECTILE_PREVIEW_DELAY_MS};
+            }
         }
     }
-	else if (button == GLFW_MOUSE_BUTTON_LEFT)
-	{
-		double mouse_pos_x;
-		double mouse_pos_y;
-		glfwGetCursorPos(window, &mouse_pos_x, &mouse_pos_y);
-		vec2 mouse_pos = vec2(mouse_pos_x, mouse_pos_y);
-		if (action == GLFW_RELEASE)
-        {
-            shootProjectile(mouse_pos);
-            left_mouse_pressed = false;
-            Projectile::Preview::removeCurrent();
 
-        }
-		else if (action == GLFW_PRESS)
-        {
-            left_mouse_pressed = true;
-            can_show_projectile_preview_time = std::chrono::high_resolution_clock::now()
-                    + std::chrono::milliseconds{PROJECTILE_PREVIEW_DELAY_MS};
-        }
-	}
 }
 
 void WorldSystem::shootProjectile(vec2 mousePos, bool preview /* = false */)
 {
 
 	//first we get the position of the mouse_pos relative to the start of the level.
-	vec2& cameraOffset = ECS::registry<Camera>.components[0].offset;
+    auto& cameraEntity = ECS::registry<Camera>.entities[0];
+    vec2& cameraOffset = ECS::registry<Motion>.get(cameraEntity).position;
 	mousePos = mousePos + cameraOffset;
 
 	// now you want to go in the direction of the (mouse_pos - snail_pos), but make it a unit vector
 	vec2 snailPosition = ECS::registry<Motion>.get(player_snail).position;
 	vec2 projectileVelocity = (mousePos - snailPosition);
 	float length = glm::length(projectileVelocity);
-	projectileVelocity.x = (projectileVelocity.x / length) * 100;
-	projectileVelocity.y = (projectileVelocity.y / length) * 100;
+	projectileVelocity.x = (projectileVelocity.x / length) * TileSystem::getScale();
+	projectileVelocity.y = (projectileVelocity.y / length) * TileSystem::getScale();
 	if (projectileVelocity != vec2(0, 0))
 	{
 		Projectile::createProjectile(snailPosition, projectileVelocity, preview);
@@ -874,7 +919,11 @@ void WorldSystem::shootProjectile(vec2 mousePos, bool preview /* = false */)
 	
 	//shooting a projectile takes your turn.
     if (!preview)
-        WorldSystem::snailMoves--;
+    {
+        snail_move--;
+        //ECS::registry<Turn>.components[0].type = PLAYER_UPDATE;
+        projectile_turn_over_time = k_projectile_turn_ms;
+    }
 }
 
 void  WorldSystem::setGLFWCallbacks()

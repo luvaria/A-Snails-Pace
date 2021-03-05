@@ -62,3 +62,10 @@ struct Overlay
 {
 	// empty; tag component
 };
+
+enum TurnType { PLAYER_WAITING, PLAYER_UPDATE, ENEMY, CAMERA };
+
+struct Turn
+{
+    TurnType type;
+};

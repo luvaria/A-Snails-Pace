@@ -205,7 +205,6 @@ void LevelSelect::selectedKeyEvent()
 	for (unsigned int i = 0; i < buttonContainer.components.size(); i++)
 	{
 		MenuButton& button = buttonContainer.components[i];
-		ECS::Entity buttonEntity = buttonContainer.entities[i];
 
 		// perform action for button being hovered over (and pressed)
 		if (button.selected)

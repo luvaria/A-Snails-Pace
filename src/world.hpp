@@ -48,15 +48,12 @@ public:
 	// return true if a given point is off screen, false otherwise
 	static bool offScreen(vec2 const& pos, vec2 window_size_in_game_units, vec2 cameraOffset);
 
-    static void goRight(ECS::Entity &entity, int &snail_move);
-    
-    static void goLeft(ECS::Entity &entity, int &snail_move);
-    
-    static void goUp(ECS::Entity &entity, int &snail_move);
-    
-    static void goDown(ECS::Entity &entity, int &snail_move);
-    
-    static void fallDown(ECS::Entity& entity, int& snail_move);
+	// movement functions
+    static void goRight(ECS::Entity &entity, int &moves);
+    static void goLeft(ECS::Entity &entity, int &moves);
+    static void goUp(ECS::Entity &entity, int &moves);
+    static void goDown(ECS::Entity &entity, int &moves);
+    static void fallDown(ECS::Entity& entity, int& moves);
     
     static void doX(Motion &motion, Tile &currTile, Tile &nextTile, int defaultDirection );
     
@@ -68,8 +65,12 @@ public:
     
 	// OpenGL window handle
 	GLFWwindow* window;
-    
+
     bool running;
+
+    static float constexpr k_move_seconds = 0.25f;
+    static float constexpr k_projectile_turn_ms = 1000.f;
+
 private:
     // Input callback functions
 	void setGLFWCallbacks();
@@ -85,8 +86,6 @@ private:
 
 	// Game state
 	float current_speed;
-	float next_spider_spawn;
-	float next_fish_spawn;
 	ECS::Entity player_snail;
 	int attempts;
 
@@ -96,8 +95,11 @@ private:
 	// NEW: turn_number is not used for now, but will probably be used to keep track
 	// of what day it is on the calendar. snail_move is how many tiles the snail can
 	// move during the current turn.
-
 	int turn_number;
+    // snail_move is the number of moves the snail has each turn
+	int snail_move;
+	unsigned turns_per_camera_move;
+    float projectile_turn_over_time;
 	
 	// music references
 	Mix_Music* background_music;

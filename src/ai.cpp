@@ -21,7 +21,7 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     int xPos = (snailPos[0] - (0.5*scale))/scale;
     int yPos = (snailPos[1] - (0.5*scale))/scale;
     vec2 snailCoord = {yPos, xPos};
-    bool aiMoved = false;
+    bool aiMovedThisStep = false;
     auto& aiRegistry = ECS::registry<AI>;
     for (unsigned int i=0; i< aiRegistry.components.size(); i++)
     {
@@ -54,10 +54,8 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             std::cout << "Time taken by function: "
                          << duration.count() << " microseconds" << std::endl;
         }
-        
-        
-        int aiMove = 0;
-        if(WorldSystem::snailMoves != AISystem::aiMoves) {
+
+        if(ECS::registry<Turn>.components[0].type == ENEMY && !aiMoved) {
             int aiMove = current.size() == 1 ? 1 : 0;
             vec2 currPos = current.size() > 1 ? current[1] : current[0];
             if(aiMove == 0) {
@@ -82,13 +80,11 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
                     WorldSystem::goLeft(entity, aiMove);
                 }
             }
-            aiMoved = true;
+            aiMovedThisStep = true;
         }
     }
-    if(aiMoved) {
-        aiMoved = false;
-        AISystem::aiMoves--;
-    }
+    if (aiMovedThisStep)
+        aiMoved = true;
     
 	(void)elapsed_ms; // placeholder to silence unused warning until implemented
 	(void)window_size_in_game_units; // placeholder to silence unused warning until implemented
@@ -398,5 +394,5 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
 
 }
 
-int AISystem::aiMoves = 0;
+bool AISystem::aiMoved = false;
 std::string AISystem::aiPathFindingAlgorithm = "BFS";
