@@ -525,12 +525,12 @@ void WorldSystem::goUp(ECS::Entity& entity, int& snail_move) {
     Tile currTile = tiles[yCoord][xCoord];
     Tile upTile = tiles[yCoord-1][xCoord];
     Tile nextTile = currTile;
-    if (currTile.type == VINE && (abs(motion.angle) == 0 || abs(motion.angle) == PI)) {
+    if (currTile.type == VINE && abs(motion.angle) == 0) {
         nextTile = tiles[yCoord][xCoord];
         changeDirection(motion, currTile, nextTile, motion.lastDirection, entity);
         if(abs(currTile.x - nextTile.x) == 0 && abs(currTile.y - nextTile.y) == 0) {
-            motion.scale = {motion.scale.y, (abs(motion.angle) == 0 ? 1 : -1) * motion.scale.x};
-            motion.angle = motion.lastDirection == DIRECTION_WEST && abs(motion.angle) == 0 ? PI/2 : -PI/2 ;
+            motion.scale = { motion.scale.y, motion.scale.x };
+            motion.angle = motion.lastDirection == DIRECTION_WEST ? PI / 2 : -PI / 2;
             motion.lastDirection = DIRECTION_NORTH;
         }
     }
