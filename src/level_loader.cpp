@@ -117,25 +117,25 @@ void LevelLoader::loadLevel(std::string levelFileName, bool preview, vec2 offset
         int x = 0;
         for(auto& elem: rows)
         {
-            if(elem.type == TileSystem::WALL) {
-                if(y - 1 > 0 && (tiles[y-1][x].type == TileSystem::VINE || tiles[y-1][x].type == TileSystem::EMPTY)) {
+            if(elem.type == WALL) {
+                if(y - 1 > 0 && (tiles[y-1][x].type == VINE || tiles[y-1][x].type == EMPTY)) {
                     auto& elem2 = tiles[y-1][x];
                     tileMovesMap.insert({{y-1, x}, elem2});
                 }
-                if(x - 1 > 0 && (tiles[y][x-1].type == TileSystem::VINE || tiles[y][x-1].type == TileSystem::EMPTY)) {
+                if(x - 1 > 0 && (tiles[y][x-1].type == VINE || tiles[y][x-1].type == EMPTY)) {
                     auto& elem2 = tiles[y][x-1];
                     tileMovesMap.insert({{y, x-1}, elem2});
                 }
-                if(y + 1 < tiles.size() && (tiles[y+1][x].type == TileSystem::VINE || tiles[y+1][x].type == TileSystem::EMPTY)) {
+                if(y + 1 < tiles.size() && (tiles[y+1][x].type == VINE || tiles[y+1][x].type == EMPTY)) {
                     auto& elem2 = tiles[y+1][x];
                     tileMovesMap.insert({{y+1, x}, elem2});
                 }
-                if(x + 1 < tiles[y].size() && (tiles[y][x+1].type == TileSystem::VINE || tiles[y][x+1].type == TileSystem::EMPTY))
+                if(x + 1 < tiles[y].size() && (tiles[y][x+1].type == VINE || tiles[y][x+1].type == EMPTY))
                 {
                     auto& elem2 = tiles[y][x+1];
                     tileMovesMap.insert({{y, x+1}, elem2});
                 }
-            } else if (elem.type == TileSystem::VINE) {
+            } else if (elem.type == VINE) {
                 tileMovesMap.insert({{y, x}, elem});
             }
             x++;

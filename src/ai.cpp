@@ -21,7 +21,7 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     int xPos = (snailPos[0] - (0.5*scale))/scale;
     int yPos = (snailPos[1] - (0.5*scale))/scale;
     vec2 snailCoord = {yPos, xPos};
-    
+    bool aiMoved = false;
     auto& aiRegistry = ECS::registry<AI>;
     for (unsigned int i=0; i< aiRegistry.components.size(); i++)
     {
@@ -82,10 +82,12 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
                     WorldSystem::goLeft(entity, aiMove);
                 }
             }
-            if(aiMove != 0) {
-                AISystem::aiMoves--;
-            }
+            aiMoved = true;
         }
+    }
+    if(aiMoved) {
+        aiMoved = false;
+        AISystem::aiMoves--;
     }
     
 	(void)elapsed_ms; // placeholder to silence unused warning until implemented
@@ -164,11 +166,11 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
                 scale_vertical_line.x *= 0.03f;
                 if (abs(child.x-lastVec.x)>0) {
                     float scaleFac = child.x-lastVec.x > 0 ? TileSystem::getScale()/2 : -TileSystem::getScale()/2;
-                    TileSystem::Tile t = tiles[lastVec.x][lastVec.y];
+                    Tile t = tiles[lastVec.x][lastVec.y];
                     DebugSystem::createLine({t.x, t.y + scaleFac}, scale_vertical_line);
                 } else {
                     float scaleFac = child.y-lastVec.y > 0 ? TileSystem::getScale()/2 : -TileSystem::getScale()/2;
-                    TileSystem::Tile t = tiles[lastVec.x][lastVec.y];
+                    Tile t = tiles[lastVec.x][lastVec.y];
                     DebugSystem::createLine({t.x + scaleFac, t.y}, scale_horizontal_line);
                 }
             }
@@ -187,7 +189,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
         if(endNode.x-1 >= 0 && endNode.x-1 < tiles.size() && endNode.y >= 0 && endNode.y < tiles[endNode.x-1].size() && tiles[endNode.x-1][endNode.y].type == WALL) {
             
             if (tileMovesMap.find({endNode.x-1, endNode.y-1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x][endNode.y-1].type == TileSystem::EMPTY) {
+                if(tiles[endNode.x][endNode.y-1].type == EMPTY) {
                     next.push_back({endNode.x, endNode.y-1});
                     next.push_back({endNode.x-1, endNode.y-1});
                     frontier.push_back(next);
@@ -196,7 +198,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
                 }
             }
             if (tileMovesMap.find({endNode.x-1, endNode.y+1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x][endNode.y+1].type == TileSystem::EMPTY) {
+                if(tiles[endNode.x][endNode.y+1].type == EMPTY) {
                     next.push_back({endNode.x, endNode.y+1});
                     next.push_back({endNode.x-1, endNode.y+1});
                     frontier.push_back(next);
@@ -207,7 +209,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
             
             // left tile
             if (tileMovesMap.find({endNode.x, endNode.y-1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x-1][endNode.y-1].type == TileSystem::WALL) {
+                if(tiles[endNode.x-1][endNode.y-1].type == WALL) {
                     next.push_back({endNode.x, endNode.y-1});
                     frontier.push_back(next);
                     next = current;
@@ -217,7 +219,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
             
             // right tile
             if (tileMovesMap.find({endNode.x, endNode.y+1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x-1][endNode.y+1].type == TileSystem::WALL) {
+                if(tiles[endNode.x-1][endNode.y+1].type == WALL) {
                     next.push_back({endNode.x, endNode.y+1});
                     frontier.push_back(next);
                     next = current;
@@ -229,7 +231,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
         // wall on the right
         if(endNode.x >= 0 && endNode.x < tiles.size() && endNode.y+1 >= 0 && endNode.y+1 < tiles[endNode.x].size() && tiles[endNode.x][endNode.y+1].type == WALL) {
             if (tileMovesMap.find({endNode.x+1, endNode.y+1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x+1][endNode.y].type == TileSystem::EMPTY) {
+                if(tiles[endNode.x+1][endNode.y].type == EMPTY) {
                     next.push_back({endNode.x+1, endNode.y});
                     next.push_back({endNode.x+1, endNode.y+1});
                     frontier.push_back(next);
@@ -238,7 +240,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
                 }
             }
             if (tileMovesMap.find({endNode.x-1, endNode.y+1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x-1][endNode.y].type == TileSystem::EMPTY) {
+                if(tiles[endNode.x-1][endNode.y].type == EMPTY) {
                     next.push_back({endNode.x-1, endNode.y});
                     next.push_back({endNode.x-1, endNode.y+1});
                     frontier.push_back(next);
@@ -248,7 +250,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
             }
             // up tile
             if (tileMovesMap.find({endNode.x-1, endNode.y}) != tileMovesMap.end()) {
-                if(tiles[endNode.x-1][endNode.y+1].type == TileSystem::WALL) {
+                if(tiles[endNode.x-1][endNode.y+1].type == WALL) {
                     next.push_back({endNode.x-1, endNode.y});
                     frontier.push_back(next);
                     next = current;
@@ -258,7 +260,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
             
             // down tile
             if (tileMovesMap.find({endNode.x+1, endNode.y}) != tileMovesMap.end()) {
-                if(tiles[endNode.x+1][endNode.y+1].type == TileSystem::WALL) {
+                if(tiles[endNode.x+1][endNode.y+1].type == WALL) {
                     next.push_back({endNode.x+1, endNode.y});
                     frontier.push_back(next);
                     next = current;
@@ -269,7 +271,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
         // wall on the left
         if(endNode.x >= 0 && endNode.x < tiles.size() && endNode.y-1 >= 0 && endNode.y-1 < tiles[endNode.x].size() && tiles[endNode.x][endNode.y-1].type == WALL) {
             if (tileMovesMap.find({endNode.x-1, endNode.y-1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x-1][endNode.y].type == TileSystem::EMPTY) {
+                if(tiles[endNode.x-1][endNode.y].type == EMPTY) {
                     next.push_back({endNode.x-1, endNode.y});
                     next.push_back({endNode.x-1, endNode.y-1});
                     frontier.push_back(next);
@@ -278,7 +280,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
                 }
             }
             if (tileMovesMap.find({endNode.x+1, endNode.y-1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x+1][endNode.y].type == TileSystem::EMPTY) {
+                if(tiles[endNode.x+1][endNode.y].type == EMPTY) {
                     next.push_back({endNode.x+1, endNode.y});
                     next.push_back({endNode.x+1, endNode.y-1});
                     frontier.push_back(next);
@@ -289,7 +291,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
             
             // up tile
             if (tileMovesMap.find({endNode.x-1, endNode.y}) != tileMovesMap.end()) {
-                if(tiles[endNode.x-1][endNode.y-1].type == TileSystem::WALL) {
+                if(tiles[endNode.x-1][endNode.y-1].type == WALL) {
                     next.push_back({endNode.x-1, endNode.y});
                     frontier.push_back(next);
                     next = current;
@@ -299,7 +301,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
             
             // down tile
             if (tileMovesMap.find({endNode.x+1, endNode.y}) != tileMovesMap.end()) {
-                if(tiles[endNode.x+1][endNode.y-1].type == TileSystem::WALL) {
+                if(tiles[endNode.x+1][endNode.y-1].type == WALL) {
                     next.push_back({endNode.x+1, endNode.y});
                     frontier.push_back(next);
                     next = current;
@@ -310,7 +312,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
         // wall below
         if(endNode.x+1 >= 0 && endNode.x+1 < tiles.size() && endNode.y >= 0 && endNode.y < tiles[endNode.x+1].size() && tiles[endNode.x+1][endNode.y].type == WALL) {
             if (tileMovesMap.find({endNode.x+1, endNode.y+1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x][endNode.y+1].type == TileSystem::EMPTY) {
+                if(tiles[endNode.x][endNode.y+1].type == EMPTY) {
                     next.push_back({endNode.x, endNode.y+1});
                     next.push_back({endNode.x+1, endNode.y+1});
                     frontier.push_back(next);
@@ -319,7 +321,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
                 }
             }
             if (tileMovesMap.find({endNode.x+1, endNode.y-1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x][endNode.y-1].type == TileSystem::EMPTY) {
+                if(tiles[endNode.x][endNode.y-1].type == EMPTY) {
                     next.push_back({endNode.x, endNode.y-1});
                     next.push_back({endNode.x+1, endNode.y-1});
                     frontier.push_back(next);
@@ -329,7 +331,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
             }
             // left tile
             if (tileMovesMap.find({endNode.x, endNode.y-1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x+1][endNode.y-1].type == TileSystem::WALL) {
+                if(tiles[endNode.x+1][endNode.y-1].type == WALL) {
                     next.push_back({endNode.x, endNode.y-1});
                     frontier.push_back(next);
                     next = current;
@@ -339,7 +341,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
             
             // right tile
             if (tileMovesMap.find({endNode.x, endNode.y+1}) != tileMovesMap.end()) {
-                if(tiles[endNode.x+1][endNode.y+1].type == TileSystem::WALL) {
+                if(tiles[endNode.x+1][endNode.y+1].type == WALL) {
                     next.push_back({endNode.x, endNode.y+1});
                     frontier.push_back(next);
                     next = current;
@@ -352,7 +354,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
         // INDIVIDUAL //
         // left vine tile
         if (tileMovesMap.find({endNode.x, endNode.y-1}) != tileMovesMap.end()) {
-            if(tiles[endNode.x][endNode.y-1].type == TileSystem::VINE) {
+            if(tiles[endNode.x][endNode.y-1].type == VINE) {
                 next.push_back({endNode.x, endNode.y-1});
                 frontier.push_back(next);
                 next = current;
@@ -363,7 +365,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
         
         // right vine tile
         if (tileMovesMap.find({endNode.x, endNode.y+1}) != tileMovesMap.end()) {
-            if(tiles[endNode.x][endNode.y+1].type == TileSystem::VINE) {
+            if(tiles[endNode.x][endNode.y+1].type == VINE) {
                 next.push_back({endNode.x, endNode.y+1});
                 frontier.push_back(next);
                 next = current;
@@ -373,7 +375,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
         
         // up vine tile
         if (tileMovesMap.find({endNode.x-1, endNode.y}) != tileMovesMap.end()) {
-            if(tiles[endNode.x-1][endNode.y].type == TileSystem::VINE) {
+            if(tiles[endNode.x-1][endNode.y].type == VINE) {
                 next.push_back({endNode.x-1, endNode.y});
                 frontier.push_back(next);
                 next = current;
@@ -383,7 +385,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
         
         // down vine tile
         if (tileMovesMap.find({endNode.x+1, endNode.y}) != tileMovesMap.end()) {
-            if(tiles[endNode.x+1][endNode.y].type == TileSystem::VINE) {
+            if(tiles[endNode.x+1][endNode.y].type == VINE) {
                 next.push_back({endNode.x+1, endNode.y});
                 frontier.push_back(next);
                 next = current;

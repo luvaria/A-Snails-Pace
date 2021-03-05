@@ -68,6 +68,8 @@ public:
     
 	// OpenGL window handle
 	GLFWwindow* window;
+    
+    bool running;
 private:
 
 	
