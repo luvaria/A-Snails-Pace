@@ -98,8 +98,6 @@ public:
 	virtual ~Menu() {}
 	virtual void setActive()
 	{
-		// default scale
-		TileSystem::setScale(100.f);
 		setGLFWCallbacks();
 	}
 	void setInactive() { this->removeEntities(); }
