@@ -3,6 +3,7 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "../ext/stb_image/stb_image.h"
+#include "level_loader.hpp"
 
 // stlib
 #include <array>
@@ -289,6 +290,41 @@ MinShadedMeshRef::MinShadedMeshRef(ShadedMesh& mesh, RenderBucket bucket) :
 	reference_to_cache(&mesh),
 	renderBucket(bucket)
 {};
+
+void Camera::reset()
+{
+    auto& camReg = ECS::registry<Camera>;
+    if (camReg.size() == 0)
+    {
+        ECS::Entity cameraEntity;
+        camReg.emplace(cameraEntity);
+    }
+    auto& cameraEntity = camReg.entities[0];
+
+    auto& motionReg = ECS::registry<Motion>;
+    if (!motionReg.has(cameraEntity))
+    {
+        motionReg.emplace(cameraEntity);
+    }
+    motionReg.get(cameraEntity).position = { 0.f,0.f };
+}
+
+void Camera::update(float move_seconds)
+{
+    assert(ECS::registry<Camera>.size() != 0);
+    auto &cameraEntity = ECS::registry<Camera>.entities[0];
+
+    assert(ECS::registry<Motion>.has(cameraEntity));
+    auto &cameraMotion = ECS::registry<Motion>.get(cameraEntity);
+
+    if (!ECS::registry<Destination>.has(cameraEntity))
+    {
+        ECS::registry<Destination>.emplace(cameraEntity);
+    }
+    auto &cameraDest = ECS::registry<Destination>.get(cameraEntity);
+    cameraDest.position = {cameraMotion.position.x + TileSystem::getScale(), cameraMotion.position.y};
+    cameraMotion.velocity = (cameraDest.position - cameraMotion.position) / move_seconds;
+}
 
 // Very, VERY simple OBJ loader adapted from https://github.com/opengl-tutorials/ogl tutorial 7
 // (modified to also read vertex color and omit uv and normals)

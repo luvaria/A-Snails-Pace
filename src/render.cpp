@@ -184,7 +184,8 @@ void RenderSystem::draw(vec2 window_size_in_game_units)
 	float right = window_size_in_game_units.x;
 	float bottom = window_size_in_game_units.y;
 
-	vec2 offset = ECS::registry<Camera>.components[0].offset;
+	auto& camera = ECS::registry<Camera>.entities[0];
+	vec2 offset = ECS::registry<Motion>.get(camera).position;
 
 	float sx = 2.f / (right - left);
 	float sy = 2.f / (top - bottom);

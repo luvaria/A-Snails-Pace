@@ -157,7 +157,8 @@ struct MinShadedMeshRef
 
 struct Camera
 {
-	vec2 offset = { 0.f,0.f };
+	static void reset();
+	static void update(float move_seconds);
 };
 
 // A struct to refer to debugging graphics in the ECS

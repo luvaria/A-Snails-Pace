@@ -2,6 +2,7 @@
   "name": "Demo 2",
   "description": "Showing off M1 features. Zoomed out and more vines.",
   "scale": 50,
+  "turnsPerCamera": 2,
   "tiles": [
     "                        ",
     "                        ",

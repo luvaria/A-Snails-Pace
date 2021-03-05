@@ -25,10 +25,13 @@ public:
     static float getScale();
     static void setScale(float s);
 
-    // reset tile grid (for level loading)
-    static void resetGrid();
+	// number of turns before camera moves
+	static unsigned getTurnsForCameraUpdate();
+    static void setTurnsForCameraUpdate(unsigned turns);
 
-  struct KeyFuncs
+	// reset tile grid (for level loading)
+	static void resetGrid();
+    struct KeyFuncs
     {
         size_t operator()(const ivec2& k)const
         {

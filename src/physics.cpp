@@ -1,12 +1,13 @@
 // Header
 #include "physics.hpp"
-#include "Geometry.hpp"
+#include "geometry.hpp"
 #include "projectile.hpp"
 #include "tiles/wall.hpp"
 #include "tiles/water.hpp"
 #include "tiny_ecs.hpp"
 #include "debug.hpp"
 #include "render.hpp"
+#include "world.hpp"
 
 // stlib
 #include <memory>
@@ -251,53 +252,80 @@ bool ShouldCheckCollision(ECS::Entity entity_i, ECS::Entity entity_j)
 	return isValidSnailCollision_i || isValidSnailCollision_j || isValidProjectileCollision_i || isValidProjectileCollision_j;
 }
 
+void stepToDestination(ECS::Entity entity, float step_seconds)
+{
+    auto& destReg = ECS::registry<Destination>;
+    if (destReg.has(entity))
+    {
+        auto& dest = destReg.get(entity);
+        auto& motion = ECS::registry<Motion>.get(entity);
+        vec2 newPos = motion.position + (motion.velocity * step_seconds);
+        if ((dot(motion.position - newPos, dest.position - newPos) > 0) || (dest.position == newPos))
+        {
+            // overshot or perfectly hit destination
+            // set velocity back to 0 stop moving
+            motion.position = dest.position;
+            //motion.velocity = { 0.f, 0.f };
+            destReg.remove(entity);
+        }
+        else
+        {
+            motion.position = newPos;
+        }
+    }
+}
+
 void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 {
-	// Move entities based on how much time has passed, this is to (partially) avoid
-	// having entities move at different speed based on the machine.
+    (void)window_size_in_game_units;
 
-	//for (auto& motion : ECS::registry<Motion>.components)
+    // Move entities based on how much time has passed, this is to (partially) avoid
+	// having entities move at different speed based on the machine.
 
 	float step_seconds = 1.0f * (elapsed_ms / 1000.f);
 
-	// move the projectile!
-	for (auto entity : ECS::registry<Projectile>.entities)
-	{
-		auto& motion = ECS::registry<Motion>.get(entity);
-		vec2 velocity = motion.velocity;
-		motion.position += velocity * step_seconds;
-	}
+    TurnType& turnType = ECS::registry<Turn>.components[0].type;
+    if (turnType == PLAYER_WAITING)
+    {
+        // Projectile previews
+        for (auto entity : ECS::registry<Projectile::Preview>.entities)
+        {
+            auto& motion = ECS::registry<Motion>.get(entity);
+            vec2 velocity = motion.velocity;
+            motion.position += velocity * step_seconds;
+        }
+    }
+    // if snail is moving to its destination then nothing else should be! for now...
+	else if (turnType == PLAYER_UPDATE)
+    {
+        auto& snailEntity = ECS::registry<Snail>.entities[0];
+	    stepToDestination(snailEntity, step_seconds);
+    }
+	else if (turnType == ENEMY)
+    {
+        // move the projectile!
+	    // There shouldn't be any previews at this point, but to be safe
+	    Projectile::Preview::removeCurrent();
+        for (auto entity : ECS::registry<Projectile>.entities)
+        {
+            auto& motion = ECS::registry<Motion>.get(entity);
+            vec2 velocity = motion.velocity;
+            motion.position += velocity * step_seconds;
+        }
 
-	// Move the entities who are not at their destinations
-	auto& destReg = ECS::registry<Destination>;
-	std::vector<std::shared_ptr<ECS::Entity>> toRemove;
-	for (size_t i = 0; i < destReg.components.size(); i++)
-	{
-		auto& entity = destReg.entities[i];
-		auto& dest = destReg.components[i];
-		auto& motion = ECS::registry<Motion>.get(entity);
-		vec2 newPos = motion.position + (motion.velocity * step_seconds);
-		if ((dot(motion.position - newPos, dest.position - newPos) > 0) || (dest.position == newPos))
-		{
-			// overshot or perfectly hit destination
-			// set velocity back to 0 stop moving
-			motion.position = dest.position;
-			motion.velocity = { 0.f, 0.f };
-			toRemove.push_back(std::make_shared<ECS::Entity>(entity));
-		}
-		else
-		{
-			motion.position = newPos;
-		}
-	}
-	// remove all that reached destination
-	// someone tell me (emily) if this is dumb and if there's a better way to do this
-	for (auto entityPtr : toRemove)
-	{
-		destReg.remove(*entityPtr);
-	}
-
-	(void)window_size_in_game_units;
+        // move enemies
+        // eventually this could be an enemy registry, but we only have spiders for now
+        for (auto entity : ECS::registry<Spider>.entities)
+        {
+            stepToDestination(entity, step_seconds);
+        }
+    }
+	else if (turnType == CAMERA)
+    {
+        // move camera
+        auto &cameraEntity = ECS::registry<Camera>.entities[0];
+        stepToDestination(cameraEntity, step_seconds);
+    }
 
 	// Visualization for debugging the position and scale of objects
 	if (DebugSystem::in_debug_mode)

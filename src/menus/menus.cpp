@@ -24,12 +24,12 @@ void MenuSystem::start()
 	// reset scale, grid, and camera (may have been changed due to previous level load)
 	TileSystem::resetGrid();
 	TileSystem::setScale(100.f);
-	ECS::registry<Camera>.components[0].offset = { 0.f, 0.f };
 	// clear everything visible
 	while (ECS::registry<Motion>.entities.size() > 0)
 		ECS::ContainerInterface::remove_all_components_of(ECS::registry<Motion>.entities.back());
 	while (ECS::registry<Text>.entities.size() > 0)
 		ECS::ContainerInterface::remove_all_components_of(ECS::registry<Text>.entities.back());
+	Camera::reset();
 	openMenu(Event::START_MENU);
 }
 

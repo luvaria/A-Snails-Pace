@@ -126,8 +126,9 @@ private:
 class AISystem
 {
 public:
-    static int aiMoves;
+
     static std::string aiPathFindingAlgorithm;
+    static bool aiMoved;
 
 	  void step(float elapsed_ms, vec2 window_size_in_game_units);
     void init();

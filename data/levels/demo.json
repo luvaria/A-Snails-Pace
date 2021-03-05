@@ -2,6 +2,7 @@
   "name": "Demo",
   "description": "Showing off M1 features.",
   "scale": 100,
+  "turnsPerCamera": 2,
   "tiles": [
     "            ",
     "            ",

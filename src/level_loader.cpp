@@ -28,13 +28,15 @@ void LevelLoader::loadLevel(std::string levelFileName, bool preview, vec2 offset
 	AISystem::aiPathFindingAlgorithm = level["AI-PathFinding-Algorithm"];
 
 	// level scale
-	float prevScale = previewScale;
-	float levelScale = level["scale"];
-	float scale = preview ? prevScale : levelScale;
+	float scale = preview ? previewScale : static_cast<float>(level["scale"]);
 	TileSystem::setScale(scale);
 
 	// clear tiles (if previously already loaded a level)
 	TileSystem::resetGrid();
+
+    // load camera moves per turn
+    unsigned turnsPerCameraMove = level["turnsPerCamera"];
+    TileSystem::setTurnsForCameraUpdate(turnsPerCameraMove);
 
 	// adjust preview area according to snail spawn location
 	// assuming one/first snail
