@@ -73,7 +73,7 @@ int main()
 			physics.step(elapsed_ms, window_size_in_game_units);
 		}
 
-		renderer.draw(window_size_in_game_units);
+		renderer.draw(window_size_in_game_units, elapsed_ms);
 	}
 
 	return EXIT_SUCCESS;

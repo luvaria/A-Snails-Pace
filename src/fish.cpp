@@ -13,7 +13,7 @@ ECS::Entity Fish::createFish(vec2 position)
 	if (resource.effect.program.resource == 0)
 	{
 		resource = ShadedMesh();
-		RenderSystem::createSprite(resource, textures_path("fish.png"), "textured");
+		RenderSystem::createSprite(resource, textures_path("fish.png"), "textured", false);
 	}
 
 	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
