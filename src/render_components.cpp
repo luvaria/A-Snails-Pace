@@ -24,7 +24,7 @@ void gl_compile_shader(GLuint shader)
 		std::vector<char> log(log_len);
 		glGetShaderInfoLog(shader, log_len, &log_len, log.data());
 		glDeleteShader(shader);
-
+		std::cout << "ERROR: " << log.data() << std::endl;
 		throw std::runtime_error("GLSL: " + std::string(log.data()));
 	}
 }

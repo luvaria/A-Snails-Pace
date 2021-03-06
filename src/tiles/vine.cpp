@@ -12,10 +12,13 @@ ECS::Entity VineTile::createVineTile(vec2 position, ECS::Entity entity)
 {
 	std::string key = "vine";
 	ShadedMesh& resource = cache_resource(key);
-	if (resource.mesh.vertices.size() == 0)
+	if (resource.effect.program.resource == 0)
 	{
-		resource.mesh.loadFromOBJFile(mesh_path("vine.obj"));
-		RenderSystem::createColoredMesh(resource, "tile");
+		resource = ShadedMesh();
+		float numFrames = 2.0f;
+		float numAnimations = 1.0f;
+		resource.texture.frameSize = { 1.0f / numFrames, 1.0f / numAnimations }; // FRAME SIZE HERE!!! this is the percentage of the whole thing...
+		RenderSystem::createSprite(resource, textures_path("vine.png"), "spriteSheet", true);
 	}
 
 	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
@@ -26,7 +29,12 @@ ECS::Entity VineTile::createVineTile(vec2 position, ECS::Entity entity)
 	motion.position = position;
 	motion.angle = 0.f;
 	motion.velocity = { 0.f, 0.f };
-	motion.scale = { TileSystem::getScale(), -TileSystem::getScale() };
+	motion.scale = { TileSystem::getScale(), TileSystem::getScale() };
+
+	//setting the animation information
+	SpriteSheet& spriteSheet = ECS::registry<SpriteSheet>.emplace(entity);
+	spriteSheet.animationSpeed = 300;
+	spriteSheet.numAnimationFrames = 2;
 
 	// Create an (empty) VineTile component
 	ECS::registry<VineTile>.emplace(entity);

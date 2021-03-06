@@ -25,10 +25,10 @@ public:
 	~RenderSystem();
 
 	// Draw all entities
-	void draw(vec2 window_size_in_game_units);
+	void draw(vec2 window_size_in_game_units, float elapsed_ms);
 
 	// Expose the creating of visual representations to other systems
-	static void createSprite(ShadedMesh& mesh_container, std::string texture_path, std::string shader_name);
+	static void createSprite(ShadedMesh& mesh_container, std::string texture_path, std::string shader_name, bool isSpriteSheet);
 	static void createColoredMesh(ShadedMesh& mesh_container, std::string shader_name);
 
 private:
@@ -37,8 +37,9 @@ private:
 	void initScreenTexture();
 
 	// Internal drawing functions for each entity type
-	void drawTexturedMesh(ECS::Entity entity, const mat3& projection);
+	void drawTexturedMesh(ECS::Entity entity, const mat3& projection, float elapsed_ms);
 	void drawToScreen();
+	void HandleFrameSwitchTiming(ECS::Entity entity, float elapsed_ms);
 
 	// Window handle
 	GLFWwindow& window;
