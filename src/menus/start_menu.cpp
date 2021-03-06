@@ -15,6 +15,7 @@ StartMenu::StartMenu(GLFWwindow& window) : Menu(window)
 
 void StartMenu::setActive()
 {
+	TileSystem::setScale(100.f);
 	Menu::setActive();
 	loadEntities();
 }
