@@ -466,6 +466,11 @@ void WorldSystem::changeDirection(Motion& motion, Tile& currTile, Tile& nextTile
 
     Destination& dest = ECS::registry<Destination>.has(entity) ? ECS::registry<Destination>.get(entity) : ECS::registry<Destination>.emplace(entity);
     dest.position = { nextTile.x, nextTile.y };
+    if (nextTile.x != currTile.x || nextTile.y != currTile.y) 
+    {
+        currTile.setOccupied(false);
+        nextTile.setOccupied(true);
+    }
     // give velocity to reach destination in set time
     // this velocity will be set to 0 once destination is reached in physics.cpp
     motion.velocity = (dest.position - motion.position)/k_move_seconds;
