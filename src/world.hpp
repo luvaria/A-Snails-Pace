@@ -42,8 +42,8 @@ public:
 	void shootProjectile(vec2 mouse_pos, bool preview = false);
 
 	void onNotify(Event event);
-    
-    static int snailMoves;
+
+	static int snailMoves;
 
 	// return true if a given point is off screen, false otherwise
 	static bool offScreen(vec2 const& pos, vec2 window_size_in_game_units, vec2 cameraOffset);
@@ -72,7 +72,8 @@ public:
     static float constexpr k_projectile_turn_ms = 1000.f;
 
 private:
-    // Input callback functions
+	// Input callback functions
+
 	void setGLFWCallbacks();
 	void on_key(int key, int, int action, int mod);
 	void on_mouse_move(vec2 mouse_pos);
@@ -89,7 +90,7 @@ private:
 	ECS::Entity player_snail;
 	int attempts;
 
-    std::chrono::time_point<std::chrono::high_resolution_clock> can_show_projectile_preview_time;
+	std::chrono::time_point<std::chrono::high_resolution_clock> can_show_projectile_preview_time;
 	bool left_mouse_pressed;
 
 	// NEW: turn_number is not used for now, but will probably be used to keep track

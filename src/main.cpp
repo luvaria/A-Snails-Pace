@@ -4,6 +4,8 @@
 // stlib
 #include <chrono>
 #include <iostream>
+#include <memory>
+#include <type_traits>
 
 // internal
 #include "common.hpp"
@@ -49,6 +51,7 @@ int main()
 	world.addObserver(&menus);
 	// add the world system as an observer of the physics systems to handle collisions
 	physics.addObserver(&world);
+
 
 	while (!world.is_over())
 	{

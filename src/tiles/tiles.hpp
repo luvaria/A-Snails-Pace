@@ -12,18 +12,18 @@ typedef enum { EMPTY, WALL, WATER, VINE } TYPE;
 
 // Defines the tile component
 struct Tile {
-	float x = 0;
-	float y = 0;
-	TYPE type = EMPTY;
-	bool occupied = false;
+    float x = 0;
+    float y = 0;
+    TYPE type = EMPTY;
+    bool occupied = false;
 };
 
 class TileSystem
 {
 public:
-	// size of each (square) tile
-	static float getScale();
-	static void setScale(float s);
+    // size of each (square) tile
+    static float getScale();
+    static void setScale(float s);
 
 	// number of turns before camera moves
 	static unsigned getTurnsForCameraUpdate();
@@ -40,13 +40,14 @@ public:
 
         bool operator()(const ivec2& a, const ivec2& b)const
         {
-                return a.x == b.x && a.y == b.y;
+            return a.x == b.x && a.y == b.y;
         }
     };
 
 
     typedef std::unordered_map<ivec2, Tile, KeyFuncs, KeyFuncs> vec2Map;
-	// tile grid
-	static std::vector<std::vector<Tile>>& getTiles();
+
+    // tile grid
+    static std::vector<std::vector<Tile>>& getTiles();
     static vec2Map& getAllTileMovesMap();
 };

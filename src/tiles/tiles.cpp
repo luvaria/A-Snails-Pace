@@ -15,4 +15,3 @@ unsigned TileSystem::getTurnsForCameraUpdate() { return turns_for_camera_update;
 void TileSystem::setTurnsForCameraUpdate(unsigned turns) { turns_for_camera_update = turns; }
 std::vector<std::vector<Tile>>& TileSystem::getTiles() { return tiles; }
 TileSystem::vec2Map& TileSystem::getAllTileMovesMap() { return tileMovesMap; }
-

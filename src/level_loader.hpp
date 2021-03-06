@@ -2,8 +2,8 @@
 
 // internal
 #include "common.hpp"
-#include "tiny_ecs.hpp"
 #include "tiles/tiles.hpp"
+#include "tiny_ecs.hpp"
 
 class LevelLoader
 {
@@ -13,7 +13,6 @@ public:
 
 	static void loadLevel(std::string levelFileName, bool preview = false, vec2 offset = { 0, 0 });
 	static void previewLevel(std::string levelFileName, vec2 offset);
-
 private:
 	// to allow switching on strings
 	// author: D.Shawley

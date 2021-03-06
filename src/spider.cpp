@@ -32,13 +32,24 @@ ECS::Entity Spider::createSpider(vec2 position, ECS::Entity entity)
 	motion.angle = 0.f;
 	motion.velocity = { 0.f, 0.f }; // 200
 	motion.position = position;
-    motion.scale = resource.mesh.original_size / resource.mesh.original_size.x * TileSystem::getScale();
+	motion.scale = resource.mesh.original_size / resource.mesh.original_size.x * TileSystem::getScale();
 	motion.scale.y *= -1; // fix orientation
 	motion.scale *= 0.9f;
-    motion.lastDirection = DIRECTION_WEST;
+	motion.lastDirection = DIRECTION_WEST;
 
-    ECS::registry<AI>.emplace(entity);
+	ECS::registry<AI>.emplace(entity);
 	ECS::registry<Spider>.emplace(entity);
-
+	
+	// Adding Behaviour Tree to Spider
+	// Maybe add some registry that keeps track of trees??
+	std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>();
+	std::shared_ptr <BTNode> isr = std::make_unique<IsSnailInRange>();
+	std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ isr, lfs }));
+	//auto& ai = ECS::registry<AI>.get(entity);
+	//ai.tree = tree;
+	tree->init(entity);
+	auto& ai = ECS::registry<AI>.get(entity);
+	ai.tree = tree;
+	//ECS::registry<std::shared_ptr <BTNode>>.emplace(entity);
 	return entity;
 }

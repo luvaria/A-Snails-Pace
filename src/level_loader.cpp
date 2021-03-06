@@ -25,8 +25,8 @@ void LevelLoader::loadLevel(std::string levelFileName, bool preview, vec2 offset
 	std::ifstream i(levels_path(levelFileName));
 	json level = json::parse(i);
 
-    AISystem::aiPathFindingAlgorithm = level["AI-PathFinding-Algorithm"];
-    
+	AISystem::aiPathFindingAlgorithm = level["AI-PathFinding-Algorithm"];
+
 	// level scale
 	float scale = preview ? previewScale : static_cast<float>(level["scale"]);
 	TileSystem::setScale(scale);
@@ -80,8 +80,8 @@ void LevelLoader::loadLevel(std::string levelFileName, bool preview, vec2 offset
 
 			Tile tile;
 
-			tile.x = (float) (x * scale + 0.5 * scale) + offset.x;
-			tile.y = (float) (y * scale + 0.5 * scale) + offset.y;
+			tile.x = (float)(x * scale + 0.5 * scale) + offset.x;
+			tile.y = (float)(y * scale + 0.5 * scale) + offset.y;
 
 			auto entity = ECS::Entity();
 			if (preview)
@@ -114,10 +114,14 @@ void LevelLoader::loadLevel(std::string levelFileName, bool preview, vec2 offset
 	// load characters
 	for (auto it = level["characters"].begin(); it != level["characters"].end(); ++it)
 	{
+		auto entity = ECS::Entity();
+		if (preview)
+			ECS::registry<LevelSelectTag>.emplace(entity);
+
 		switch (hashit(it.key()))
 		{
 		case eSnail:
-			for (auto &snail : it.value())
+			for (auto& snail : it.value())
 			{
 				ivec2 snailPos = { snail["x"], snail["y"] };
 				if (preview && (xNotInPreviewArea(snailPos.x, previewOrigin) || yNotInPreviewArea(snailPos.y, previewOrigin)))

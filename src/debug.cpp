@@ -11,7 +11,7 @@
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // DON'T WORRY ABOUT THIS CLASS UNTIL ASSIGNMENT 2
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-namespace DebugSystem 
+namespace DebugSystem
 {
  	void createLine(vec2 position, vec2 scale, float angle) {
 		auto entity = ECS::Entity();
@@ -25,7 +25,7 @@ namespace DebugSystem
 
 			// Corner points
 			ColoredVertex v;
-			v.position = {-0.5,-0.5,z};
+			v.position = { -0.5,-0.5,z };
 			v.color = red;
 			resource.mesh.vertices.push_back(v);
 			v.position = { -0.5,0.5,z };
@@ -66,10 +66,9 @@ namespace DebugSystem
 		// Clear old debugging visualizations
 		while (ECS::registry<DebugComponent>.entities.size() > 0) {
 			ECS::ContainerInterface::remove_all_components_of(ECS::registry<DebugComponent>.entities.back());
-        }
+		}
 	}
 
 	bool in_debug_mode = false;
-    bool in_path_debug_mode = false;
-
+	bool in_path_debug_mode = false;
 }
