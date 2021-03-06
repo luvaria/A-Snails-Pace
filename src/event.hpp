@@ -6,7 +6,7 @@
 class Event
 {
 public:
-	enum EventType { COLLISION, LOAD_LEVEL, MENU_START, MENU_OPEN, MENU_CLOSE, MENU_CLOSE_ALL, PAUSE, UNPAUSE };
+	enum EventType { COLLISION, LOAD_LEVEL, MENU_START, MENU_OPEN, MENU_CLOSE, MENU_CLOSE_ALL, PAUSE, UNPAUSE, TILE_OCCUPIED, TILE_UNOCCUPIED };
 	// used to determine what level to load
 	enum Level { INVALID_LEVEL, DEMO, DEMO_2, LVL_1 };
 	// used to determine what menu type is being opened or closed

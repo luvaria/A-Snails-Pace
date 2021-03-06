@@ -5,7 +5,9 @@
 ECS::Entity VineTile::createVineTile(Tile& tile, ECS::Entity entity)
 {
 	ECS::registry<Tile>.insert(entity, std::move(tile));
-	return createVineTile(vec2(tile.x, tile.y), entity);
+	auto vineEntity = createVineTile(vec2(tile.x, tile.y), entity);
+	tile.addObserver(&ECS::registry<VineTile>.get(vineEntity));
+	return vineEntity;
 }
 
 ECS::Entity VineTile::createVineTile(vec2 position, ECS::Entity entity)
@@ -15,8 +17,8 @@ ECS::Entity VineTile::createVineTile(vec2 position, ECS::Entity entity)
 	if (resource.effect.program.resource == 0)
 	{
 		resource = ShadedMesh();
-		float numFrames = 2.0f;
-		float numAnimations = 1.0f;
+		float numFrames = 6.0f;
+		float numAnimations = 2.0f;
 		resource.texture.frameSize = { 1.0f / numFrames, 1.0f / numAnimations }; // FRAME SIZE HERE!!! this is the percentage of the whole thing...
 		RenderSystem::createSprite(resource, textures_path("vine.png"), "spriteSheet", true);
 	}
@@ -33,11 +35,25 @@ ECS::Entity VineTile::createVineTile(vec2 position, ECS::Entity entity)
 
 	//setting the animation information
 	SpriteSheet& spriteSheet = ECS::registry<SpriteSheet>.emplace(entity);
-	spriteSheet.animationSpeed = 300;
-	spriteSheet.numAnimationFrames = 2;
+	spriteSheet.animationSpeed = 100;
+	spriteSheet.numAnimationFrames = 6;
+	spriteSheet.currentAnimationNumber = 1; //leaves move when the level starts.
+
 
 	// Create an (empty) VineTile component
-	ECS::registry<VineTile>.emplace(entity);
-
+	auto& vineTile = ECS::registry<VineTile>.emplace(entity);
+	vineTile.entity = entity;
 	return entity;
+}
+
+void VineTile::onNotify(Event env) 
+{
+	if (env.type == Event::TILE_OCCUPIED) 
+	{
+		ECS::registry<SpriteSheet>.get(entity).currentAnimationNumber = 0;
+	}
+	if (env.type == Event::TILE_UNOCCUPIED)
+	{
+		ECS::registry<SpriteSheet>.get(entity).currentAnimationNumber = 1;
+	}
 }

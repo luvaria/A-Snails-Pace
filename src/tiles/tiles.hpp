@@ -3,6 +3,8 @@
 // stlib
 #include <vector>
 #include "common.hpp"
+#include "event.hpp"
+#include "subject.hpp"
 #include <unordered_map>
 
 // Defining what tile types are possible, used to render correct tile types
@@ -11,11 +13,23 @@
 typedef enum { EMPTY, WALL, WATER, VINE } TYPE;
 
 // Defines the tile component
-struct Tile {
+class Tile: public Subject {
+public:
     float x = 0;
     float y = 0;
     TYPE type = EMPTY;
     bool occupied = false;
+    void setOccupied(bool isOccupied) 
+    {
+        occupied = isOccupied;
+        isOccupied ? notify(Event(Event::TILE_OCCUPIED)) : notify(Event(Event::TILE_UNOCCUPIED));
+    }
+    bool operator==(const Tile& rhs) const
+    {
+        return
+            this->x == rhs.x &&
+            this->y == rhs.y;
+    }
 };
 
 class TileSystem

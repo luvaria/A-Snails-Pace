@@ -128,7 +128,7 @@ void LevelLoader::loadLevel(std::string levelFileName, bool preview, vec2 offset
 					continue;
 				Tile& tile = tiles[snail["y"]][snail["x"]];
 				// may not want this for snail location depending on enemy type and AI
-				tile.occupied = true;
+				tile.setOccupied(true);
 				Snail::createSnail({ tile.x, tile.y }, createTaggedEntity(preview));
 			}
 			break;
@@ -139,7 +139,7 @@ void LevelLoader::loadLevel(std::string levelFileName, bool preview, vec2 offset
 				if (preview && (xNotInPreviewArea(spiderPos.x, previewOrigin) || yNotInPreviewArea(spiderPos.y, previewOrigin)))
 					continue;
 				Tile& tile = tiles[spider["y"]][spider["x"]];
-				tile.occupied = true;
+				tile.setOccupied(true);
 				Spider::createSpider({ tile.x, tile.y }, createTaggedEntity(preview));
 			}
 			break;
