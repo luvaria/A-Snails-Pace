@@ -40,6 +40,7 @@ enum class BTState {
 
 class BTNode {
     public:
+        virtual ~BTNode() {};
         virtual void init(ECS::Entity e) {};
         virtual BTState process(ECS::Entity e) = 0;
 };
