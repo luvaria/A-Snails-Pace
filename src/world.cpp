@@ -360,6 +360,9 @@ void WorldSystem::onNotify(Event event) {
         case Event::Level::DEMO_2:
             level = "demo-2.json";
             break;
+        case Event::Level::LVL_1:
+            level = "level-1.json";
+            break;
         default:
             throw std::runtime_error("Could not load unknown level.");
         }

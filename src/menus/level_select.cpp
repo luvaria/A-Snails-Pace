@@ -66,7 +66,7 @@ void LevelSelect::loadEntities()
 	ECS::registry<LevelSelectTag>.emplace(spider);
 
 	// level previews
-	std::vector<std::string> levelNames = { "demo.json", "demo-2.json" };
+	std::vector<std::string> levelNames = { "demo.json", "demo-2.json", "level-1.json"};
 	vec2 previewSpacing = LevelLoader::previewScale * LevelLoader::previewDimensions + 2.f * vec2(LevelLoader::previewScale, 2.f * LevelLoader::previewScale);
 	vec2 previewOffset = vec2(100.f, 100.f);
 
@@ -149,6 +149,10 @@ void LevelSelect::on_key(int key, int, int action, int /*mod*/)
 			notify(Event(Event::EventType::LOAD_LEVEL, Event::Level::DEMO_2));
 			notify(Event(Event::EventType::MENU_CLOSE_ALL));
 			break;
+		case GLFW_KEY_3:
+			notify(Event(Event::EventType::LOAD_LEVEL, Event::Level::LVL_1));
+			notify(Event(Event::EventType::MENU_CLOSE_ALL));
+			break;
 		}
 	}
 }
@@ -220,6 +224,10 @@ void LevelSelect::selectedKeyEvent()
 					break;
 				case 1:
 					notify(Event(Event::EventType::LOAD_LEVEL, Event::Level::DEMO_2));
+					notify(Event(Event::EventType::MENU_CLOSE_ALL));
+					break;
+				case 2:
+					notify(Event(Event::EventType::LOAD_LEVEL, Event::Level::LVL_1));
 					notify(Event(Event::EventType::MENU_CLOSE_ALL));
 					break;
 				}
