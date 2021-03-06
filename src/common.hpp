@@ -53,6 +53,15 @@ struct Motion {
     int lastDirection = DIRECTION_NORTH;
 };
 
+struct SpriteSheet 
+{
+	int numAnimationFrames = 1;
+	float animationSpeed = 10000;
+	int currentAnimationNumber = 0;
+	int currentFrame = 0;
+	float timeSinceFrameSwitch = 0;
+};
+
 struct Destination {
     vec2 position = { 0, 0 };
 };

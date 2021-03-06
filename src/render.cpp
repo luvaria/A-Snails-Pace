@@ -7,7 +7,33 @@
 
 #include <iostream>
 
-void RenderSystem::drawTexturedMesh(ECS::Entity entity, const mat3& projection)
+//change the data that gets passed to the fs on a frame-frame basis (nothing regarding intial loading here)
+void DoSpriteSheetLogic(ECS::Entity entity, const ShadedMesh& mesh)
+{
+	auto& spriteSheet = ECS::registry<SpriteSheet>.get(entity);
+	//we need to determine the vertOffset, horOffset
+	auto width = mesh.texture.frameSize.x;
+	auto height = mesh.texture.frameSize.y;
+	auto vertOffset = height * spriteSheet.currentAnimationNumber;
+	auto horOffset = width * spriteSheet.currentFrame; //when frame = 0, we get no offset.
+	GLint vertOffset_uloc = glGetUniformLocation(mesh.effect.program, "vertOffset");
+	GLint horOffset_uloc = glGetUniformLocation(mesh.effect.program, "horOffset");
+	glUniform1f(vertOffset_uloc, vertOffset);
+	glUniform1f(horOffset_uloc, horOffset);
+}
+
+void RenderSystem::HandleFrameSwitchTiming(ECS::Entity entity, float elapsed_ms)
+{
+	auto& spriteSheet = ECS::registry<SpriteSheet>.get(entity);
+	spriteSheet.timeSinceFrameSwitch += elapsed_ms;
+	if (spriteSheet.timeSinceFrameSwitch >= spriteSheet.animationSpeed)
+	{
+		spriteSheet.timeSinceFrameSwitch = 0;
+		spriteSheet.currentFrame = (spriteSheet.currentFrame + 1) % spriteSheet.numAnimationFrames;
+	}
+}
+
+void RenderSystem::drawTexturedMesh(ECS::Entity entity, const mat3& projection, float elapsed_ms)
 {
 	auto& motion = ECS::registry<Motion>.get(entity);
 	auto& texmesh = *ECS::registry<ShadedMeshRef>.get(entity).reference_to_cache;
@@ -83,6 +109,13 @@ void RenderSystem::drawTexturedMesh(ECS::Entity entity, const mat3& projection)
 	gl_has_errors();
     glUniform1f(alpha_uloc, texmesh.texture.alpha);
     gl_has_errors();
+
+	if (ECS::registry<SpriteSheet>.has(entity)) 
+	{
+
+		HandleFrameSwitchTiming(entity, elapsed_ms);
+		DoSpriteSheetLogic(entity, texmesh);
+	}
 
 	// Get number of indices from index buffer, which has elements uint16_t
 	GLint size = 0;
@@ -160,7 +193,7 @@ void RenderSystem::drawToScreen()
 
 // Render our game world
 // http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
-void RenderSystem::draw(vec2 window_size_in_game_units)
+void RenderSystem::draw(vec2 window_size_in_game_units, float elapsed_ms)
 {
 	// Getting size of window
 	ivec2 frame_buffer_size; // in pixels
@@ -209,9 +242,9 @@ void RenderSystem::draw(vec2 window_size_in_game_units)
 		
 		// Note, its not very efficient to access elements indirectly via the entity albeit iterating through all Sprites in sequence
 		if (!ECS::registry<Overlay>.has(entity))
-			drawTexturedMesh(entity, projection_2D);
+			drawTexturedMesh(entity, projection_2D, elapsed_ms);
 		else
-			drawTexturedMesh(entity, overlay_projection_2D);
+			drawTexturedMesh(entity, overlay_projection_2D, elapsed_ms);
 
 		gl_has_errors();
 	}

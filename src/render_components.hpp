@@ -76,6 +76,7 @@ struct Texture
 {
 	GLResource<TEXTURE> texture_id;
 	ivec2 size = {0, 0};
+	vec2 frameSize = { 0,0 }; //<width, height> // set this when you load the sprite
 	vec3 color = {1,1,1};
 	float alpha = 1.0f; // only affects projectile for now, should it be implemented for all?
 	

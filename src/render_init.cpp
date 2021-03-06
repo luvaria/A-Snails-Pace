@@ -36,7 +36,7 @@ RenderSystem::~RenderSystem()
 }
 
 // Create a new sprite and register it with ECS
-void RenderSystem::createSprite(ShadedMesh& sprite, std::string texture_path, std::string shader_name)
+void RenderSystem::createSprite(ShadedMesh& sprite, std::string texture_path, std::string shader_name, bool isSpriteSheet)
 {
 	if (texture_path.length() > 0)
 		sprite.texture.load_from_file(texture_path.c_str());
@@ -47,10 +47,22 @@ void RenderSystem::createSprite(ShadedMesh& sprite, std::string texture_path, st
 	vertices[1].position = { +1.f/2, +1.f/2, 0.f };
 	vertices[2].position = { +1.f/2, -1.f/2, 0.f };
 	vertices[3].position = { -1.f/2, -1.f/2, 0.f };
-	vertices[0].texcoord = { 0.f, 1.f };
-	vertices[1].texcoord = { 1.f, 1.f };
-	vertices[2].texcoord = { 1.f, 0.f };
-	vertices[3].texcoord = { 0.f, 0.f };
+	if (!isSpriteSheet) 
+	{
+		vertices[0].texcoord = { 0.f, 1.f };
+		vertices[1].texcoord = { 1.f, 1.f };
+		vertices[2].texcoord = { 1.f, 0.f };
+		vertices[3].texcoord = { 0.f, 0.f };
+	}
+	else 
+	{
+		// set the texcoords based on how large a single frame in the sprite sheet is.
+		auto frameSize = sprite.texture.frameSize;
+		vertices[0].texcoord = { 0.f, frameSize.y };
+		vertices[1].texcoord = { frameSize.x, frameSize.y };
+		vertices[2].texcoord = { frameSize.x, 0.f };
+		vertices[3].texcoord = { 0.f, 0.f };
+	}
 
 	// Counterclockwise as it's the default opengl front winding direction.
 	uint16_t indices[] = { 0, 3, 1, 1, 3, 2 };
@@ -108,8 +120,8 @@ void RenderSystem::createColoredMesh(ShadedMesh& texmesh, std::string shader_nam
 // Initialize the screen texture from a standard sprite
 void RenderSystem::initScreenTexture()
 {
-	// Create a sprite withour loading a texture
-	createSprite(screen_sprite, "", "water");
+	// Create a sprite without loading a texture
+	createSprite(screen_sprite, "", "water", false);
 
 	// Initialize the screen texture and its state
 	screen_sprite.texture.create_from_screen(&window, depth_render_buffer_id.data());
