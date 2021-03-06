@@ -43,8 +43,8 @@ ECS::Entity Spider::createSpider(vec2 position, ECS::Entity entity)
 	// Adding Behaviour Tree to Spider
 	// Maybe add some registry that keeps track of trees??
 	std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>();
-	//std::shared_ptr <BTNode> npp = std::make_unique<NoPathsPossible>();
-	std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ lfs }));
+	std::shared_ptr <BTNode> isr = std::make_unique<IsSnailInRange>();
+	std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ isr, lfs }));
 	//auto& ai = ECS::registry<AI>.get(entity);
 	//ai.tree = tree;
 	tree->init(entity);

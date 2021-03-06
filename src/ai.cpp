@@ -134,6 +134,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
             lastVec = child;
             
         }
+        //std::cout << "on true" << std::endl;
         return true;
     }
     else {
@@ -349,6 +350,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
         }
         
     }
+    //std::cout << "on false" << std::endl;
     return false;
 
 }
@@ -433,9 +435,45 @@ BTState LookForSnail::process(ECS::Entity e) {
     return BTState::Running;
 }
 
-BTState NoPathsPossible::process(ECS::Entity e) {
-    std::cout << "in npp" << std::endl;
-    return BTState::Success;
+BTState IsSnailInRange::process(ECS::Entity e) {
+    //std::cout << "checking if snail is in range" << std::endl;
+    int range = 7;
+    // snail coordinates
+    auto& snailEntity = ECS::registry<Snail>.entities[0];
+    float scale = TileSystem::getScale();
+
+    vec2 snailPos = ECS::registry<Motion>.get(snailEntity).position;
+    int xPos = (snailPos[0] - (0.5 * scale)) / scale;
+    int yPos = (snailPos[1] - (0.5 * scale)) / scale;
+    vec2 snailCoord = { yPos, xPos };
+
+    auto entity = e;
+
+    auto tiles = TileSystem::getTiles();
+    auto& motion = ECS::registry<Motion>.get(entity);
+    vec2 aiPos = motion.position;
+    int xAiPos = (aiPos.x - (0.5 * scale)) / scale;
+    int yAiPos = (aiPos.y - (0.5 * scale)) / scale;
+    vec2 aiCoord = { yAiPos, xAiPos };
+
+    int xMax = aiCoord.x + range;
+    int xMin = aiCoord.x - range;
+    int yMax = aiCoord.y + range;
+    int yMin = aiCoord.x - range;
+
+
+    if (xMax >= snailCoord.x && xMin <= snailCoord.x) {
+        //std::cout << "success1" << std::endl;
+        return BTState::Success;
+    }
+    else if (yMax <= snailCoord.y && yMin >= snailCoord.y) {
+        //std::cout << "success2" << std::endl;
+        return BTState::Success;
+    }
+    else {
+        //std::cout << "failure" << std::endl;
+        return BTState::Failure;
+    }
 }
 
 bool AISystem::aiMoved = false;

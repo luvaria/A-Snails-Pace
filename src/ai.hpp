@@ -7,6 +7,7 @@
 #include <memory>
 #include <type_traits>
 #include <iostream>
+#include <functional>
 
 #include "common.hpp"
 #include "tiles/tiles.hpp"
@@ -47,8 +48,7 @@ struct AI {
     std::shared_ptr <BTNode> tree;
 };
 
-// loops through all children and exits when one fails.
-
+// got this from tutorial
 class BTSequence : public BTNode {
 public:
     BTSequence(std::vector<std::shared_ptr<BTNode>> children)
@@ -100,8 +100,45 @@ private:
     std::vector<std::shared_ptr<BTNode>> m_children;
 };
 
-class IsSnailInRange : public BTNode {
 
+// Made to be used in M3/M4, will probably end up making more nodes depending on what different
+// entities we will be doing in M3/M4
+class BTSelector : public BTNode {
+public:
+    BTSelector(std::shared_ptr<BTNode> child1, std::shared_ptr<BTNode> child2, std::function<bool(ECS::Entity)> condition)
+        : m_child1(std::move(child1)), m_child2(std::move(child2)), m_condition(condition){
+
+    }
+    virtual void init(ECS::Entity e) override {
+        m_child1->init(e);
+        m_child2->init(e);
+    }
+    
+
+    virtual BTState process(ECS::Entity e) override {
+        if (m_condition(e)) {
+            return m_child1->process(e);
+        }
+        else {
+            return m_child2->process(e);
+        }
+    }
+private: 
+    std::shared_ptr<BTNode> m_child1;
+    std::shared_ptr<BTNode> m_child2;
+    std::function<bool(ECS::Entity)> m_condition;
+};
+
+class IsSnailInRange : public BTNode {
+public:
+    IsSnailInRange() {
+
+    }
+private:
+    void init(ECS::Entity e) override {
+
+    }
+    BTState process(ECS::Entity e) override;
 };
 
 class LookForSnail : public BTNode {
