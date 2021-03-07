@@ -352,20 +352,11 @@ void WorldSystem::onNotify(Event event) {
         DebugSystem::in_debug_mode = false;
         attempts = -1;
         ControlsOverlay::toggleControlsOverlayOff();
-        switch (event.level)
-        {
-        case Event::Level::DEMO:
-            level = "demo.json";
-            break;
-        case Event::Level::DEMO_2:
-            level = "demo-2.json";
-            break;
-        case Event::Level::LVL_1:
-            level = "level-1.json";
-            break;
-        default:
-            throw std::runtime_error("Could not load unknown level.");
-        }
+
+        // level index exists
+        assert(event.level >= 0 && event.level < levels.size());
+        level = levels[event.level];
+
         restart(level);
     }
 }

@@ -7,21 +7,19 @@ class Event
 {
 public:
 	enum EventType { COLLISION, LOAD_LEVEL, MENU_START, MENU_OPEN, MENU_CLOSE, MENU_CLOSE_ALL, PAUSE, UNPAUSE, TILE_OCCUPIED, TILE_UNOCCUPIED };
-	// used to determine what level to load
-	enum Level { INVALID_LEVEL, DEMO, DEMO_2, LVL_1 };
 	// used to determine what menu type is being opened or closed
 	enum MenuType { INVALID_MENU, START_MENU, LEVEL_SELECT, PAUSE_MENU };
 
 	EventType type;
 	ECS::Entity entity;
 	ECS::Entity other_entity;
-	Level level = INVALID_LEVEL;
+	int level = -1;
 	MenuType menu = INVALID_MENU;
 
 	// pause unpause, return to start menu
 	Event(EventType t) : type(t) {}
 	// level load
-	Event(EventType t, Level l) : type(t), level(l) {}
+	Event(EventType t, int l) : type(t), level(l) {}
 	// menu open or close
 	Event(EventType t, MenuType m) : type(t), menu(m) {}
 	// collision

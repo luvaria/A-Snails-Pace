@@ -66,7 +66,6 @@ void LevelSelect::loadEntities()
 	ECS::registry<LevelSelectTag>.emplace(spider);
 
 	// level previews
-	std::vector<std::string> levelNames = { "demo.json", "demo-2.json", "level-1.json"};
 	vec2 previewSpacing = LevelLoader::previewScale * LevelLoader::previewDimensions + 2.f * vec2(LevelLoader::previewScale, 2.f * LevelLoader::previewScale);
 	vec2 previewOffset = vec2(100.f, 100.f);
 
@@ -79,16 +78,16 @@ void LevelSelect::loadEntities()
 		for (int x = 0; x < 3; x++)
 		{
 			// check if no more levels to display
-			if (levelIndex >= levelNames.size())
+			if (levelIndex >= levels.size())
 				return;
 
-			LevelLoader::previewLevel(levelNames[levelIndex], previewOffset);
+			LevelLoader::previewLevel(levels[levelIndex], previewOffset);
 
 			// draw border around preview
 			createPreviewBackground(previewOffset + SCALED_DIMENSIONS / 2.f, SCALED_DIMENSIONS);
 
 			// access level file
-			std::ifstream i(levels_path(levelNames[levelIndex]));
+			std::ifstream i(levels_path(levels[levelIndex]));
 			json level = json::parse(i);
 
 			const auto ABEEZEE_REGULAR = Font::load("data/fonts/abeezee/ABeeZee-Regular.otf");
@@ -142,15 +141,15 @@ void LevelSelect::on_key(int key, int, int action, int /*mod*/)
 			exit();
 			break;
 		case GLFW_KEY_1:
-			notify(Event(Event::EventType::LOAD_LEVEL, Event::Level::DEMO));
+			notify(Event(Event::EventType::LOAD_LEVEL, 0));
 			notify(Event(Event::EventType::MENU_CLOSE_ALL));
 			break;
 		case GLFW_KEY_2:
-			notify(Event(Event::EventType::LOAD_LEVEL, Event::Level::DEMO_2));
+			notify(Event(Event::EventType::LOAD_LEVEL, 1));
 			notify(Event(Event::EventType::MENU_CLOSE_ALL));
 			break;
 		case GLFW_KEY_3:
-			notify(Event(Event::EventType::LOAD_LEVEL, Event::Level::LVL_1));
+			notify(Event(Event::EventType::LOAD_LEVEL, 2));
 			notify(Event(Event::EventType::MENU_CLOSE_ALL));
 			break;
 		}
@@ -216,21 +215,8 @@ void LevelSelect::selectedKeyEvent()
 			switch (button.event)
 			{
 			case ButtonEventType::LOAD_LEVEL:
-				switch (activeButtonIndex)
-				{
-				case 0:
-					notify(Event(Event::EventType::LOAD_LEVEL, Event::Level::DEMO));
-					notify(Event(Event::EventType::MENU_CLOSE_ALL));
-					break;
-				case 1:
-					notify(Event(Event::EventType::LOAD_LEVEL, Event::Level::DEMO_2));
-					notify(Event(Event::EventType::MENU_CLOSE_ALL));
-					break;
-				case 2:
-					notify(Event(Event::EventType::LOAD_LEVEL, Event::Level::LVL_1));
-					notify(Event(Event::EventType::MENU_CLOSE_ALL));
-					break;
-				}
+				notify(Event(Event::EventType::LOAD_LEVEL, activeButtonIndex));
+				notify(Event(Event::EventType::MENU_CLOSE_ALL));
 				break;
 			default:
 				break;
