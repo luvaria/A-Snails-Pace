@@ -27,7 +27,7 @@
 // Game configuration
 const size_t PROJECTILE_PREVIEW_DELAY_MS = 100; // frequency of projectile previews
 
-std::string level = "demo.json";
+int level = 0;
 
 // Create the fish world
 // Note, this has a lot of OpenGL specific things, could be moved to the renderer; but it also defines the callbacks to the mouse and keyboard. That is why it is called here.
@@ -249,7 +249,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 }
 
 // Reset the world state to its initial state
-void WorldSystem::restart(std::string newLevel)
+void WorldSystem::restart(int newLevel)
 {
     // Debugging for memory/component leaks
     ECS::ContainerInterface::list_all_components();
@@ -293,7 +293,7 @@ void WorldSystem::restart(std::string newLevel)
     ECS::registry<Turn>.components[0].type = PLAYER_WAITING;
 
     // for the first level, prompt controls overlay
-    if (level == "demo.json" && attempts == 0)
+    if (level == 0 && attempts == 0)
         ControlsOverlay::addControlsPrompt();
 
 	snail_move = 1;
@@ -355,7 +355,7 @@ void WorldSystem::onNotify(Event event) {
 
         // level index exists
         assert(event.level >= 0 && event.level < levels.size());
-        level = levels[event.level];
+        level = event.level;
 
         restart(level);
     }

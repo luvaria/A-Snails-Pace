@@ -11,8 +11,8 @@ public:
 	static float previewScale;
 	static vec2 previewDimensions;
 
-	static void loadLevel(std::string levelFileName, bool preview = false, vec2 offset = { 0, 0 });
-	static void previewLevel(std::string levelFileName, vec2 offset);
+	static void loadLevel(int levelIndex, bool preview = false, vec2 offset = { 0, 0 });
+	static void previewLevel(int levelIndex, vec2 offset);
 private:
 	// to allow switching on strings
 	// author: D.Shawley

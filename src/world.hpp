@@ -31,7 +31,7 @@ public:
 	~WorldSystem();
 
 	// restart level
-	void restart(std::string level);
+	void restart(int level);
 
 	// Steps the game ahead by ms milliseconds
 	void step(float elapsed_ms, vec2 window_size_in_game_units);
