@@ -140,17 +140,15 @@ void LevelSelect::on_key(int key, int, int action, int /*mod*/)
 			// exit level select (go back to start menu)
 			exit();
 			break;
-		case GLFW_KEY_1:
-			notify(Event(Event::EventType::LOAD_LEVEL, 0));
-			notify(Event(Event::EventType::MENU_CLOSE_ALL));
-			break;
-		case GLFW_KEY_2:
-			notify(Event(Event::EventType::LOAD_LEVEL, 1));
-			notify(Event(Event::EventType::MENU_CLOSE_ALL));
-			break;
-		case GLFW_KEY_3:
-			notify(Event(Event::EventType::LOAD_LEVEL, 2));
-			notify(Event(Event::EventType::MENU_CLOSE_ALL));
+		default:
+			// see https://discourse.glfw.org/t/get-integer-representing-label-printed-on-keyboard-layout/1522
+			const char* keyName = glfwGetKeyName(key, 0);
+			const int keyNum = (int)keyName[0] - '0' - 1; // key presses are not zero-indexed
+			if (keyNum >= 0 && keyNum < levels.size())
+			{
+				notify(Event(Event::EventType::LOAD_LEVEL, keyNum));
+				notify(Event(Event::EventType::MENU_CLOSE_ALL));
+			}
 			break;
 		}
 	}
