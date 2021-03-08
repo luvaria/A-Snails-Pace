@@ -20,9 +20,9 @@ using json = nlohmann::json;
 float LevelLoader::previewScale = 20.f;
 vec2 LevelLoader::previewDimensions = { 12, 8 };
 
-void LevelLoader::loadLevel(std::string levelFileName, bool preview, vec2 offset)
+void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 {
-	std::ifstream i(levels_path(levelFileName));
+	std::ifstream i(levels_path(levels[levelIndex]));
 	json level = json::parse(i);
 
 	AISystem::aiPathFindingAlgorithm = level["AI-PathFinding-Algorithm"];
@@ -188,9 +188,9 @@ void LevelLoader::loadLevel(std::string levelFileName, bool preview, vec2 offset
 	}
 }
 
-void LevelLoader::previewLevel(std::string levelFileName, vec2 offset)
+void LevelLoader::previewLevel(int levelIndex, vec2 offset)
 {
-	loadLevel(levelFileName, true, offset);
+	loadLevel(levelIndex, true, offset);
 }
 
 // to allow switching on strings

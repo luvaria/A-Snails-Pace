@@ -66,7 +66,7 @@ void MenuSystem::onNotify(Event event)
 		switch (event.menu)
 		{
 		case Event::MenuType::START_MENU:
-			notify(Event(Event::LOAD_LEVEL, Event::Level::DEMO));
+			notify(Event(Event::LOAD_LEVEL, 0));
 			break;
 		case Event::MenuType::PAUSE_MENU:
 			notify(Event(Event::UNPAUSE));

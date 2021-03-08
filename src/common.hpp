@@ -44,6 +44,9 @@ struct Transform {
 #define AI_PF_ALGO_BFS  "BFS"
 #define AI_PF_ALGO_A_STAR "Astar"
 
+// for use with levels_path(): use indices, starting from 0
+const std::vector<std::string> levels = { "demo.json", "demo-2.json", "level-1.json" };
+
 // All data relevant to the shape and motion of entities
 struct Motion {
 	vec2 position = { 0, 0 };
