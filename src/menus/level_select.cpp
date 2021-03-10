@@ -143,6 +143,10 @@ void LevelSelect::on_key(int key, int, int action, int /*mod*/)
 		default:
 			// see https://discourse.glfw.org/t/get-integer-representing-label-printed-on-keyboard-layout/1522
 			const char* keyName = glfwGetKeyName(key, 0);
+			if (keyName == NULL)
+			{
+				return; // ignore keys without names
+			}
 			const int keyNum = (int)keyName[0] - '0' - 1; // key presses are not zero-indexed
 			if (keyNum >= 0 && keyNum < levels.size())
 			{
