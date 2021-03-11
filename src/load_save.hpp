@@ -13,8 +13,12 @@ struct Collectible
 class LoadSaveSystem
 {
 public:
-    static char constexpr collectibleStr[] = "collectibles";
+    static char constexpr COLLECTIBLE_KEY[] = "collectibles";
 
-    static void loadPlayerFile(std::string filename);
-    static void writePlayerFile(std::string filename);
+    static char constexpr PLAYER_DIR[] = "player/";
+
+    static char constexpr PLAYER_FILE[] = "player_data.json";
+
+    static void loadPlayerFile();
+    static void writePlayerFile();
 };
