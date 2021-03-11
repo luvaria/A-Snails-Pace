@@ -16,6 +16,7 @@
 #include "ai.hpp"
 #include "debug.hpp"
 #include "menus/menus.hpp"
+#include "load_save.hpp"
 
 using Clock = std::chrono::high_resolution_clock;
 
@@ -52,6 +53,7 @@ int main()
 	// add the world system as an observer of the physics systems to handle collisions
 	physics.addObserver(&world);
 
+	LoadSaveSystem::loadPlayerFile("player_data.json");
 
 	while (!world.is_over())
 	{
@@ -75,6 +77,8 @@ int main()
 
 		renderer.draw(window_size_in_game_units, elapsed_ms);
 	}
+
+	LoadSaveSystem::writePlayerFile("player_data.json");
 
 	return EXIT_SUCCESS;
 }

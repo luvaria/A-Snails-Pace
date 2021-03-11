@@ -1,6 +1,7 @@
 #include "start_menu.hpp"
 #include "text.hpp"
 #include "snail.hpp"
+#include "load_save.hpp"
 #include "../tiles/tiles.hpp"
 #include "../tiles/wall.hpp"
 #include "../tiles/vine.hpp"
@@ -116,6 +117,34 @@ void StartMenu::loadEntities()
 	ECS::registry<MenuButton>.emplace(selectLevelEntity, ButtonEventType::SELECT_LEVEL);
 	ECS::registry<StartMenuTag>.emplace(selectLevelEntity);
 	buttonEntities.push_back(selectLevelEntity);
+
+    // TODO: enable for M4
+	// load save button
+//    auto loadSaveEntity = ECS::Entity();
+//    ECS::registry<Text>.insert(
+//            loadSaveEntity,
+//            Text("Load save", ABEEZEE_REGULAR, { 650.0f, 450.0f })
+//    );
+//    Text& loadSaveText = ECS::registry<Text>.get(loadSaveEntity);
+//    loadSaveText.colour = DEFAULT_COLOUR;
+//    loadSaveText.scale *= OPTION_SCALE;
+//    ECS::registry<MenuButton>.emplace(loadSaveEntity, ButtonEventType::LOAD_SAVE);
+//    ECS::registry<StartMenuTag>.emplace(loadSaveEntity);
+//    buttonEntities.push_back(loadSaveEntity);
+
+    // clear data button
+    auto clearDataEntity = ECS::Entity();
+    ECS::registry<Text>.insert(
+            clearDataEntity,
+            Text("Clear data", ABEEZEE_REGULAR, { 700.0f, 500.0f })
+    );
+    Text& clearDataText = ECS::registry<Text>.get(clearDataEntity);
+    clearDataText.colour = DEFAULT_COLOUR;
+    clearDataText.scale *= SUB_OPTION_SCALE;
+    ECS::registry<MenuButton>.emplace(clearDataEntity, ButtonEventType::CLEAR_DATA);
+    ECS::registry<StartMenuTag>.emplace(clearDataEntity);
+    buttonEntities.push_back(clearDataEntity);
+
 }
 
 void StartMenu::removeEntities()
@@ -212,6 +241,16 @@ void StartMenu::selectedKeyEvent()
 				resetButtons();
 				notify(Event(Event::MENU_OPEN, Event::LEVEL_SELECT));
 				break;
+			case ButtonEventType::CLEAR_DATA:
+                // TODO #54: clear collectibles
+                for (int i = ECS::registry<Collectible>.entities.size() - 1; i >= 0; i--)
+                {
+                    ECS::Entity entity = ECS::registry<Collectible>.entities[i];
+                    ECS::ContainerInterface::remove_all_components_of(entity);
+                }
+                // TODO #54: let user know they are cleared
+                std::cout << "cleared!" << std::endl;
+			    break;
 			default:
 				break;
 			}

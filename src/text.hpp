@@ -165,3 +165,4 @@ const float OPTION_SCALE = 0.65f;
 const float OVERLAY_SCALE = 0.55f;
 const float DIALOGUE_SCALE = 0.5f;
 const float LEVEL_NAME_SCALE = 0.45f;
+const float SUB_OPTION_SCALE = 0.35f;
