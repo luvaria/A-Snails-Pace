@@ -505,7 +505,7 @@ void WorldSystem::goLeft(ECS::Entity &entity, int &moves) {
         nextTile = nextTile.type == WALL || leftTile.type == VINE ? leftTile : nextTile;
         changeDirection(motion, currTile, nextTile, DIRECTION_WEST, entity);
     }
-    else if (abs(motion.angle) == PI / 2 && leftTile.type == VINE) {
+    else if (abs(motion.angle) == PI / 2 && leftTile.type == VINE && currTile.type == VINE) {
         motion.scale = { motion.scale.y, motion.scale.x };
         motion.scale.x = motion.angle == -PI / 2 ? motion.lastDirection == DIRECTION_NORTH ? -motion.scale.x : motion.scale.x
             : motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : -motion.scale.x;
@@ -567,7 +567,7 @@ void WorldSystem::goRight(ECS::Entity& entity, int& moves) {
         nextTile = nextTile.type == WALL || rightTile.type == VINE ? rightTile : nextTile;
         changeDirection(motion, currTile, nextTile, DIRECTION_EAST, entity);
     }
-    else if (abs(motion.angle) == PI / 2 && rightTile.type == VINE) {
+    else if (abs(motion.angle) == PI / 2 && rightTile.type == VINE && currTile.type == VINE) {
         motion.scale = { motion.scale.y, motion.scale.x };
         motion.scale.x = motion.angle == -PI / 2 ? motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : -motion.scale.x
             : motion.lastDirection == DIRECTION_NORTH ? -motion.scale.x : motion.scale.x;
