@@ -18,7 +18,3 @@ public:
     static void loadPlayerFile(std::string filename);
     static void writePlayerFile(std::string filename);
 };
-
-
-
-
