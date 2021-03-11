@@ -45,12 +45,12 @@ void LoadSaveSystem::writePlayerFile()
     std::string const filename = std::string(PLAYER_DIR) + std::string(PLAYER_FILE);
     std::ofstream o(save_path(filename));
     json save;
-    std::cout << save_path(filename) << std::endl;
 
     auto& collectibleReg = ECS::registry<Collectible>;
 
-    ECS::Entity e;
-    collectibleReg.emplace(e, 70);
+//    TODO #54: remove this, temp for debugging
+//    ECS::Entity e;
+//    collectibleReg.emplace(e, 70);
 
     for (auto& collectible : collectibleReg.components)
     {
