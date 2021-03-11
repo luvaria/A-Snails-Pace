@@ -755,21 +755,25 @@ void WorldSystem::fallDown(ECS::Entity& entity, int& moves) {
             }
             else if (motion.angle == -PI) {
                 if (motion.lastDirection == DIRECTION_EAST) {
-                    motion.scale = { motion.scale.y, motion.scale.x };
+                    if(tiles[i-1][xCoord].type != VINE)
+                        motion.scale = { motion.scale.y, motion.scale.x };
                     goDown(entity, tempMove);
                 }
                 else {
-                    motion.scale = { motion.scale.y, -motion.scale.x };
+                    if(tiles[i-1][xCoord].type != VINE)
+                        motion.scale = { motion.scale.y, -motion.scale.x };
                     goDown(entity, tempMove);
                 }
             }
             else if (motion.angle == PI) {
                 if (motion.lastDirection == DIRECTION_WEST) {
-                    motion.scale = { motion.scale.y, -motion.scale.x };
+                    if(tiles[i-1][xCoord].type != VINE)
+                        motion.scale = { motion.scale.y, -motion.scale.x };
                     goDown(entity, tempMove);
                 }
                 else {
-                    motion.scale = { motion.scale.y, motion.scale.x };
+                    if(tiles[i-1][xCoord].type != VINE)
+                        motion.scale = { motion.scale.y, motion.scale.x };
                     goDown(entity, tempMove);
                 }
             }
