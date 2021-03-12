@@ -308,6 +308,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
         
         
         // INDIVIDUAL //
+        
         // left vine tile
         if (tileMovesMap.find({endNode.x, endNode.y-1}) != tileMovesMap.end()) {
             if(tiles[endNode.x][endNode.y-1].type == VINE) {
@@ -317,7 +318,6 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
                 tileMovesMap.erase({endNode.x, endNode.y-1});
             }
         }
-        
         
         // right vine tile
         if (tileMovesMap.find({endNode.x, endNode.y+1}) != tileMovesMap.end()) {
@@ -342,6 +342,48 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
         // down vine tile
         if (tileMovesMap.find({endNode.x+1, endNode.y}) != tileMovesMap.end()) {
             if(tiles[endNode.x+1][endNode.y].type == VINE) {
+                next.push_back({endNode.x+1, endNode.y});
+                frontier.push_back(next);
+                next = current;
+                tileMovesMap.erase({endNode.x+1, endNode.y});
+            }
+        }
+        
+        // CURRENT VINE TILE
+        
+        // left vine tile
+        if (tileMovesMap.find({endNode.x, endNode.y-1}) != tileMovesMap.end()) {
+            if(tiles[endNode.x][endNode.y].type == VINE && (tiles[endNode.x+1][endNode.y-1].type == WALL || tiles[endNode.x-1][endNode.y].type == WALL)) {
+                next.push_back({endNode.x, endNode.y-1});
+                frontier.push_back(next);
+                next = current;
+                tileMovesMap.erase({endNode.x, endNode.y-1});
+            }
+        }
+        
+        // right vine tile
+        if (tileMovesMap.find({endNode.x, endNode.y+1}) != tileMovesMap.end()) {
+            if(tiles[endNode.x][endNode.y].type == VINE && (tiles[endNode.x-1][endNode.y+1].type == WALL || tiles[endNode.x+1][endNode.y+1].type == WALL)) {
+                next.push_back({endNode.x, endNode.y+1});
+                frontier.push_back(next);
+                next = current;
+                tileMovesMap.erase({endNode.x, endNode.y+1});
+            }
+        }
+        
+        // up vine tile
+        if (tileMovesMap.find({endNode.x-1, endNode.y}) != tileMovesMap.end()) {
+            if(tiles[endNode.x][endNode.y].type == VINE && (tiles[endNode.x-1][endNode.y-1].type == WALL || tiles[endNode.x-1][endNode.y+1].type == WALL)) {
+                next.push_back({endNode.x-1, endNode.y});
+                frontier.push_back(next);
+                next = current;
+                tileMovesMap.erase({endNode.x-1, endNode.y});
+            }
+        }
+        
+        // down vine tile
+        if (tileMovesMap.find({endNode.x+1, endNode.y}) != tileMovesMap.end()) {
+            if(tiles[endNode.x][endNode.y].type == VINE && (tiles[endNode.x+1][endNode.y-1].type == WALL || tiles[endNode.x+1][endNode.y+1].type == WALL)) {
                 next.push_back({endNode.x+1, endNode.y});
                 frontier.push_back(next);
                 next = current;
