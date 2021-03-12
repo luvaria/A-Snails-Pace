@@ -320,7 +320,7 @@ void WorldSystem::onNotify(Event event) {
             // Checking Snail - Spider collisions
             if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<WaterTile>.has(event.other_entity))
             {
-                // initiate death unless already dying
+                // Initiate death unless already dying
                 if (!ECS::registry<DeathTimer>.has(event.entity))
                 {
                     // Scream, reset timer, and make the snail sink
@@ -330,7 +330,7 @@ void WorldSystem::onNotify(Event event) {
             }
         }
 
-        //collisions involving the projectiles
+        // Collisions involving the projectiles
         if (ECS::registry<Projectile>.has(event.entity))
         {
             // Don't collide with a preview projectile (ie. all enemies should fall under here)
@@ -339,8 +339,7 @@ void WorldSystem::onNotify(Event event) {
                 // Checking Projectile - Spider collisions
                 if (ECS::registry<Spider>.has(event.other_entity))
                 {
-                    //remove both the spider and the projectile
-                    ECS::ContainerInterface::remove_all_components_of(event.entity);
+                    // Remove the spider but not the projectile
                     ECS::ContainerInterface::remove_all_components_of(event.other_entity);
                 }
             }
@@ -939,8 +938,8 @@ void WorldSystem::shootProjectile(vec2 mousePos, bool preview /* = false */)
 	vec2 snailPosition = ECS::registry<Motion>.get(player_snail).position;
 	vec2 projectileVelocity = (mousePos - snailPosition);
 	float length = glm::length(projectileVelocity);
-	projectileVelocity.x = (projectileVelocity.x / length) * TileSystem::getScale();
-	projectileVelocity.y = (projectileVelocity.y / length) * TileSystem::getScale();
+	projectileVelocity.x = (projectileVelocity.x / length) * TileSystem::getScale() * 2;
+	projectileVelocity.y = (projectileVelocity.y / length) * TileSystem::getScale() * 2;
 	if (projectileVelocity != vec2(0, 0))
 	{
 		Projectile::createProjectile(snailPosition, projectileVelocity, preview);
