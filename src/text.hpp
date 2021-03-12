@@ -141,7 +141,7 @@ private:
 
     // Allow the `drawText` function to access the private
     // `getCharacter` function. See `drawText` below.
-    friend void drawText(const Text&, glm::ivec2);
+    friend void drawText(const Text&, glm::vec2);
 };
 
 /**
@@ -150,7 +150,7 @@ private:
  * for all text objects in `ECS::registry<Text>` and this function is
  * not to be used otherwise.
  */
-void drawText(const Text& text, glm::ivec2 frameBufferSize);
+void drawText(const Text& text, glm::vec2 gameUnitSize);
 
 // text colours
 const vec3 TITLE_COLOUR = { 0.984f, 0.690f, 0.231f };

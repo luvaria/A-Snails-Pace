@@ -256,7 +256,7 @@ void RenderSystem::draw(vec2 window_size_in_game_units, float elapsed_ms)
 	// consider using a depth buffer during rendering and adding a
 	// Z-component or depth index to all rendererable components.
 	for (const Text& text : ECS::registry<Text>.components) {
-		drawText(text, frame_buffer_size);
+		drawText(text, window_size_in_game_units);
 	}
 
 	// Truely render to the screen
