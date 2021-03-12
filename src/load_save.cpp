@@ -26,35 +26,45 @@ void LoadSaveSystem::loadPlayerFile()
 
     json save = json::parse(i);
 
-    for (int id : save[COLLECTIBLE_KEY])
+    if (ECS::registry<Inventory>.size() == 0)
     {
         ECS::Entity entity;
-        ECS::registry<Collectible>.emplace(entity, id);
+        ECS::registry<Inventory>.emplace(entity);
+    }
+    std::unordered_set<CollectId>& collectibles = ECS::registry<Inventory>.components[0].collectibles;
+
+    for (int id : save[COLLECTIBLE_KEY])
+    {
+        collectibles.insert(id);
     }
 
     // TODO #54: remove this, temp for debugging
-    for (auto& com : ECS::registry<Collectible>.components)
-    {
-        std::cout << com.id << std::endl;
-    }
+//    for (auto& com : collectibles)
+//    {
+//        std::cout << com << std::endl;
+//    }
 
 }
 
 void LoadSaveSystem::writePlayerFile()
 {
+    if (ECS::registry<Inventory>.size() == 0) return;
+
     std::string const filename = std::string(PLAYER_DIR) + std::string(PLAYER_FILE);
     std::ofstream o(save_path(filename));
     json save;
 
-    auto& collectibleReg = ECS::registry<Collectible>;
+    std::unordered_set<CollectId>& collectibles = ECS::registry<Inventory>.components[0].collectibles;
 
 //    TODO #54: remove this, temp for debugging
-//    ECS::Entity e;
-//    collectibleReg.emplace(e, 70);
-
-    for (auto& collectible : collectibleReg.components)
+    for (int i = 0; i < 10; i++)
     {
-        save[COLLECTIBLE_KEY].push_back(collectible.id);
+        collectibles.insert(3 * i);
+    }
+
+    for (auto& collectible : collectibles)
+    {
+        save[COLLECTIBLE_KEY].push_back(collectible);
     }
 
     o << save << std::endl;

@@ -242,12 +242,7 @@ void StartMenu::selectedKeyEvent()
 				notify(Event(Event::MENU_OPEN, Event::LEVEL_SELECT));
 				break;
 			case ButtonEventType::CLEAR_DATA:
-                // TODO #54: clear collectibles
-                for (int i = ECS::registry<Collectible>.entities.size() - 1; i >= 0; i--)
-                {
-                    ECS::Entity entity = ECS::registry<Collectible>.entities[i];
-                    ECS::ContainerInterface::remove_all_components_of(entity);
-                }
+                ECS::registry<Inventory>.components[0].collectibles.clear();
                 // TODO #54: let user know they are cleared
                 std::cout << "cleared!" << std::endl;
 			    break;

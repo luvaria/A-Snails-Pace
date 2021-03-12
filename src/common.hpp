@@ -4,6 +4,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <unordered_set>
 #include <stdexcept>
 
 // glfw (OpenGL)
@@ -81,4 +82,10 @@ enum TurnType { PLAYER_WAITING, PLAYER_UPDATE, ENEMY, CAMERA };
 struct Turn
 {
     TurnType type;
+};
+
+typedef int CollectId;
+struct Inventory
+{
+    std::unordered_set<CollectId> collectibles;
 };
