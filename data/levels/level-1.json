@@ -2,7 +2,9 @@
   "name": "Level 1",
   "description": "First non demo level, slightly more challenging",
   "scale": 100,
+  "direction": "right",
   "turnsPerCamera": 2,
+  "AI-PathFinding-Algorithm": "BFS",
   "tiles": [
     "                X   ",
     "                    ",
@@ -42,6 +44,5 @@
         "y": 1
       }
     ]
-  },
-  "AI-PathFinding-Algorithm": "BFS"
+  }
 }

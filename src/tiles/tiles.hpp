@@ -1,5 +1,7 @@
 #pragma once
 
+#include "common.hpp"
+
 // stlib
 #include <vector>
 #include "common.hpp"
@@ -58,10 +60,18 @@ public:
         }
     };
 
-
     typedef std::unordered_map<ivec2, Tile, KeyFuncs, KeyFuncs> vec2Map;
+	// tile grid
+	static std::vector<std::vector<Tile>>& getTiles();
 
-    // tile grid
-    static std::vector<std::vector<Tile>>& getTiles();
-    static vec2Map& getAllTileMovesMap();
+	// level scrolling direction
+	static ScrollDirection getScrollDirection();
+	static void setScrollDirection(ScrollDirection dir);
+
+	static vec2Map& getAllTileMovesMap();
+
+private:
+	static float scale;
+	static std::vector<std::vector<Tile>> tiles;
+	static ScrollDirection scrollDirection;
 };

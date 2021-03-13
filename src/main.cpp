@@ -16,6 +16,7 @@
 #include "ai.hpp"
 #include "debug.hpp"
 #include "menus/menus.hpp"
+#include "parallax_background.hpp"
 
 using Clock = std::chrono::high_resolution_clock;
 
@@ -38,6 +39,7 @@ int main()
 	RenderSystem renderer(*world.window);
 	PhysicsSystem physics;
 	AISystem ai;
+	BackgroundSystem bg(window_size_in_game_units);
 
 	// Set all states to default
 	TileSystem::setScale(100.f);
@@ -51,6 +53,9 @@ int main()
 	world.addObserver(&menus);
 	// add the world system as an observer of the physics systems to handle collisions
 	physics.addObserver(&world);
+	// add the background system as an observer of the world system and menu system
+	world.addObserver(&bg);
+	menus.addObserver(&bg);
 
 
 	while (!world.is_over())
@@ -71,6 +76,7 @@ int main()
 			ai.step(elapsed_ms, window_size_in_game_units);
 			world.step(elapsed_ms, window_size_in_game_units);
 			physics.step(elapsed_ms, window_size_in_game_units);
+			bg.step();
 		}
 
 		renderer.draw(window_size_in_game_units, elapsed_ms);
