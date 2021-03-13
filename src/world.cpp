@@ -725,6 +725,9 @@ void WorldSystem::fallDown(ECS::Entity& entity, int& moves) {
         return;
     }
 
+    Tile currTile = tiles[yCoord][xCoord];
+    currTile.setOccupied(false);
+
     int tempMove = moves; // so we don't decrement moves multiple times for one fall
     for (int i = yCoord + 1; i < tiles.size(); i++) {
         Tile t = tiles[i][xCoord];
@@ -779,6 +782,8 @@ void WorldSystem::fallDown(ECS::Entity& entity, int& moves) {
             }
             i = tiles.size();
         }
+
+        t.setOccupied(true);
     }
     if (tempMove < moves)
     {
