@@ -320,7 +320,7 @@ void WorldSystem::onNotify(Event event) {
             // Checking Snail - Spider collisions
             if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<WaterTile>.has(event.other_entity))
             {
-                // initiate death unless already dying
+                // Initiate death unless already dying
                 if (!ECS::registry<DeathTimer>.has(event.entity))
                 {
                     // Scream, reset timer, and make the snail sink
@@ -330,7 +330,7 @@ void WorldSystem::onNotify(Event event) {
             }
         }
 
-        //collisions involving the projectiles
+        // Collisions involving the projectiles
         if (ECS::registry<Projectile>.has(event.entity))
         {
             // Don't collide with a preview projectile (ie. all enemies should fall under here)
@@ -347,8 +347,7 @@ void WorldSystem::onNotify(Event event) {
                     Tile& t = TileSystem::getTiles()[yCoord][xCoord];
                     t.setOccupied(false);
 
-                    //remove both the spider and the projectile
-                    ECS::ContainerInterface::remove_all_components_of(event.entity);
+                    // Remove the spider but not the projectile
                     ECS::ContainerInterface::remove_all_components_of(event.other_entity);
                 }
             }
@@ -950,13 +949,15 @@ void WorldSystem::shootProjectile(vec2 mousePos, bool preview /* = false */)
 
 	// now you want to go in the direction of the (mouse_pos - snail_pos), but make it a unit vector
 	vec2 snailPosition = ECS::registry<Motion>.get(player_snail).position;
-	vec2 projectileVelocity = (mousePos - snailPosition);
+    // instead of firing from the centre of the snail, fire from half a tile in the direction of the mouse
+    vec2 projectilePosition = snailPosition + normalize(mousePos - snailPosition) * TileSystem::getScale() / 2.f;
+	vec2 projectileVelocity = (mousePos - projectilePosition);
 	float length = glm::length(projectileVelocity);
-	projectileVelocity.x = (projectileVelocity.x / length) * TileSystem::getScale();
-	projectileVelocity.y = (projectileVelocity.y / length) * TileSystem::getScale();
+	projectileVelocity.x = (projectileVelocity.x / length) * TileSystem::getScale() * 2;
+	projectileVelocity.y = (projectileVelocity.y / length) * TileSystem::getScale() * 2;
 	if (projectileVelocity != vec2(0, 0))
 	{
-		Projectile::createProjectile(snailPosition, projectileVelocity, preview);
+		Projectile::createProjectile(projectilePosition, projectileVelocity, preview);
 	}
 	
 	//shooting a projectile takes your turn.
