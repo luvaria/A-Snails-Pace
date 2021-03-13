@@ -339,6 +339,14 @@ void WorldSystem::onNotify(Event event) {
                 // Checking Projectile - Spider collisions
                 if (ECS::registry<Spider>.has(event.other_entity))
                 {
+                    // tile no longer occupied by spider
+                    float scale = TileSystem::getScale();
+                    auto& motion = ECS::registry<Motion>.get(event.other_entity);
+                    int xCoord = static_cast<int>(motion.position.x / scale);
+                    int yCoord = static_cast<int>(motion.position.y / scale);
+                    Tile& t = TileSystem::getTiles()[yCoord][xCoord];
+                    t.setOccupied(false);
+
                     //remove both the spider and the projectile
                     ECS::ContainerInterface::remove_all_components_of(event.entity);
                     ECS::ContainerInterface::remove_all_components_of(event.other_entity);
