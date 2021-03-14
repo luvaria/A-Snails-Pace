@@ -37,10 +37,7 @@ void StartMenu::step(vec2 /*window_size_in_game_units*/)
 
 		updateDisabled(button);
 
-		if (button.disabled)
-        {
-		    buttonText.alpha = 0.5f;
-        }
+        buttonText.alpha = button.disabled ? 0.5f : 1.f;
 
 		if (button.selected && !button.disabled)
 		{
