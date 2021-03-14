@@ -15,6 +15,7 @@
 #include "tiles/tiles.hpp"
 #include "level_loader.hpp"
 #include "controls_overlay.hpp"
+#include "parallax_background.hpp"
 #include "observer.hpp"
 #include "subject.hpp"
 
@@ -278,7 +279,10 @@ void WorldSystem::restart(int newLevel)
     // Debugging for memory/component leaks
     ECS::ContainerInterface::list_all_components();
 
-    // Load level from data/levels
+    // Load backgrounds
+    notify(Event(Event::LOAD_BG));
+
+	// Load level from data/levels
     level = newLevel;
     LevelLoader::loadLevel(newLevel);
     // can't access player_snail in level loader
@@ -319,7 +323,7 @@ void WorldSystem::onNotify(Event event) {
             // Checking Snail - Spider collisions
             if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<WaterTile>.has(event.other_entity))
             {
-                // initiate death unless already dying
+                // Initiate death unless already dying
                 if (!ECS::registry<DeathTimer>.has(event.entity))
                 {
                     // Scream, reset timer, and make the snail sink
@@ -329,7 +333,7 @@ void WorldSystem::onNotify(Event event) {
             }
         }
 
-        //collisions involving the projectiles
+        // Collisions involving the projectiles
         if (ECS::registry<Projectile>.has(event.entity))
         {
             // Don't collide with a preview projectile (ie. all enemies should fall under here)
@@ -338,8 +342,7 @@ void WorldSystem::onNotify(Event event) {
                 // Checking Projectile - Spider collisions
                 if (ECS::registry<Spider>.has(event.other_entity))
                 {
-                    //remove both the spider and the projectile
-                    ECS::ContainerInterface::remove_all_components_of(event.entity);
+                    // Remove the spider but not the projectile
                     ECS::ContainerInterface::remove_all_components_of(event.other_entity);
                 }
             }
@@ -504,12 +507,23 @@ void WorldSystem::goLeft(ECS::Entity &entity, int &moves) {
         nextTile = nextTile.type == WALL || leftTile.type == VINE ? leftTile : nextTile;
         changeDirection(motion, currTile, nextTile, DIRECTION_WEST, entity);
     }
-    else if (abs(motion.angle) == PI / 2 && leftTile.type == VINE) {
+    else if (abs(motion.angle) == PI / 2 && leftTile.type == VINE && currTile.type == VINE) {
         motion.scale = { motion.scale.y, motion.scale.x };
         motion.scale.x = motion.angle == -PI / 2 ? motion.lastDirection == DIRECTION_NORTH ? -motion.scale.x : motion.scale.x
             : motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : -motion.scale.x;
         motion.lastDirection = DIRECTION_WEST;
         motion.angle = 0;
+    } else if (motion.angle == -PI/2 && tiles[motion.lastDirection == DIRECTION_NORTH ? (yCoord - 1) : (yCoord + 1)][xCoord - 1].type == WALL) {
+        motion.scale = { motion.scale.y, motion.scale.x };
+        motion.scale.x = motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : motion.scale.x;
+        motion.angle = motion.lastDirection == DIRECTION_NORTH ? PI : 0;
+        motion.lastDirection = DIRECTION_WEST;
+    }
+    else if (motion.angle == PI/2 && tiles[motion.lastDirection == DIRECTION_NORTH ? (yCoord + 1) : (yCoord - 1)][xCoord - 1].type == WALL) {
+        motion.scale = { motion.scale.y, motion.scale.x };
+        motion.scale.x = motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : motion.scale.x;
+        motion.angle = motion.lastDirection == DIRECTION_SOUTH ? PI : 0;
+        motion.lastDirection = DIRECTION_WEST;
     }
     
     if(currTile.x != nextTile.x || currTile.y != nextTile.y) {
@@ -555,12 +569,23 @@ void WorldSystem::goRight(ECS::Entity& entity, int& moves) {
         nextTile = nextTile.type == WALL || rightTile.type == VINE ? rightTile : nextTile;
         changeDirection(motion, currTile, nextTile, DIRECTION_EAST, entity);
     }
-    else if (abs(motion.angle) == PI / 2 && rightTile.type == VINE) {
+    else if (abs(motion.angle) == PI / 2 && rightTile.type == VINE && currTile.type == VINE) {
         motion.scale = { motion.scale.y, motion.scale.x };
         motion.scale.x = motion.angle == -PI / 2 ? motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : -motion.scale.x
             : motion.lastDirection == DIRECTION_NORTH ? -motion.scale.x : motion.scale.x;
         motion.lastDirection = DIRECTION_EAST;
         motion.angle = 0;
+    } else if (motion.angle == -PI/2 && tiles[motion.lastDirection == DIRECTION_NORTH ? (yCoord + 1) : (yCoord - 1)][xCoord + 1].type == WALL) {
+        motion.scale = { motion.scale.y, motion.scale.x };
+        motion.scale.x = motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : motion.scale.x;
+        motion.angle = motion.lastDirection == DIRECTION_NORTH ? 0 : PI;
+        motion.lastDirection = DIRECTION_EAST;
+    }
+    else if (motion.angle == PI/2 && tiles[motion.lastDirection == DIRECTION_NORTH ? (yCoord - 1) : (yCoord + 1)][xCoord + 1].type == WALL) {
+        motion.scale = { motion.scale.y, motion.scale.x };
+        motion.scale.x = motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : motion.scale.x;
+        motion.angle = motion.lastDirection == DIRECTION_NORTH ? PI : 0;
+        motion.lastDirection = DIRECTION_EAST;
     }
     
     if(currTile.x != nextTile.x || currTile.y != nextTile.y) {
@@ -589,34 +614,11 @@ void WorldSystem::goUp(ECS::Entity& entity, int& moves) {
             motion.angle = motion.lastDirection == DIRECTION_WEST ? PI / 2 : -PI / 2;
             motion.lastDirection = DIRECTION_NORTH;
         }
-    }
-    else if (abs(motion.angle) == PI/2 && upTile.type == WALL) {
-        // This is to fix a movement bug where snail flips to weird positions when: a. it is upside down
-        // and b. W is pressed. In order to fix that bug I have written this if statement
-        // which might not be the best way to do it, but solves the bug for now.
-        //if (tiles[yCoord - 1][xCoord + 1].type == WALL && (motion.angle == PI || motion.angle == -PI)) {
-          //  return;
-        //}
-
-        //if (tiles[yCoord - 1][xCoord + 1].type != WALL && currTile.type == VINE &&
-            //(motion.angle == PI || motion.angle == -PI)) {
-            /*
-            Tile nextTile = tiles[yCoord - 1][xCoord + 1];
-            Destination& dest = ECS::registry<Destination>.has(entity) ? ECS::registry<Destination>.get(entity) : ECS::registry<Destination>.emplace(entity);
-            dest.position = { nextTile.x, nextTile.y };
-            motion.velocity = (dest.position - motion.position) / MOVE_S;
-            //motion.position.x = (xCoord + 1) * scale + 50;
-            //motion.position.y = (yCoord - 1) * scale + 50;
-            motion.scale = { motion.scale.y, motion.scale.x };
-            motion.angle = PI / 2;
-            motion.lastDirection = DIRECTION_NORTH;
-            */
-           // return;
-        //}
-
-        //if (tiles[yCoord - 1][xCoord + 1].type != WALL && (motion.angle == PI || motion.angle == -PI)) {
-            //return;
-        //}
+    } else if (currTile.type == VINE && abs(motion.angle) == PI) {
+        motion.scale = { motion.scale.y, motion.scale.x };
+        motion.angle = motion.lastDirection == DIRECTION_EAST ? PI/2 : -PI/2;
+        motion.lastDirection = DIRECTION_NORTH;
+    } else if (abs(motion.angle) == PI/2 && upTile.type == WALL) {
         nextTile = tiles[yCoord][xCoord];
         changeDirection(motion, currTile, nextTile, DIRECTION_NORTH, entity);
         if (abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
@@ -669,8 +671,11 @@ void WorldSystem::goDown(ECS::Entity& entity, int& moves) {
             motion.angle = motion.lastDirection == DIRECTION_WEST ? PI / 2 : -PI / 2;
             motion.lastDirection = DIRECTION_SOUTH;
         }
-    }
-    else if (upTile.type == WALL) {
+    } else if (currTile.type == VINE && abs(motion.angle) == PI) {
+        motion.scale = { motion.scale.y, motion.scale.x };
+        motion.angle = motion.lastDirection == DIRECTION_EAST ? PI/2 : -PI/2;
+        motion.lastDirection = DIRECTION_NORTH;
+    } else if (upTile.type == WALL) {
         nextTile = tiles[yCoord][xCoord];
         if (motion.angle != 0 && abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
             changeDirection(motion, currTile, nextTile, DIRECTION_SOUTH, entity);
@@ -752,21 +757,25 @@ void WorldSystem::fallDown(ECS::Entity& entity, int& moves) {
             }
             else if (motion.angle == -PI) {
                 if (motion.lastDirection == DIRECTION_EAST) {
-                    motion.scale = { motion.scale.y, motion.scale.x };
+                    if(tiles[i-1][xCoord].type != VINE)
+                        motion.scale = { motion.scale.y, motion.scale.x };
                     goDown(entity, tempMove);
                 }
                 else {
-                    motion.scale = { motion.scale.y, -motion.scale.x };
+                    if(tiles[i-1][xCoord].type != VINE)
+                        motion.scale = { motion.scale.y, -motion.scale.x };
                     goDown(entity, tempMove);
                 }
             }
             else if (motion.angle == PI) {
                 if (motion.lastDirection == DIRECTION_WEST) {
-                    motion.scale = { motion.scale.y, -motion.scale.x };
+                    if(tiles[i-1][xCoord].type != VINE)
+                        motion.scale = { motion.scale.y, -motion.scale.x };
                     goDown(entity, tempMove);
                 }
                 else {
-                    motion.scale = { motion.scale.y, motion.scale.x };
+                    if(tiles[i-1][xCoord].type != VINE)
+                        motion.scale = { motion.scale.y, motion.scale.x };
                     goDown(entity, tempMove);
                 }
             }
@@ -930,13 +939,15 @@ void WorldSystem::shootProjectile(vec2 mousePos, bool preview /* = false */)
 
 	// now you want to go in the direction of the (mouse_pos - snail_pos), but make it a unit vector
 	vec2 snailPosition = ECS::registry<Motion>.get(player_snail).position;
-	vec2 projectileVelocity = (mousePos - snailPosition);
+    // instead of firing from the centre of the snail, fire from half a tile in the direction of the mouse
+    vec2 projectilePosition = snailPosition + normalize(mousePos - snailPosition) * TileSystem::getScale() / 2.f;
+	vec2 projectileVelocity = (mousePos - projectilePosition);
 	float length = glm::length(projectileVelocity);
-	projectileVelocity.x = (projectileVelocity.x / length) * TileSystem::getScale();
-	projectileVelocity.y = (projectileVelocity.y / length) * TileSystem::getScale();
+	projectileVelocity.x = (projectileVelocity.x / length) * TileSystem::getScale() * 2;
+	projectileVelocity.y = (projectileVelocity.y / length) * TileSystem::getScale() * 2;
 	if (projectileVelocity != vec2(0, 0))
 	{
-		Projectile::createProjectile(snailPosition, projectileVelocity, preview);
+		Projectile::createProjectile(projectilePosition, projectileVelocity, preview);
 	}
 	
 	//shooting a projectile takes your turn.

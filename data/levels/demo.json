@@ -2,7 +2,9 @@
   "name": "Demo",
   "description": "Showing off M1 features.",
   "scale": 100,
+  "direction": "right",
   "turnsPerCamera": 2,
+  "AI-PathFinding-Algorithm": "Astar",
   "tiles": [
     "            ",
     "            ",
@@ -30,6 +32,5 @@
         "y": 3
       }
     ]
-  },
-  "AI-PathFinding-Algorithm": "Astar"
+  }
 }

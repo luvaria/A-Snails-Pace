@@ -1,7 +1,5 @@
 // internal
 #include "render.hpp"
-#include "render_components.hpp"
-#include "tiny_ecs.hpp"
 
 #include "text.hpp"
 
@@ -42,7 +40,7 @@ void RenderSystem::drawTexturedMesh(ECS::Entity entity, const mat3& projection, 
 	Transform transform;
 	transform.translate(motion.position);
 	transform.scale(motion.scale);
-    transform.rotate(motion.angle);
+	transform.rotate(motion.angle);
 	// !!! TODO A1: add rotation to the chain of transformations, mind the order of transformations
 
 	// Setting shaders
@@ -135,7 +133,7 @@ void RenderSystem::drawTexturedMesh(ECS::Entity entity, const mat3& projection, 
 }
 
 // Draw the intermediate texture to the screen, with some distortion to simulate water
-void RenderSystem::drawToScreen() 
+void RenderSystem::drawToScreen()
 {
 	// Setting shaders
 	glUseProgram(screen_sprite.effect.program);
@@ -152,7 +150,7 @@ void RenderSystem::drawToScreen()
 	glClearDepth(1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	gl_has_errors();
-	
+
 	// Disable alpha channel for mapping the screen texture onto the real screen
 	glDisable(GL_BLEND); // we have a single texture without transparency. Areas with alpha <1 cab arise around the texture transparency boundary, enabling blending would make them visible.
 	glDisable(GL_DEPTH_TEST);
@@ -165,7 +163,7 @@ void RenderSystem::drawToScreen()
 	gl_has_errors();
 
 	// Set clock
-	GLuint time_uloc       = glGetUniformLocation(screen_sprite.effect.program, "time");
+	GLuint time_uloc = glGetUniformLocation(screen_sprite.effect.program, "time");
 	GLuint dead_timer_uloc = glGetUniformLocation(screen_sprite.effect.program, "darken_screen_factor");
 	glUniform1f(time_uloc, static_cast<float>(glfwGetTime() * 10.0f));
 	auto& screen = ECS::registry<ScreenState>.get(screen_state_entity);
@@ -211,25 +209,14 @@ void RenderSystem::draw(vec2 window_size_in_game_units, float elapsed_ms)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	gl_has_errors();
 
-	// Fake projection matrix, scales with respect to window coordinates
-	float left = 0.f;
-	float top = 0.f;
-	float right = window_size_in_game_units.x;
-	float bottom = window_size_in_game_units.y;
-
 	auto& camera = ECS::registry<Camera>.entities[0];
-	vec2 offset = ECS::registry<Motion>.get(camera).position;
+	vec2 cameraOffset = ECS::registry<Motion>.get(camera).position;
 
-	float sx = 2.f / (right - left);
-	float sy = 2.f / (top - bottom);
-	float tx = (-(right + left) / (right - left)) - 2 * (offset.x / right);
-	float ty = (-(top + bottom) / (top - bottom)) - 2 * (offset.y / bottom);
-	mat3 projection_2D{ { sx, 0.f, 0.f },{ 0.f, sy, 0.f },{ tx, ty, 1.f } };
+	// projection that follows camera
+	mat3 projection_2D = projection2D(window_size_in_game_units, cameraOffset);
 
 	// stationary entities that don't move with camera
-	tx = -(right + left) / (right - left);
-	ty = -(top + bottom) / (top - bottom);
-	mat3 overlay_projection_2D{ { sx, 0.f, 0.f },{ 0.f, sy, 0.f },{ tx, ty, 1.f } };
+	mat3 overlay_projection_2D = projection2D(window_size_in_game_units, { 0, 0 });
 
 	// Sort meshes for correct asset drawing order
 	ECS::registry<ShadedMeshRef>.sort(renderCmp);
@@ -241,10 +228,12 @@ void RenderSystem::draw(vec2 window_size_in_game_units, float elapsed_ms)
 			continue;
 		
 		// Note, its not very efficient to access elements indirectly via the entity albeit iterating through all Sprites in sequence
-		if (!ECS::registry<Overlay>.has(entity))
-			drawTexturedMesh(entity, projection_2D, elapsed_ms);
-		else
+		if (ECS::registry<Overlay>.has(entity))
 			drawTexturedMesh(entity, overlay_projection_2D, elapsed_ms);
+		else if (ECS::registry<Parallax>.has(entity))
+			drawTexturedMesh(entity, projection2D(window_size_in_game_units, cameraOffset / static_cast<float>(ECS::registry<Parallax>.get(entity).layer)), elapsed_ms);
+		else
+			drawTexturedMesh(entity, projection_2D, elapsed_ms);
 
 		gl_has_errors();
 	}
@@ -256,7 +245,7 @@ void RenderSystem::draw(vec2 window_size_in_game_units, float elapsed_ms)
 	// consider using a depth buffer during rendering and adding a
 	// Z-component or depth index to all rendererable components.
 	for (const Text& text : ECS::registry<Text>.components) {
-		drawText(text, frame_buffer_size);
+		drawText(text, window_size_in_game_units);
 	}
 
 	// Truely render to the screen
@@ -266,13 +255,29 @@ void RenderSystem::draw(vec2 window_size_in_game_units, float elapsed_ms)
 	glfwSwapBuffers(&window);
 }
 
+mat3 RenderSystem::projection2D(vec2 window_size_in_game_units, vec2 offset)
+{
+	// Fake projection matrix, scales with respect to window coordinates
+	float left = 0.f;
+	float top = 0.f;
+	float right = window_size_in_game_units.x;
+	float bottom = window_size_in_game_units.y;
+
+	float sx = 2.f / (right - left);
+	float sy = 2.f / (top - bottom);
+	float tx = (-(right + left) / (right - left)) - 2 * (offset.x / right);
+	float ty = (-(top + bottom) / (top - bottom)) + 2 * (offset.y / bottom);
+	
+	return { { sx, 0.f, 0.f },{ 0.f, sy, 0.f },{ tx, ty, 1.f } };
+}
+
 void gl_has_errors()
 {
 	GLenum error = glGetError();
 
 	if (error == GL_NO_ERROR)
 		return;
-	
+
 	const char* error_str = "";
 	while (error != GL_NO_ERROR)
 	{

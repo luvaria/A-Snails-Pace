@@ -441,11 +441,14 @@ std::u32string utf8ToUtf32(const std::string& str) {
     return convert_t{}.from_bytes(str);
 }
 
-void drawText(const Text& text, glm::ivec2 frameBufferSize) {
+void drawText(const Text& text, glm::vec2 gameUnitSize) {
     assert(text.font);
 
     // The on-screen baseline origin of the current glyph being drawn
     auto cursor = text.position;
+
+    // invert y-axis to place origin at top-left corner for consistency
+    cursor.y = gameUnitSize.y - cursor.y;
 
     // Use the text shader
     assert(text.font->m_context);
@@ -458,9 +461,9 @@ void drawText(const Text& text, glm::ivec2 frameBufferSize) {
     // Orthographic projection matrix for placing text on-screen
     glm::mat4 projection = glm::ortho(
         0.0f,
-        static_cast<float>(frameBufferSize.x),
+        gameUnitSize.x,
         0.0f,
-        static_cast<float>(frameBufferSize.y)
+        gameUnitSize.y
     );
 
     // Pass the projection matrix uniform, see data/shaders/text.vs.glsl
@@ -498,7 +501,7 @@ void drawText(const Text& text, glm::ivec2 frameBufferSize) {
         // compute the on-screen texture coordinates from the cursor's
         // baseline origin
 		const auto xpos = cursor.x + ch.Bearing.x * text.scale;
-		const auto ypos = frameBufferSize.y - cursor.y + (ch.Bearing.y - ch.Size.y) * text.scale;
+		const auto ypos = cursor.y + (ch.Bearing.y - ch.Size.y) * text.scale;
 
 		const auto w = ch.Size.x * text.scale;
 		const auto h = ch.Size.y * text.scale;
