@@ -18,12 +18,35 @@ public:
     float x = 0;
     float y = 0;
     TYPE type = EMPTY;
-    bool occupied = false;
-    void setOccupied(bool isOccupied) 
+    int numOccupyingEntities;
+
+    Tile() 
     {
-        occupied = isOccupied;
-        isOccupied ? notify(Event(Event::TILE_OCCUPIED)) : notify(Event(Event::TILE_UNOCCUPIED));
+        numOccupyingEntities = 0;
     }
+
+    void addOccupyingEntity() 
+    {
+        numOccupyingEntities++;
+        if (numOccupyingEntities == 1) 
+        {
+            notify(Event(Event::TILE_OCCUPIED));
+        }
+    }
+
+    void removeOccupyingEntity()
+    {
+        if (numOccupyingEntities == 0) 
+        {
+            throw std::runtime_error("tried to remove an occupying entity when there were none");
+        }
+        numOccupyingEntities--;
+        if (numOccupyingEntities == 0)
+        {
+            notify(Event(Event::TILE_UNOCCUPIED));
+        }
+    }
+
     bool operator==(const Tile& rhs) const
     {
         return
