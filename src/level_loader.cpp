@@ -31,6 +31,16 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 	float scale = preview ? previewScale : static_cast<float>(level["scale"]);
 	TileSystem::setScale(scale);
 
+	// get level direction
+	std::string direction = level["direction"];
+	if (direction == "right")
+		TileSystem::setScrollDirection(LEFT_TO_RIGHT);
+	else if (direction == "down")
+		TileSystem::setScrollDirection(TOP_TO_BOTTOM);
+	else
+		throw std::runtime_error("Could not read level scroll direction.");
+
+
 	// clear tiles (if previously already loaded a level)
 	TileSystem::resetGrid();
 

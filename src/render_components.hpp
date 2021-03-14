@@ -173,3 +173,24 @@ struct DeathTimer
 {
 	float counter_ms = 1000;
 };
+
+struct Parallax
+{
+	// Parallax depth layers
+	enum Layer
+	{
+		// closest to camera
+		LAYER_1 = 1,
+		LAYER_2 = 2,
+		LAYER_3 = 3,
+		LAYER_4 = 4,
+		LAYER_5 = 5,
+		LAYER_6 = 6,
+		LAYER_7 = 7,
+		LAYER_8 = 8
+		// furthest from camera
+	};
+
+	Layer layer = LAYER_1;
+	Parallax(Layer l) : layer(l) {}
+};

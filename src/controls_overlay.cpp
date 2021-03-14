@@ -123,21 +123,17 @@ ECS::Entity ControlsOverlay::addKeyIcon(std::string name, vec2 pos)
     if (resource.effect.program.resource == 0) {
         // create a procedural circle
         constexpr float z = -0.1f;
-        vec3 white = { 1.f, 1.f, 1.f };
 
         // Corner points
         ColoredVertex v;
-        v.position = { -0.5,-0.5,z };
-        v.color = white;
+        v.color = TITLE_COLOUR;
+        v.position = { -0.5, -0.5, z };
         resource.mesh.vertices.push_back(v);
-        v.position = { -0.5,0.5,z };
-        v.color = white;
+        v.position = { -0.5, 0.5, z };
         resource.mesh.vertices.push_back(v);
-        v.position = { 0.5,0.5,z };
-        v.color = white;
+        v.position = { 0.5, 0.5, z };
         resource.mesh.vertices.push_back(v);
-        v.position = { 0.5,-0.5,z };
-        v.color = white;
+        v.position = { 0.5, -0.5, z };
         resource.mesh.vertices.push_back(v);
 
         // Two triangles
@@ -190,7 +186,7 @@ ECS::Entity ControlsOverlay::addControlDesc(std::string desc, vec2 pos)
     );
     Text& text = ECS::registry<Text>.get(entity);
     text.scale = OVERLAY_SCALE;
-    text.colour = HIGHLIGHT_COLOUR;
+    text.colour = OVERLAY_COLOUR;
     text.position = vec2(pos.x, pos.y + BUTTON_SCALE.y * 3 / 16);
 
     ECS::registry<Overlay>.emplace(entity);

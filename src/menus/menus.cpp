@@ -30,6 +30,7 @@ void MenuSystem::start()
 	while (ECS::registry<Text>.entities.size() > 0)
 		ECS::ContainerInterface::remove_all_components_of(ECS::registry<Text>.entities.back());
 	Camera::reset();
+	notify(Event(Event::CLOSE_BG));
 	openMenu(Event::START_MENU);
 }
 

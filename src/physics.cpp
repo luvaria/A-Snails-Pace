@@ -367,6 +367,10 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 			if (ECS::registry<Overlay>.has(entity))
 				continue;
 
+			// ignore backgrounds
+			if (ECS::registry<Parallax>.has(entity))
+				continue;
+
 			// draw a cross at the position of all objects
 			auto scale_horizontal_line = motion.scale;
 			scale_horizontal_line.y *= 0.1f;

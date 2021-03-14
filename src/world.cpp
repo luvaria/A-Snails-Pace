@@ -15,6 +15,7 @@
 #include "tiles/tiles.hpp"
 #include "level_loader.hpp"
 #include "controls_overlay.hpp"
+#include "parallax_background.hpp"
 #include "observer.hpp"
 #include "subject.hpp"
 
@@ -279,7 +280,10 @@ void WorldSystem::restart(int newLevel)
     // Debugging for memory/component leaks
     ECS::ContainerInterface::list_all_components();
 
-    // Load level from data/levels
+    // Load backgrounds
+    notify(Event(Event::LOAD_BG));
+
+	// Load level from data/levels
     level = newLevel;
     LevelLoader::loadLevel(newLevel);
     // can't access player_snail in level loader

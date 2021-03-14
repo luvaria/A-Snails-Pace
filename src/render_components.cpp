@@ -322,7 +322,15 @@ void Camera::update(float move_seconds)
         ECS::registry<Destination>.emplace(cameraEntity);
     }
     auto &cameraDest = ECS::registry<Destination>.get(cameraEntity);
-    cameraDest.position = {cameraMotion.position.x + TileSystem::getScale(), cameraMotion.position.y};
+	ScrollDirection scrollDir = TileSystem::getScrollDirection();
+	if (scrollDir == LEFT_TO_RIGHT)
+	{
+		cameraDest.position = { cameraMotion.position.x + TileSystem::getScale(), cameraMotion.position.y };
+	}
+	else if (scrollDir == TOP_TO_BOTTOM)
+	{
+		cameraDest.position = { cameraMotion.position.x, cameraMotion.position.y + TileSystem::getScale() };
+	}
     cameraMotion.velocity = (cameraDest.position - cameraMotion.position) / move_seconds;
 }
 
