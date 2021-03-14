@@ -250,8 +250,6 @@ void StartMenu::selectedKeyEvent()
 				break;
 			case ButtonEventType::CLEAR_COLLECT_DATA:
                 ECS::registry<Inventory>.components[0].collectibles.clear();
-                // TODO #54: let user know they are cleared
-                std::cout << "cleared!" << std::endl;
 			    break;
 			default:
 				break;
