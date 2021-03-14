@@ -259,21 +259,23 @@ private:
 
 
 
-Text::Text(std::string content, std::shared_ptr<Font> font, glm::vec2 position, float scale, glm::vec3 colour) noexcept
+Text::Text(std::string content, std::shared_ptr<Font> font, glm::vec2 position, float scale, glm::vec3 colour, float alpha) noexcept
     : content(std::move(content))
     , font(std::move(font))
     , position(position)
     , scale(scale)
-    , colour(colour) {
+    , colour(colour)
+    , alpha(alpha) {
 
 }
 
-Text::Text(std::string content, const std::string& pathToTTF, glm::vec2 position, float scale, glm::vec3 colour) noexcept
+Text::Text(std::string content, const std::string& pathToTTF, glm::vec2 position, float scale, glm::vec3 colour, float alpha) noexcept
     : content(std::move(content))
     , font(Font::load(pathToTTF))
     , position(position)
     , scale(scale)
-    , colour(colour) {
+    , colour(colour)
+    , alpha(alpha) {
 
 }
 
@@ -482,6 +484,9 @@ void drawText(const Text& text, glm::vec2 gameUnitSize) {
         text.colour.z
     );
         
+    gl_has_errors();
+
+    glUniform1f(glGetUniformLocation(shader.program, "alpha"), text.alpha);
     gl_has_errors();
 
 	glActiveTexture(GL_TEXTURE0);

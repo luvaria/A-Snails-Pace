@@ -35,7 +35,14 @@ void StartMenu::step(vec2 /*window_size_in_game_units*/)
 		ECS::Entity buttonEntity = buttonContainer.entities[i];
 		Text& buttonText = textContainer.get(buttonEntity);
 
-		if (button.selected)
+		updateDisabled(button);
+
+		if (button.disabled)
+        {
+		    buttonText.alpha = 0.5f;
+        }
+
+		if (button.selected && !button.disabled)
 		{
 			buttonText.colour = HIGHLIGHT_COLOUR;
 			buttonText.font = ABEEZEE_ITALIC;
@@ -133,17 +140,17 @@ void StartMenu::loadEntities()
 //    buttonEntities.push_back(loadSaveEntity);
 
     // clear data button
-    auto clearDataEntity = ECS::Entity();
+    auto clearCollectibleDataEntity = ECS::Entity();
     ECS::registry<Text>.insert(
-            clearDataEntity,
-            Text("Clear data", ABEEZEE_REGULAR, { 700.0f, 500.0f })
+            clearCollectibleDataEntity,
+            Text("Clear collectible data", ABEEZEE_REGULAR, { 700.0f, 500.0f })
     );
-    Text& clearDataText = ECS::registry<Text>.get(clearDataEntity);
-    clearDataText.colour = DEFAULT_COLOUR;
-    clearDataText.scale *= SUB_OPTION_SCALE;
-    ECS::registry<MenuButton>.emplace(clearDataEntity, ButtonEventType::CLEAR_DATA);
-    ECS::registry<StartMenuTag>.emplace(clearDataEntity);
-    buttonEntities.push_back(clearDataEntity);
+    Text& clearCollectibleDataText = ECS::registry<Text>.get(clearCollectibleDataEntity);
+    clearCollectibleDataText.colour = DEFAULT_COLOUR;
+    clearCollectibleDataText.scale *= SUB_OPTION_SCALE;
+    ECS::registry<MenuButton>.emplace(clearCollectibleDataEntity, ButtonEventType::CLEAR_COLLECT_DATA);
+    ECS::registry<StartMenuTag>.emplace(clearCollectibleDataEntity);
+    buttonEntities.push_back(clearCollectibleDataEntity);
 
 }
 
@@ -241,7 +248,7 @@ void StartMenu::selectedKeyEvent()
 				resetButtons();
 				notify(Event(Event::MENU_OPEN, Event::LEVEL_SELECT));
 				break;
-			case ButtonEventType::CLEAR_DATA:
+			case ButtonEventType::CLEAR_COLLECT_DATA:
                 ECS::registry<Inventory>.components[0].collectibles.clear();
                 // TODO #54: let user know they are cleared
                 std::cout << "cleared!" << std::endl;
@@ -251,4 +258,12 @@ void StartMenu::selectedKeyEvent()
 			}
 		}
 	}
+}
+
+void StartMenu::updateDisabled(MenuButton &button)
+{
+    if (button.event == ButtonEventType::CLEAR_COLLECT_DATA)
+    {
+        button.disabled = ECS::registry<Inventory>.components[0].collectibles.empty();
+    }
 }
