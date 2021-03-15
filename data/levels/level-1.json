@@ -5,6 +5,7 @@
   "direction": "right",
   "turnsPerCamera": 2,
   "AI-PathFinding-Algorithm": "BFS",
+  "endCoordinates": {"x" : 19 , "y" : 6 },
   "tiles": [
     "                X   ",
     "                    ",

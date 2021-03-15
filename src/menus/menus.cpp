@@ -3,6 +3,7 @@
 #include "menus/start_menu.hpp"
 #include "menus/level_select.hpp"
 #include "menus/pause_menu.hpp"
+#include "menus/level_complete_menu.hpp"
 #include "tiles/tiles.hpp"
 #include "text.hpp"
 
@@ -84,6 +85,9 @@ void MenuSystem::onNotify(Event event)
 		assert(menus.empty());
 		openMenu(Event::MenuType::PAUSE_MENU);
 		break;
+	case Event::LEVEL_COMPLETE:
+		openMenu(Event::MenuType::LEVEL_COMPLETE_MENU);
+		break;
 	case Event::MENU_START:
 		// move all current menus to delete queue
 		while (!menus.empty())
@@ -96,6 +100,7 @@ void MenuSystem::onNotify(Event event)
 		// return to start menu
 		start();
 		break;
+	case Event::NEXT_LEVEL:
 	case Event::LOAD_LEVEL:
 		// move all current menus to delete queue
 		while (!menus.empty())
@@ -144,6 +149,9 @@ void MenuSystem::openMenu(Event::MenuType menu)
 		break;
 	case Event::MenuType::PAUSE_MENU:
 		newMenu = new PauseMenu(window);
+		break;
+	case Event::MenuType::LEVEL_COMPLETE_MENU:
+		newMenu = new LevelCompleteMenu(window);
 		break;
 	default:
 		// no menu opened

@@ -147,20 +147,17 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
         ECS::registry<DeathTimer>.emplace(player_snail);
         Mix_PlayChannel(-1, salmon_dead_sound, 0);
     }
+
     float scale = TileSystem::getScale();
     auto& tiles = TileSystem::getTiles();
     int xCoord = static_cast<int>(snailMotion.position.x / scale);
-    if (xCoord == tiles[0].size() - 1) {
-        //load next level
-        level += 1;
-        if (level < levels.size()) {
-            restart(level);
-        }
-        else {
-            //game end screen
-            running = false;
-            notify(Event(Event::MENU_START));
-        }
+    int yCoord = static_cast<int>(snailMotion.position.y / scale);
+    ivec2 endCoordinates = TileSystem::getEndCoordinates();
+
+    if (xCoord == endCoordinates.x && yCoord == endCoordinates.y) {
+        running = false;
+        ControlsOverlay::removeControlsOverlay();
+        notify(Event(Event::LEVEL_COMPLETE));
     }
 
 	//remove any offscreen projectiles
@@ -330,6 +327,23 @@ void WorldSystem::onNotify(Event event) {
         ControlsOverlay::addControlsOverlayIfOn();
         running = true;
     }
+
+    if (event.type == Event::NEXT_LEVEL) {
+        setGLFWCallbacks();
+        ControlsOverlay::addControlsOverlayIfOn();
+        running = true;
+        //load next level
+        level += 1;
+        if (level < levels.size()) {
+            restart(level);
+        }
+        else {
+            //game end screen
+            running = false;
+            notify(Event(Event::MENU_START));
+        }
+    }
+    
     else if (event.type == Event::COLLISION) {
 
         // Collisions involving snail

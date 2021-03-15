@@ -9,7 +9,7 @@
 #include <iostream>
 #include <functional>
 
-enum ButtonEventType { NO_ACTION, START_GAME, SELECT_LEVEL, LOAD_LEVEL, QUIT_GAME };
+enum ButtonEventType { NO_ACTION, START_GAME, SELECT_LEVEL, LOAD_LEVEL, QUIT_GAME, NEXT_LEVEL };
 
 // button tag
 struct MenuButton
