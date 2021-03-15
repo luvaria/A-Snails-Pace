@@ -24,7 +24,6 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
-
 // Game configuration
 const size_t PROJECTILE_PREVIEW_DELAY_MS = 100; // frequency of projectile previews
 
@@ -147,6 +146,21 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     {
         ECS::registry<DeathTimer>.emplace(player_snail);
         Mix_PlayChannel(-1, salmon_dead_sound, 0);
+    }
+    float scale = TileSystem::getScale();
+    auto& tiles = TileSystem::getTiles();
+    int xCoord = static_cast<int>(snailMotion.position.x / scale);
+    if (xCoord == tiles[0].size() - 1) {
+        //load next level
+        level += 1;
+        if (level < levels.size()) {
+            restart(level);
+        }
+        else {
+            //game end screen
+            running = false;
+            notify(Event(Event::MENU_START));
+        }
     }
 
 	//remove any offscreen projectiles
