@@ -43,7 +43,8 @@ int main()
 
 	// Set all states to default
 	TileSystem::setScale(100.f);
-	menus.start();
+	menus.setup();
+	menus.openMenu(Event::START_MENU);
 	auto t = Clock::now();
 	// Variable timestep loop
 
@@ -56,7 +57,6 @@ int main()
 	// add the background system as an observer of the world system and menu system
 	world.addObserver(&bg);
 	menus.addObserver(&bg);
-
 
 	while (!world.is_over())
 	{

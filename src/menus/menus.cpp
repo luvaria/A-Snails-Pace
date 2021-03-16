@@ -4,6 +4,7 @@
 #include "menus/level_select.hpp"
 #include "menus/pause_menu.hpp"
 #include "menus/level_complete_menu.hpp"
+#include "menus/end_screen.hpp"
 #include "tiles/tiles.hpp"
 #include "text.hpp"
 
@@ -12,7 +13,7 @@
 
 MenuSystem::MenuSystem(GLFWwindow& window) : window(window) {}
 
-void MenuSystem::start()
+void MenuSystem::setup()
 {
 	ECS::registry<ScreenState>.components[0].darken_screen_factor = 0.f;
 
@@ -32,7 +33,6 @@ void MenuSystem::start()
 		ECS::ContainerInterface::remove_all_components_of(ECS::registry<Text>.entities.back());
 	Camera::reset();
 	notify(Event(Event::CLOSE_BG));
-	openMenu(Event::START_MENU);
 }
 
 bool MenuSystem::hasOpenMenu()
@@ -88,6 +88,30 @@ void MenuSystem::onNotify(Event event)
 	case Event::LEVEL_COMPLETE:
 		openMenu(Event::MenuType::LEVEL_COMPLETE_MENU);
 		break;
+	case Event::GAME_OVER:
+		while (!menus.empty())
+		{
+			Menu* menu = menus.top();
+			menus.pop();
+			toDelete.push(menu);
+		}
+		MenuSystem::setup();
+		{
+			const auto ABEEZEE_REGULAR = Font::load("data/fonts/abeezee/ABeeZee-Regular.otf");
+			const auto VIGA_REGULAR = Font::load("data/fonts/viga/Viga-Regular.otf");
+			auto subtitleTextEntity = ECS::Entity();
+			std::string stats = "Here are some stats for nerds: You had " 
+				+ std::to_string(event.attempts) + " attempts, shot " 
+				+ std::to_string(event.projectiles_fired) 
+				+ " projectiles and killed " + std::to_string(event.enemies_killed) + " enemies";
+			ECS::registry<Text>.insert(
+			subtitleTextEntity,
+			Text(stats, ABEEZEE_REGULAR, { 70.0f, 90.0f }, 0.4f, DEFAULT_COLOUR)
+		);
+			ECS::registry<EndScreenTag>.emplace(subtitleTextEntity);
+		}
+		openMenu(Event::MenuType::END_SCREEN);
+		break;
 	case Event::MENU_START:
 		// move all current menus to delete queue
 		while (!menus.empty())
@@ -96,9 +120,11 @@ void MenuSystem::onNotify(Event event)
 			menus.pop();
 			toDelete.push(menu);
 		}
-
-		// return to start menu
-		start();
+		setup();
+		openMenu(Event::START_MENU);
+		break;
+	case Event::STATS: 
+		notify(event);
 		break;
 	case Event::NEXT_LEVEL:
 	case Event::LOAD_LEVEL:
@@ -152,6 +178,9 @@ void MenuSystem::openMenu(Event::MenuType menu)
 		break;
 	case Event::MenuType::LEVEL_COMPLETE_MENU:
 		newMenu = new LevelCompleteMenu(window);
+		break;
+	case Event::MenuType::END_SCREEN:
+		newMenu = new EndScreen(window);
 		break;
 	default:
 		// no menu opened

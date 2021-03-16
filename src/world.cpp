@@ -35,6 +35,8 @@ WorldSystem::WorldSystem(ivec2 window_size_px) :
     running(false),
     points(0),
     attempts(-1),
+    enemies_killed(0), 
+    projectiles_fired(0),
     left_mouse_pressed(false),
     snail_move(1), // this might be something we want to load in
     turns_per_camera_move(1),
@@ -340,7 +342,8 @@ void WorldSystem::onNotify(Event event) {
         else {
             //game end screen
             running = false;
-            notify(Event(Event::MENU_START));
+            ControlsOverlay::removeControlsOverlay();
+            notify(Event(Event::GAME_OVER, attempts, enemies_killed, projectiles_fired));
         }
     }
     
@@ -371,6 +374,7 @@ void WorldSystem::onNotify(Event event) {
                 // Checking Projectile - Spider collisions
                 if (ECS::registry<Spider>.has(event.other_entity))
                 {
+                    enemies_killed++;
                     // Remove the spider but not the projectile
                     ECS::ContainerInterface::remove_all_components_of(event.other_entity);
                 }
@@ -942,6 +946,7 @@ void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
             vec2 mouse_pos = vec2(mouse_pos_x, mouse_pos_y);
             if (action == GLFW_RELEASE)
             {
+                projectiles_fired++;
                 shootProjectile(mouse_pos);
                 left_mouse_pressed = false;
                 Projectile::Preview::removeCurrent();
