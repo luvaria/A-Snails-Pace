@@ -5,6 +5,7 @@
 #include <tuple>
 #include <vector>
 #include <unordered_set>
+#include <unordered_map>
 #include <stdexcept>
 
 // glfw (OpenGL)
@@ -49,6 +50,11 @@ struct Transform {
 
 // for use with levels_path(): use indices, starting from 0
 const std::vector<std::string> levels = { "demo.json", "demo-2.json", "level-1.json" };
+
+const std::unordered_map<int, std::string> collectibleMap =
+{
+    {0, "spider"},
+};
 
 // All data relevant to the shape and motion of entities
 struct Motion {
