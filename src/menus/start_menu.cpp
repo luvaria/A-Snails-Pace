@@ -1,6 +1,7 @@
 #include "start_menu.hpp"
 #include "text.hpp"
 #include "snail.hpp"
+#include "load_save.hpp"
 #include "../tiles/tiles.hpp"
 #include "../tiles/wall.hpp"
 #include "../tiles/vine.hpp"
@@ -34,7 +35,11 @@ void StartMenu::step(vec2 /*window_size_in_game_units*/)
 		ECS::Entity buttonEntity = buttonContainer.entities[i];
 		Text& buttonText = textContainer.get(buttonEntity);
 
-		if (button.selected)
+		updateDisabled(button);
+
+        buttonText.alpha = button.disabled ? 0.5f : 1.f;
+
+		if (button.selected && !button.disabled)
 		{
 			buttonText.colour = HIGHLIGHT_COLOUR;
 			buttonText.font = ABEEZEE_ITALIC;
@@ -116,6 +121,34 @@ void StartMenu::loadEntities()
 	ECS::registry<MenuButton>.emplace(selectLevelEntity, ButtonEventType::SELECT_LEVEL);
 	ECS::registry<StartMenuTag>.emplace(selectLevelEntity);
 	buttonEntities.push_back(selectLevelEntity);
+
+    // TODO: enable for M4
+	// load save button
+//    auto loadSaveEntity = ECS::Entity();
+//    ECS::registry<Text>.insert(
+//            loadSaveEntity,
+//            Text("Load save", ABEEZEE_REGULAR, { 650.0f, 450.0f })
+//    );
+//    Text& loadSaveText = ECS::registry<Text>.get(loadSaveEntity);
+//    loadSaveText.colour = DEFAULT_COLOUR;
+//    loadSaveText.scale *= OPTION_SCALE;
+//    ECS::registry<MenuButton>.emplace(loadSaveEntity, ButtonEventType::LOAD_SAVE);
+//    ECS::registry<StartMenuTag>.emplace(loadSaveEntity);
+//    buttonEntities.push_back(loadSaveEntity);
+
+    // clear data button
+    auto clearCollectibleDataEntity = ECS::Entity();
+    ECS::registry<Text>.insert(
+            clearCollectibleDataEntity,
+            Text("Clear collectible data", ABEEZEE_REGULAR, { 700.0f, 500.0f })
+    );
+    Text& clearCollectibleDataText = ECS::registry<Text>.get(clearCollectibleDataEntity);
+    clearCollectibleDataText.colour = DEFAULT_COLOUR;
+    clearCollectibleDataText.scale *= SUB_OPTION_SCALE;
+    ECS::registry<MenuButton>.emplace(clearCollectibleDataEntity, ButtonEventType::CLEAR_COLLECT_DATA);
+    ECS::registry<StartMenuTag>.emplace(clearCollectibleDataEntity);
+    buttonEntities.push_back(clearCollectibleDataEntity);
+
 }
 
 void StartMenu::removeEntities()
@@ -198,7 +231,7 @@ void StartMenu::selectedKeyEvent()
 		MenuButton& button = buttonContainer.components[i];
 
 		// perform action for button being hovered over (and pressed)
-		if (button.selected)
+		if (button.selected && !button.disabled)
 		{
 			switch (button.event)
 			{
@@ -212,9 +245,20 @@ void StartMenu::selectedKeyEvent()
 				resetButtons();
 				notify(Event(Event::MENU_OPEN, Event::LEVEL_SELECT));
 				break;
+			case ButtonEventType::CLEAR_COLLECT_DATA:
+                ECS::registry<Inventory>.components[0].collectibles.clear();
+			    break;
 			default:
 				break;
 			}
 		}
 	}
+}
+
+void StartMenu::updateDisabled(MenuButton &button)
+{
+    if (button.event == ButtonEventType::CLEAR_COLLECT_DATA)
+    {
+        button.disabled = (ECS::registry<Inventory>.size() == 0) || ECS::registry<Inventory>.components[0].collectibles.empty();
+    }
 }

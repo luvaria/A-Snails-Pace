@@ -17,6 +17,9 @@ private:
 	void on_mouse_button(int button, int action, int /*mods*/);
 
 	void selectedKeyEvent();
+
+	// only for this subclass, may be useful for all subclasses?
+	void updateDisabled(MenuButton& button);
 };
 
 // component tag

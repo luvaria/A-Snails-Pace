@@ -16,6 +16,7 @@
 #include "ai.hpp"
 #include "debug.hpp"
 #include "menus/menus.hpp"
+#include "load_save.hpp"
 #include "parallax_background.hpp"
 
 using Clock = std::chrono::high_resolution_clock;
@@ -57,6 +58,7 @@ int main()
 	world.addObserver(&bg);
 	menus.addObserver(&bg);
 
+	LoadSaveSystem::loadPlayerFile();
 
 	while (!world.is_over())
 	{
@@ -81,6 +83,8 @@ int main()
 
 		renderer.draw(window_size_in_game_units, elapsed_ms);
 	}
+
+	LoadSaveSystem::writePlayerFile();
 
 	return EXIT_SUCCESS;
 }
