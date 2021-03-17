@@ -12,7 +12,7 @@
 // Defining what tile types are possible, used to render correct tile types
 // and to check if can be moved to. EMPTY = nothing is on the tile and you
 // can move to it if it is unoccupied
-typedef enum { EMPTY, WALL, WATER, VINE, SPLASH } TYPE;
+typedef enum { EMPTY, WALL, WATER, VINE, INACCESSIBLE, SPLASH } TYPE;
 
 // Defines the tile component
 class Tile: public Subject {
@@ -20,12 +20,35 @@ public:
     float x = 0;
     float y = 0;
     TYPE type = EMPTY;
-    bool occupied = false;
-    void setOccupied(bool isOccupied) 
+    int numOccupyingEntities;
+
+    Tile() 
     {
-        occupied = isOccupied;
-        isOccupied ? notify(Event(Event::TILE_OCCUPIED)) : notify(Event(Event::TILE_UNOCCUPIED));
+        numOccupyingEntities = 0;
     }
+
+    void addOccupyingEntity() 
+    {
+        numOccupyingEntities++;
+        if (numOccupyingEntities == 1) 
+        {
+            notify(Event(Event::TILE_OCCUPIED));
+        }
+    }
+
+    void removeOccupyingEntity()
+    {
+        if (numOccupyingEntities == 0) 
+        {
+            throw std::runtime_error("tried to remove an occupying entity when there were none");
+        }
+        numOccupyingEntities--;
+        if (numOccupyingEntities == 0)
+        {
+            notify(Event(Event::TILE_UNOCCUPIED));
+        }
+    }
+
     bool operator==(const Tile& rhs) const
     {
         return

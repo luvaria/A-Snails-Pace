@@ -189,3 +189,8 @@ endif()
 add_subdirectory(ext/nlohmann_json)
 set(JSON_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/ext/nlohmann_json/single_include")
 target_link_directories(${PROJECT_NAME} PUBLIC ${JSON_INCLUDE_DIRS})
+
+# XML
+add_subdirectory(ext/pugixml)
+set(XML_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/ext/pugixml/")
+target_link_directories(${PROJECT_NAME} PUBLIC ${XML_INCLUDE_DIRS})

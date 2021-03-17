@@ -18,4 +18,5 @@ protected:
 public:
 	void addObserver(Observer* observer);
 	void removeObserver(Observer* observer);
+	void clearObservers();
 };

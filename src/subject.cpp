@@ -22,11 +22,18 @@ void Subject::notify(Event event)
 	}
 }
 
-void Subject::addObserver(Observer* observer) {
+void Subject::addObserver(Observer* observer)
+{
 	observers.push_back(observer);
 }
 
-void Subject::removeObserver(Observer* observer) {
-	//assert(std::find(observers.begin(), observers.end(), observer) != observers.end()))
+void Subject::removeObserver(Observer* observer)
+{
+	assert(std::find(observers.begin(), observers.end(), observer) != observers.end());
 	observers.remove(observer);
+}
+
+void Subject::clearObservers()
+{
+	observers.clear();
 }

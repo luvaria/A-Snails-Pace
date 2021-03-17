@@ -289,9 +289,9 @@ Font::Font(const std::string& pathToTTF)
     // Construct a new FreeType font face from the TTF file
     FT_Check(FT_New_Face(ftl, pathToTTF.c_str(), 0, &m_face));
 
-    // Request a vertical size of 60 pixels. The horizontal
+    // Request a vertical size in pixels. The horizontal
     // size is inferred if 0 is passed.
-    FT_Check(FT_Set_Pixel_Sizes(m_face, 0, 60));
+    FT_Check(FT_Set_Pixel_Sizes(m_face, 0, VERTICAL_TEXT_SIZE));
 
     // Use the Unicode character encoding
     FT_Check(FT_Select_Charmap(m_face, FT_ENCODING_UNICODE));

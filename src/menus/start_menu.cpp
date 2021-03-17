@@ -23,8 +23,8 @@ void StartMenu::setActive()
 
 void StartMenu::step(vec2 /*window_size_in_game_units*/)
 {
-	const auto ABEEZEE_REGULAR = Font::load("data/fonts/abeezee/ABeeZee-Regular.otf");
-	const auto ABEEZEE_ITALIC = Font::load("data/fonts/abeezee/ABeeZee-Italic.otf");
+	const auto ABEEZEE_REGULAR = Font::load(ABEEZEE_REGULAR_PATH);
+	const auto ABEEZEE_ITALIC = Font::load(ABEEZEE_ITALIC_PATH);
 
 	// update button colour based on mouseover
 	auto& buttonContainer = ECS::registry<MenuButton>;
@@ -82,8 +82,8 @@ void StartMenu::loadEntities()
 		}
 	}
 
-	const auto ABEEZEE_REGULAR = Font::load("data/fonts/abeezee/ABeeZee-Regular.otf");
-	const auto VIGA_REGULAR = Font::load("data/fonts/viga/Viga-Regular.otf");
+	const auto ABEEZEE_REGULAR = Font::load(ABEEZEE_REGULAR_PATH);
+	const auto VIGA_REGULAR = Font::load(VIGA_REGULAR_PATH);
 
 	// title text
 	// probably best to replace with a png/mesh
