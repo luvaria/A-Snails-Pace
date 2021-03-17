@@ -5,6 +5,7 @@
 #include "menus/pause_menu.hpp"
 #include "tiles/tiles.hpp"
 #include "text.hpp"
+#include "collectible_menu.hpp"
 
 // stlib
 #include <sstream>
@@ -145,6 +146,8 @@ void MenuSystem::openMenu(Event::MenuType menu)
 	case Event::MenuType::PAUSE_MENU:
 		newMenu = new PauseMenu(window);
 		break;
+	case Event::MenuType::COLLECTIBLES_MENU:
+        newMenu = new CollectMenu(window);
 	default:
 		// no menu opened
 		return;

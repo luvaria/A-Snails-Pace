@@ -8,7 +8,7 @@ class Event
 public:
 	enum EventType { COLLISION, LOAD_LEVEL, LOAD_BG, CLOSE_BG, MENU_START, MENU_OPEN, MENU_CLOSE, MENU_CLOSE_ALL, PAUSE, UNPAUSE, TILE_OCCUPIED, TILE_UNOCCUPIED };
 	// used to determine what menu type is being opened or closed
-	enum MenuType { INVALID_MENU, START_MENU, LEVEL_SELECT, PAUSE_MENU };
+	enum MenuType { INVALID_MENU, START_MENU, LEVEL_SELECT, PAUSE_MENU, COLLECTIBLES_MENU };
 
 	EventType type;
 	ECS::Entity entity;
