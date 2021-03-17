@@ -3,8 +3,9 @@
 #include "common.hpp"
 #include "tiny_ecs.hpp"
 #include "subject.hpp"
-#include <random>
 
+#include <random>
+#include <functional>
 
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
