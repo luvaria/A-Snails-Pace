@@ -158,7 +158,8 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     int yCoord = static_cast<int>(snailMotion.position.y / scale);
     ivec2 endCoordinates = TileSystem::getEndCoordinates();
 
-    if (xCoord == endCoordinates.x && yCoord == endCoordinates.y) {
+    if (ECS::registry<Turn>.components[0].type == PLAYER_WAITING
+            && xCoord == endCoordinates.x && yCoord == endCoordinates.y) {
         running = false;
         ControlsOverlay::removeControlsOverlay();
         notify(Event(Event::LEVEL_COMPLETE));
