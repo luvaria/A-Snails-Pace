@@ -53,7 +53,7 @@ void LevelCompleteMenu::loadEntities()
 	auto titleTextEntity = ECS::Entity();
 	ECS::registry<Text>.insert(
 		titleTextEntity,
-		Text("Level Complete!", ABEEZEE_REGULAR, { 450.f, 250.f })
+		Text("Level Complete!", ABEEZEE_REGULAR, { 425.f, 250.f })
 	);
 	Text& titleText = ECS::registry<Text>.get(titleTextEntity);
 	titleText.scale = SUBTITLE_SCALE;
@@ -64,7 +64,7 @@ void LevelCompleteMenu::loadEntities()
 	auto nextLevelEntity = ECS::Entity();
 	ECS::registry<Text>.insert(
 		nextLevelEntity,
-		Text("Next Level", ABEEZEE_REGULAR, { 550.f, 325.0f })
+		Text("Next Level", ABEEZEE_REGULAR, { 500.f, 325.0f })
 	);
 	Text& nextLevelText = ECS::registry<Text>.get(nextLevelEntity);
 	nextLevelText.colour = DEFAULT_COLOUR;
@@ -77,7 +77,7 @@ void LevelCompleteMenu::loadEntities()
 	auto quitGameEntity = ECS::Entity();
 	ECS::registry<Text>.insert(
 		quitGameEntity,
-		Text("Quit", ABEEZEE_REGULAR, { 550.f, 375.0f })
+		Text("Quit", ABEEZEE_REGULAR, { 500.f, 375.0f })
 	);
 	Text& quitText = ECS::registry<Text>.get(quitGameEntity);
 	quitText.colour = DEFAULT_COLOUR;
