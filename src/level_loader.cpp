@@ -1,6 +1,7 @@
 // Header
 #include "level_loader.hpp"
 #include "snail.hpp"
+#include "npc.hpp"
 #include "spider.hpp"
 #include "ai.hpp"
 #include "collectible.hpp"
@@ -25,6 +26,8 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 {
 	std::ifstream i(levels_path(levels[levelIndex]));
 	json level = json::parse(i);
+
+	std::string levelName = level["name"];
 
 	AISystem::aiPathFindingAlgorithm = level["AI-PathFinding-Algorithm"];
 
@@ -111,6 +114,11 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 			case 'V':
 				tile.type = VINE;
 				VineTile::createVineTile(tile, entity);
+				break;
+			case 'N':
+				tile.type = INACCESSIBLE;
+				tile.addOccupyingEntity();
+				NPC::createNPC(tile, levelName, entity);
 				break;
 			default:
 				tile.type = EMPTY;

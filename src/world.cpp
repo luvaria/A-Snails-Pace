@@ -16,6 +16,8 @@
 #include "level_loader.hpp"
 #include "controls_overlay.hpp"
 #include "parallax_background.hpp"
+#include "dialogue.hpp"
+#include "npc.hpp"
 #include "observer.hpp"
 #include "subject.hpp"
 #include "collectible.hpp"
@@ -286,6 +288,8 @@ void WorldSystem::restart(int newLevel)
 	// Load level from data/levels
     level = newLevel;
     LevelLoader::loadLevel(newLevel);
+    // register NPCs in observer pattern
+    notify(Event(Event::LEVEL_LOADED));
     // can't access player_snail in level loader
     player_snail = ECS::registry<Snail>.entities[0];
 
@@ -314,6 +318,7 @@ void WorldSystem::onNotify(Event event) {
     {
         setGLFWCallbacks();
         ControlsOverlay::addControlsOverlayIfOn();
+        notify(Event(Event::RESUME_DIALOGUE));
         running = true;
     }
     else if (event.type == Event::COLLISION) {
@@ -500,6 +505,7 @@ void WorldSystem::goLeft(ECS::Entity &entity, int &moves) {
     }
     Tile currTile = tiles[yCoord][xCoord];
     Tile leftTile = tiles[yCoord][xCoord - 1];
+    if (leftTile.type == INACCESSIBLE) return;
     Tile nextTile = currTile;
     if (abs(motion.angle) != PI / 2 && (leftTile.type == WALL)) {
         nextTile = tiles[yCoord][xCoord];
@@ -559,6 +565,7 @@ void WorldSystem::goRight(ECS::Entity& entity, int& moves) {
     }
     Tile currTile = tiles[yCoord][xCoord];
     Tile rightTile = tiles[yCoord][xCoord + 1];
+    if (rightTile.type == INACCESSIBLE) return;
     Tile nextTile = currTile;
     if (abs(motion.angle) != PI / 2 && rightTile.type == WALL) {
         nextTile = tiles[yCoord][xCoord];
@@ -621,6 +628,7 @@ void WorldSystem::goUp(ECS::Entity& entity, int& moves) {
     }
     Tile currTile = tiles[yCoord][xCoord];
     Tile upTile = tiles[yCoord-1][xCoord];
+    if (upTile.type == INACCESSIBLE) return;
     Tile nextTile = currTile;
     if (currTile.type == VINE && abs(motion.angle) == 0) {
         nextTile = tiles[yCoord][xCoord];
@@ -677,7 +685,8 @@ void WorldSystem::goDown(ECS::Entity& entity, int& moves) {
         return;
     }
     Tile currTile = tiles[yCoord][xCoord];
-    Tile upTile = tiles[yCoord + 1][xCoord];
+    Tile downTile = tiles[yCoord + 1][xCoord];
+    if (downTile.type == INACCESSIBLE) return;
     Tile nextTile = currTile;
     if (currTile.type == VINE && abs(motion.angle) == PI) {
         nextTile = tiles[yCoord][xCoord];
@@ -691,7 +700,7 @@ void WorldSystem::goDown(ECS::Entity& entity, int& moves) {
         motion.scale = { motion.scale.y, motion.scale.x };
         motion.angle = motion.lastDirection == DIRECTION_EAST ? PI/2 : -PI/2;
         motion.lastDirection = DIRECTION_NORTH;
-    } else if (upTile.type == WALL) {
+    } else if (downTile.type == WALL) {
         nextTile = tiles[yCoord][xCoord];
         if (motion.angle != 0 && abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
             changeDirection(motion, currTile, nextTile, DIRECTION_SOUTH, entity);
@@ -717,17 +726,16 @@ void WorldSystem::goDown(ECS::Entity& entity, int& moves) {
         }
         nextTile = tiles[(yCoord + 1)][motion.angle == -PI / 2 ? xCoord + 1 : xCoord - 1];
         Tile sideTile = tiles[(yCoord)][motion.angle == -PI / 2 ? xCoord + 1 : xCoord - 1];
-        if (!(nextTile.type == WALL || upTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
+        if (!(nextTile.type == WALL || downTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
             return;
         }
-        nextTile = nextTile.type == WALL || upTile.type == VINE ? upTile : nextTile;
+        nextTile = nextTile.type == WALL || downTile.type == VINE ? downTile : nextTile;
         changeDirection(motion, currTile, nextTile, DIRECTION_SOUTH, entity);
     }
     
     if (currTile.x != nextTile.x || currTile.y != nextTile.y) {
         moves--;
     }
-
 }
 
 void WorldSystem::fallDown(ECS::Entity& entity, int& moves) {
@@ -797,6 +805,10 @@ void WorldSystem::fallDown(ECS::Entity& entity, int& moves) {
             }
             i = tiles.size();
         }
+        else if (t.type == INACCESSIBLE)
+        {
+            return;
+        }
     }
     if (tempMove < moves)
     {
@@ -845,8 +857,42 @@ void WorldSystem::on_key(int key, int, int action, int mod)
             case GLFW_KEY_SPACE:
                     fallDown(player_snail, snail_move);
                 break;
+            case GLFW_KEY_E:
+                Motion& playerMotion = ECS::registry<Motion>.get(player_snail);
+                for (ECS::Entity npcEntity : ECS::registry<NPC>.entities)
+                {
+                    Motion& npcMotion = ECS::registry<Motion>.get(npcEntity);
+                    vec2 displacement = playerMotion.position - npcMotion.position;
+                    if ((abs(displacement.x) < TileSystem::getScale() * 1.5f) && (abs(displacement.y) < TileSystem::getScale() * 1.5f))
+                    {
+                        encountered_npc = npcEntity;
+                        ECS::registry<NPC>.get(encountered_npc).beginEncounter();
+                        ECS::registry<Turn>.components[0].type = NPC_ENCOUNTER;
+                        break; // assuming only one NPC nearby at a time
+                    }
+                }
+                break;
 			}
 		}
+        else if ((ECS::registry<Turn>.components[0].type == NPC_ENCOUNTER) && (action == GLFW_PRESS))
+        {
+            NPC& npc = ECS::registry<NPC>.get(encountered_npc);
+
+            switch (key)
+            {
+            // exit dialogue
+            case GLFW_KEY_Q:
+                npc.endEncounter();
+                ECS::registry<Turn>.components[0].type = PLAYER_WAITING;
+                break;
+            // step encounter
+            case GLFW_KEY_E:
+                npc.stepEncounter();
+                if (!npc.isActive)
+                    ECS::registry<Turn>.components[0].type = PLAYER_WAITING;
+                break;
+            }
+        }
 	}
 
     // Resetting game
