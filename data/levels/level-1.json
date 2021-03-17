@@ -4,7 +4,7 @@
   "scale": 100,
   "direction": "right",
   "turnsPerCamera": 2,
-  "AI-PathFinding-Algorithm": "BFS",
+  "AI-PathFinding-Algorithm": "Astar",
   "tiles": [
     "                X   ",
     "                    ",

@@ -106,28 +106,78 @@ private:
 // entities we will be doing in M3/M4
 class BTSelector : public BTNode {
 public:
-    BTSelector(std::shared_ptr<BTNode> child1, std::shared_ptr<BTNode> child2, std::function<bool(ECS::Entity)> condition)
-        : m_child1(std::move(child1)), m_child2(std::move(child2)), m_condition(condition){
+    BTSelector(std::vector<std::shared_ptr<BTNode>> children)
+        : m_children(std::move(children)), m_index(0) {
 
     }
     virtual void init(ECS::Entity e) override {
-        m_child1->init(e);
-        m_child2->init(e);
+        m_index = 0;
+        assert(m_index < m_children.size());
+        // initialize the first child
+        const auto& child = m_children[m_index];
+        assert(child);
+        child->init(e);
     }
     
 
     virtual BTState process(ECS::Entity e) override {
-        if (m_condition(e)) {
-            return m_child1->process(e);
+        if (m_index >= m_children.size())
+            return BTState::Success;
+
+        // process current child
+        const auto& child = m_children[m_index];
+        assert(child);
+        BTState state = child->process(e);
+
+        // select a new active child and initialize its internal state
+        if (state == BTState::Success) {
+            return BTState::Success;
         }
         else {
-            return m_child2->process(e);
+            const auto& nextChild = m_children[m_index];
+            assert(nextChild);
+            nextChild->init(e);
+            return BTState::Running;
         }
+        
     }
 private: 
     std::shared_ptr<BTNode> m_child1;
     std::shared_ptr<BTNode> m_child2;
+    int m_index;
+    std::vector<std::shared_ptr<BTNode>> m_children;
     std::function<bool(ECS::Entity)> m_condition;
+};
+
+class RepeatForN : public BTNode {
+public:
+    RepeatForN(std::shared_ptr<BTNode> child, int n) :
+    m_child(child), m_iterationsRemaining(n){
+
+    }
+
+    virtual void init(ECS::Entity e) override {
+        m_child->init(e);
+    }
+
+    virtual BTState process(ECS::Entity e) override {
+        std::cout << m_iterationsRemaining << std::endl;
+        BTState state = m_child->process(e);
+        // unsure whether to set these to Failure or Running
+        if (m_iterationsRemaining != 0 && state != BTState::Success) {
+            m_iterationsRemaining = m_iterationsRemaining - 1;
+            return BTState::Running;
+        }
+        else if (m_iterationsRemaining == 0 && state == BTState::Failure) {
+            return BTState::Failure;
+        }
+        else {
+            return BTState::Success;
+        }
+    }
+private:
+    std::shared_ptr<BTNode> m_child;
+    int m_iterationsRemaining;
 };
 
 class IsSnailInRange : public BTNode {
@@ -154,9 +204,9 @@ private:
     BTState process(ECS::Entity e) override;
 };
 
-class NoPathsPossible : public BTNode {
+class GetWithinTwoTiles : public BTNode {
 public:
-    NoPathsPossible() noexcept {
+    GetWithinTwoTiles() noexcept {
 
     }
 private:
@@ -164,6 +214,80 @@ private:
     
     }
 
+    BTState process(ECS::Entity e) override;
+};
+
+class FireXShots : public BTNode {
+public:
+    FireXShots(int n) noexcept {
+        m_Shots = n;
+    }
+    void init(ECS::Entity e) override {
+        m_Shots = 1 + rand() % 3;
+    }
+    BTState process(ECS::Entity e) override;
+private:
+    int m_Shots;
+};
+
+class RandomSelector : public BTNode {
+public:
+    // chance is % chance of option #1 happening
+    RandomSelector(float chance, std::shared_ptr<BTNode> option1, std::shared_ptr<BTNode> option2):
+    m_chance(chance), m_child1(option1), m_child2(option2){
+        
+    }
+private:
+    void init(ECS::Entity e) override {
+        m_chance = 1 + rand() % 100;
+        if (m_chance <= 75) {
+            const auto& child = m_child1;
+            m_chosen = child;
+            child->init(e);
+        }
+        else {
+            const auto& child = m_child2;
+            m_chosen = child;
+            child->init(e);
+        }
+    }
+    BTState process(ECS::Entity e) override {
+        BTState state = m_chosen->process(e);
+        if (state == BTState::Success) {
+            return BTState::Success;
+        }
+        else {
+            return BTState::Failure;
+        }
+    }
+private:
+    std::shared_ptr<BTNode> m_child1;
+    std::shared_ptr<BTNode> m_child2;
+    std::shared_ptr<BTNode> m_chosen;
+    int m_chance;
+};
+
+class PredictShot : public BTNode {
+public:
+    PredictShot() noexcept {
+        
+    }
+    void init(ECS::Entity e) override {
+
+    }
+    BTState process(ECS::Entity e) override;
+private:
+    //int m_Shots;
+};
+
+class GetToSnail : public BTNode {
+public:
+    GetToSnail() noexcept {
+
+    }
+    void init(ECS::Entity e) override {
+
+    }
     BTState process(ECS::Entity e) override;
 };
 
@@ -177,8 +301,9 @@ public:
 
 	  void step(float elapsed_ms, vec2 window_size_in_game_units);
     void init();
-    static std::vector<vec2> shortestPathBFS(vec2 start, vec2 goal);
-    static std::vector<vec2> shortestPathAStar(vec2 start, vec2 goal);
+    static std::vector<vec2> shortestPathBFS(vec2 start, vec2 goal, std::string animal);
+    static std::vector<vec2> shortestPathAStar(vec2 start, vec2 goal, std::string animal);
     static void sortQueue(std::deque<std::vector<vec2>> &frontier, vec2 destCoord);
     static bool checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deque<std::vector<vec2>>& frontier, std::vector<vec2>& current, TileSystem::vec2Map& tileMovesMap, vec2& goal);
+    static bool birdAddNeighborNodes(std::deque<std::vector<vec2>>& frontier, std::vector<vec2>& current, vec2& goal);
 };

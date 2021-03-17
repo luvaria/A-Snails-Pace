@@ -3,6 +3,7 @@
 #include "tiles/tiles.hpp"
 #include "level_loader.hpp"
 #include "spider.hpp"
+#include "bird.hpp"
 
 #include <fstream>
 #include <../ext/nlohmann_json/single_include/nlohmann/json.hpp>

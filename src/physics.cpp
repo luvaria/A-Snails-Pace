@@ -13,6 +13,7 @@
 #include <memory>
 #include <snail.hpp>
 #include <spider.hpp>
+#include <bird.hpp>
 #include <iostream>
 #include <cstdio>
 
@@ -235,19 +236,21 @@ bool isProjectileAndWall(ECS::Entity entity_i, ECS::Entity entity_j)
 }
 
 //returns true if we have a possibility of caring if entity_i and entity_j collide
+//was edited to check collision with bird
 bool ShouldCheckCollision(ECS::Entity entity_i, ECS::Entity entity_j)
 {
 	bool isValidSnailCollision_i = ECS::registry<Snail>.has(entity_i) &&
-		(ECS::registry<Spider>.has(entity_j) || ECS::registry<WaterTile>.has(entity_j));
+		(ECS::registry<Spider>.has(entity_j) || ECS::registry<WaterTile>.has(entity_j) || ECS::registry<Bird>.has(entity_j));
 
 	bool isValidSnailCollision_j = ECS::registry<Snail>.has(entity_j) &&
-		(ECS::registry<Spider>.has(entity_i) || ECS::registry<WaterTile>.has(entity_i));
+		(ECS::registry<Spider>.has(entity_i) || ECS::registry<WaterTile>.has(entity_i) || ECS::registry<Bird>.has(entity_i));
 
 	bool isValidProjectileCollision_i = ECS::registry<Projectile>.has(entity_i) &&
-		(ECS::registry<Spider>.has(entity_j) || ECS::registry<WallTile>.has(entity_j));
+		(ECS::registry<Spider>.has(entity_j) || ECS::registry<WallTile>.has(entity_j) || ECS::registry<Bird>.has(entity_j));
 
 	bool isValidProjectileCollision_j = ECS::registry<Projectile>.has(entity_j) &&
-		(ECS::registry<Spider>.has(entity_i) || ECS::registry<WallTile>.has(entity_i));
+		(ECS::registry<Spider>.has(entity_i) || ECS::registry<WallTile>.has(entity_i) || ECS::registry<Bird>.has(entity_i));
+	
 
 	return isValidSnailCollision_i || isValidSnailCollision_j || isValidProjectileCollision_i || isValidProjectileCollision_j;
 }
@@ -319,6 +322,11 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
         {
             stepToDestination(entity, step_seconds);
         }
+
+		for (auto entity : ECS::registry<Bird>.entities) 
+		{
+			stepToDestination(entity, step_seconds);
+		}
     }
 	else if (turnType == CAMERA)
     {

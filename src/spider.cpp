@@ -39,6 +39,7 @@ ECS::Entity Spider::createSpider(vec2 position, ECS::Entity entity)
 
 	ECS::registry<AI>.emplace(entity);
 	ECS::registry<Spider>.emplace(entity);
+
 	
 	// Adding Behaviour Tree to Spider
 	// Maybe add some registry that keeps track of trees??
@@ -47,6 +48,7 @@ ECS::Entity Spider::createSpider(vec2 position, ECS::Entity entity)
 	std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ isr, lfs }));
 	//auto& ai = ECS::registry<AI>.get(entity);
 	//ai.tree = tree;
+
 	tree->init(entity);
 	auto& ai = ECS::registry<AI>.get(entity);
 	ai.tree = tree;

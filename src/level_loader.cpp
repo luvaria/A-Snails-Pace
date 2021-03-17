@@ -2,6 +2,7 @@
 #include "level_loader.hpp"
 #include "snail.hpp"
 #include "spider.hpp"
+#include "bird.hpp"
 #include "ai.hpp"
 #include "tiles/vine.hpp"
 #include "tiles/water.hpp"
@@ -153,6 +154,18 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 				Spider::createSpider({ tile.x, tile.y }, createTaggedEntity(preview));
 			}
 			break;
+			// added this for bird
+		case eBird:
+			for (auto& bird : it.value())
+			{
+				ivec2 birdPos = { bird["x"], bird["y"] };
+				if (preview && (xNotInPreviewArea(birdPos.x, previewOrigin) || yNotInPreviewArea(birdPos.y, previewOrigin)))
+					continue;
+				Tile& tile = tiles[bird["y"]][bird["x"]];
+				tile.setOccupied(true);
+				Bird::createBird({ tile.x, tile.y }, createTaggedEntity(preview));
+			}
+			break;
 		default:
 			throw std::runtime_error("Failed to spawn character " + it.key());
 			break;
@@ -209,6 +222,7 @@ void LevelLoader::previewLevel(int levelIndex, vec2 offset)
 LevelLoader::string_code LevelLoader::hashit(std::string const& inString) {
 	if (inString == "snail") return eSnail;
 	if (inString == "spider") return eSpider;
+	if (inString == "bird") return eBird;
 	throw std::runtime_error("No hash found for " + inString);
 }
 
