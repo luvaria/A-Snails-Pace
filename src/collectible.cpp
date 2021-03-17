@@ -49,3 +49,9 @@ ECS::Entity Collectible::createCollectible(vec2 position, int id)
 
     return entity;
 }
+
+void Collectible::equip(ECS::Entity host, int id)
+{
+    // TODO #54: implement this
+    return;
+}

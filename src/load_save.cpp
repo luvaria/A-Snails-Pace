@@ -57,10 +57,10 @@ void LoadSaveSystem::writePlayerFile()
     std::unordered_set<CollectId>& collectibles = ECS::registry<Inventory>.components[0].collectibles;
 
 //    TODO #54: remove this, temp for debugging
-    for (int i = 0; i < 10; i++)
-    {
-        collectibles.insert(3 * i);
-    }
+//    for (int i = 0; i < 10; i++)
+//    {
+//        collectibles.insert(3 * i);
+//    }
 
     for (auto& collectible : collectibles)
     {
