@@ -231,7 +231,7 @@ void StartMenu::selectedKeyEvent()
 		MenuButton& button = buttonContainer.components[i];
 
 		// perform action for button being hovered over (and pressed)
-		if (button.selected)
+		if (button.selected && !button.disabled)
 		{
 			switch (button.event)
 			{
