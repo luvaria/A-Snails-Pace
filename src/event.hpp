@@ -6,7 +6,7 @@
 class Event
 {
 public:
-	enum EventType { COLLISION, LOAD_LEVEL, LOAD_BG, CLOSE_BG, MENU_START, MENU_OPEN, MENU_CLOSE, MENU_CLOSE_ALL, PAUSE, UNPAUSE, TILE_OCCUPIED, TILE_UNOCCUPIED };
+	enum EventType { COLLISION, LOAD_LEVEL, LOAD_BG, CLOSE_BG, MENU_START, MENU_OPEN, MENU_CLOSE, MENU_CLOSE_ALL, PAUSE, UNPAUSE, TILE_OCCUPIED, TILE_UNOCCUPIED, LEVEL_LOADED, START_DIALOGUE, NEXT_DIALOGUE, RESUME_DIALOGUE, END_DIALOGUE };
 	// used to determine what menu type is being opened or closed
 	enum MenuType { INVALID_MENU, START_MENU, LEVEL_SELECT, PAUSE_MENU, COLLECTIBLES_MENU };
 
@@ -15,8 +15,9 @@ public:
 	ECS::Entity other_entity;
 	int level = -1;
 	MenuType menu = INVALID_MENU;
+	std::string dialogue;
 
-	// pause unpause, backgrounds, return to start menu
+	// typed event with no additional arguments
 	Event(EventType t) : type(t) {}
 	// level load
 	Event(EventType t, int l) : type(t), level(l) {}
@@ -24,4 +25,6 @@ public:
 	Event(EventType t, MenuType m) : type(t), menu(m) {}
 	// collision
 	Event(EventType t, ECS::Entity& e, ECS::Entity& o) : type(t), entity(e), other_entity(o) {}
+	// start dialogue
+	Event(EventType t, std::string d) : type(t), dialogue(d) {}
 };

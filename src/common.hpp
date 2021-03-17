@@ -30,6 +30,7 @@ inline std::string mesh_path(const std::string& name) { return data_path() + "/m
 inline std::string levels_path(const std::string& name) { return data_path() + "/levels/" + name; };
 inline std::string save_path(const std::string& name) { return data_path() + "/saves/" + name; };
 inline std::string backgrounds_path(const std::string& name) { return data_path() + "/backgrounds/" + name; };
+inline std::string dialogue_path(const std::string& name) { return data_path() + "/dialogue/" + name; };
 
 // The 'Transform' component handles transformations passed to the Vertex shader
 // (similar to the gl Immediate mode equivalent, e.g., glTranslate()...)
@@ -84,7 +85,7 @@ struct Overlay
 	// empty; tag component
 };
 
-enum TurnType { PLAYER_WAITING, PLAYER_UPDATE, ENEMY, CAMERA };
+enum TurnType { PLAYER_WAITING, NPC_ENCOUNTER, PLAYER_UPDATE, ENEMY, CAMERA };
 
 struct Turn
 {

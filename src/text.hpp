@@ -157,6 +157,21 @@ private:
  */
 void drawText(const Text& text, glm::vec2 gameUnitSize);
 
+// text vertical size
+const int VERTICAL_TEXT_SIZE = 60;
+
+// font paths
+// title
+const std::string VIGA_REGULAR_PATH = "data/fonts/viga/Viga-Regular.otf";
+// buttons
+const std::string ABEEZEE_REGULAR_PATH = "data/fonts/abeezee/ABeeZee-Regular.otf";
+const std::string ABEEZEE_ITALIC_PATH = "data/fonts/abeezee/ABeeZee-Italic.otf";
+// controls overlay
+const std::string SF_CARTOONIST_HAND_PATH = "data/fonts/SF-Cartoonist-Hand/SF_Cartoonist_Hand.ttf";
+const std::string SF_CARTOONIST_HAND_BOLD_PATH = "data/fonts/SF-Cartoonist-Hand/SF_Cartoonist_Hand_Bold.ttf";
+// dialogue
+const std::string FANTASQUE_SANS_MONO_REGULAR_PATH = "data/fonts/fantasque-sans-mono/fantasquesansmono-regular.otf";
+
 // text colours
 const vec3 TITLE_COLOUR = { 0.984f, 0.690f, 0.231f };
 const vec3 DEFAULT_COLOUR = { 1.f, 1.f, 1.f };
@@ -171,3 +186,12 @@ const float OVERLAY_SCALE = 0.55f;
 const float DIALOGUE_SCALE = 0.5f;
 const float LEVEL_NAME_SCALE = 0.45f;
 const float SUB_OPTION_SCALE = 0.35f;
+
+// text pos (as a proportion of window size)
+const vec2 DIALOGUE_POS = { 0.09, 0.71 };
+
+// vertical line spacing (as a proportion of window size)
+const float LINE_SPACING = 0.002;
+
+// text width (as a proportion of vertical text size)
+const float FANTASQUE_SANS_MONO_REGULAR_WIDTH = 0.5f;

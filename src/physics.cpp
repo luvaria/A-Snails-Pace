@@ -24,6 +24,25 @@ vec2 get_bounding_box(const Motion& motion)
 	return { abs(motion.scale.x), abs(motion.scale.y) };
 }
 
+//given that the entity is moving from oldPos to newPos, update any tiles occupancy status
+void UpdateTileOccupancy(vec2 oldPos, vec2 newPos)
+{
+	auto scale = TileSystem::getScale();
+	int oldPosxCoord = static_cast<int>(oldPos.x / scale); //index into the tiles array
+	int oldPosyCoord = static_cast<int>(oldPos.y / scale);
+	int newPosxCoord = static_cast<int>(newPos.x / scale);
+	int newPosyCoord = static_cast<int>(newPos.y / scale);
+	//if the tiles are the same, it didn't change tiles, so we don't do anything
+	if (oldPosxCoord != newPosxCoord || oldPosyCoord != newPosyCoord)
+	{
+		auto& tiles = TileSystem::getTiles();
+		auto& oldTile = tiles[oldPosyCoord][oldPosxCoord];
+		auto& newTile = tiles[newPosyCoord][newPosxCoord];
+		oldTile.removeOccupyingEntity();
+		newTile.addOccupyingEntity();
+	}
+}
+
 void bounceProjectileOffWall(Motion& projectileMotion, std::vector<ColoredVertex> projectileVertices, std::vector<ColoredVertex> wallVertices)
 {
 	//first we get the bounding box cooordinates for the wall
@@ -263,6 +282,10 @@ void stepToDestination(ECS::Entity entity, float step_seconds)
         vec2 newPos = motion.position + (motion.velocity * step_seconds);
         if ((dot(motion.position - newPos, dest.position - newPos) > 0) || (dest.position == newPos))
         {
+			if (ECS::registry<Snail>.has(entity) || ECS::registry<Spider>.has(entity))
+			{
+				UpdateTileOccupancy(motion.position, dest.position);
+			}
             // overshot or perfectly hit destination
             // set velocity back to 0 stop moving
             motion.position = dest.position;
@@ -271,6 +294,10 @@ void stepToDestination(ECS::Entity entity, float step_seconds)
         }
         else
         {
+			if (ECS::registry<Snail>.has(entity) || ECS::registry<Spider>.has(entity)) 
+			{
+				UpdateTileOccupancy(motion.position, newPos);
+			}
             motion.position = newPos;
         }
     }
