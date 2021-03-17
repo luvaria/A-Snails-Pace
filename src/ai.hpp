@@ -101,6 +101,70 @@ private:
     std::vector<std::shared_ptr<BTNode>> m_children;
 };
 
+class BTSequenceForN : public BTNode {
+public:
+    BTSequenceForN(std::vector<std::shared_ptr<BTNode>> children)
+        : m_children(std::move(children)), m_index(0), m_iterations(5) {
+
+    }
+
+private:
+    void init(ECS::Entity e) override
+    {
+        m_index = 0;
+        assert(m_index < m_children.size());
+        // initialize the first child
+        const auto& child = m_children[m_index];
+        m_iterations = 5;
+        assert(child);
+        child->init(e);
+    }
+
+    BTState process(ECS::Entity e) override {
+        if (m_index >= m_children.size()) {
+            std::cout << "went through all options" << std::endl;
+            return BTState::Failure;
+        }
+        // process current child
+        const auto& child = m_children[m_index];
+        assert(child);
+        std::cout << "processing child" << std::endl;
+        BTState state = child->process(e);
+
+        // select a new active child and initialize its internal state
+        if (state == BTState::Success) {
+            std::cout << "in success for some reason" << std::endl;
+            ++m_index;
+            if (m_index >= m_children.size()) {
+                return BTState::Success;
+            }
+            else {
+                const auto& nextChild = m_children[m_index];
+                std::cout << "there should be no other children" << std::endl;
+                //std::cout << m_index << std::endl;
+                assert(nextChild);
+                nextChild->init(e);
+                return BTState::Running;
+            }
+        }
+        else if (state != BTState::Success && m_iterations == 0) {
+            std::cout << "where it should be" << std::endl;
+            m_index = m_children.size();
+            return BTState::Failure;
+        }
+        else {
+            std::cout << "one iteration done" << std::endl;
+            std::cout << m_iterations << std::endl;
+            m_iterations = m_iterations--;
+            return state;
+        }
+    }
+
+    int m_index;
+    std::vector<std::shared_ptr<BTNode>> m_children;
+    int m_iterations;
+};
+
 
 // Made to be used in M3/M4, will probably end up making more nodes depending on what different
 // entities we will be doing in M3/M4
@@ -165,6 +229,7 @@ public:
         BTState state = m_child->process(e);
         // unsure whether to set these to Failure or Running
         if (m_iterationsRemaining != 0 && state != BTState::Success) {
+            std::cout << m_iterationsRemaining << std::endl;
             m_iterationsRemaining = m_iterationsRemaining - 1;
             return BTState::Running;
         }
@@ -206,15 +271,17 @@ private:
 
 class GetWithinTwoTiles : public BTNode {
 public:
-    GetWithinTwoTiles() noexcept {
+    GetWithinTwoTiles(int iterations) :  m_iterations(iterations){
 
     }
 private:
     void init(ECS::Entity e) override {
-    
+        m_iterations = 5;
     }
 
     BTState process(ECS::Entity e) override;
+private:
+    int m_iterations;
 };
 
 class FireXShots : public BTNode {
@@ -298,12 +365,13 @@ public:
 
     static std::string aiPathFindingAlgorithm;
     static bool aiMoved;
-
+    //static std::vector<vec2> birdPath;
 	  void step(float elapsed_ms, vec2 window_size_in_game_units);
     void init();
     static std::vector<vec2> shortestPathBFS(vec2 start, vec2 goal, std::string animal);
     static std::vector<vec2> shortestPathAStar(vec2 start, vec2 goal, std::string animal);
     static void sortQueue(std::deque<std::vector<vec2>> &frontier, vec2 destCoord);
     static bool checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deque<std::vector<vec2>>& frontier, std::vector<vec2>& current, TileSystem::vec2Map& tileMovesMap, vec2& goal);
-    static bool birdAddNeighborNodes(std::deque<std::vector<vec2>>& frontier, std::vector<vec2>& current, vec2& goal);
+    static bool birdAddNeighborNodes(std::deque<std::vector<vec2>>& frontier, std::vector<vec2>& current, TileSystem::vec2Map& tileMovesMap, vec2& goal);
+   // static std::vector<vec2> getBirdPath() { return birdPath; }
 };
