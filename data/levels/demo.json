@@ -13,10 +13,10 @@
     "            ",
     "            ",
     "            ",
-    "            ",
+    "    N       ",
     "   XXXXXX   ",
     "   V        ",
-    "X  V        ",
+    "X  VN       ",
     "XXXXXWWWXXXX"
   ],
   "characters": {
@@ -36,5 +36,12 @@
         "y": 3
       }
     ]
-  }
+  },
+  "collectibles": [
+    {
+      "id": 0,
+      "x": 4,
+      "y": 5
+    }
+  ]
 }

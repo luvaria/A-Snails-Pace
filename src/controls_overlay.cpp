@@ -158,7 +158,7 @@ ECS::Entity ControlsOverlay::addKeyIcon(std::string name, vec2 pos)
     motion.scale = BUTTON_SCALE;
 
     // add text overlay to key
-    const auto SF_CARTOONIST_HAND_BOLD = Font::load("data/fonts/SF-Cartoonist-Hand/SF_Cartoonist_Hand_Bold.ttf");
+    const auto SF_CARTOONIST_HAND_BOLD = Font::load(SF_CARTOONIST_HAND_BOLD_PATH);
 
     ECS::registry<Text>.insert(
         entity,
@@ -178,7 +178,7 @@ ECS::Entity ControlsOverlay::addControlDesc(std::string desc, vec2 pos)
 {
     auto entity = ECS::Entity();
 
-    const auto SF_CARTOONIST_HAND = Font::load("data/fonts/SF-Cartoonist-Hand/SF_Cartoonist_Hand.ttf");
+    const auto SF_CARTOONIST_HAND = Font::load(SF_CARTOONIST_HAND_PATH);
 
     ECS::registry<Text>.insert(
         entity,

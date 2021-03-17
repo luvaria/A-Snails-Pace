@@ -16,7 +16,9 @@
 #include "ai.hpp"
 #include "debug.hpp"
 #include "menus/menus.hpp"
+#include "load_save.hpp"
 #include "parallax_background.hpp"
+#include "dialogue.hpp"
 
 using Clock = std::chrono::high_resolution_clock;
 
@@ -36,6 +38,7 @@ int main()
 	// Initialize the main systems
 	WorldSystem world(window_size_in_px);
 	MenuSystem menus(*world.window);
+	DialogueSystem dialogue(window_size_in_game_units);
 	RenderSystem renderer(*world.window);
 	PhysicsSystem physics;
 	AISystem ai;
@@ -57,6 +60,10 @@ int main()
 	// add the background system as an observer of the world system and menu system
 	world.addObserver(&bg);
 	menus.addObserver(&bg);
+	// add the dialogue system as an observer of the world system to start and navigate dialogue
+	world.addObserver(&dialogue);
+
+	LoadSaveSystem::loadPlayerFile();
 
 	while (!world.is_over())
 	{
@@ -77,10 +84,13 @@ int main()
 			world.step(elapsed_ms, window_size_in_game_units);
 			physics.step(elapsed_ms, window_size_in_game_units);
 			bg.step();
+			dialogue.step(elapsed_ms, window_size_in_game_units);
 		}
 
 		renderer.draw(window_size_in_game_units, elapsed_ms);
 	}
+
+	LoadSaveSystem::writePlayerFile();
 
 	return EXIT_SUCCESS;
 }

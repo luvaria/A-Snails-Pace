@@ -17,8 +17,8 @@ void PauseMenu::setActive()
 
 void PauseMenu::step(vec2 /*window_size_in_game_units*/)
 {
-	const auto ABEEZEE_REGULAR = Font::load("data/fonts/abeezee/ABeeZee-Regular.otf");
-	const auto ABEEZEE_ITALIC = Font::load("data/fonts/abeezee/ABeeZee-Italic.otf");
+	const auto ABEEZEE_REGULAR = Font::load(ABEEZEE_REGULAR_PATH);
+	const auto ABEEZEE_ITALIC = Font::load(ABEEZEE_ITALIC_PATH);
 
 	// update button colour based on mouseover
 	auto& buttonContainer = ECS::registry<MenuButton>;
@@ -46,7 +46,7 @@ void PauseMenu::loadEntities()
 {
 	ECS::registry<ScreenState>.components[0].darken_screen_factor = 0.2f;
 
-	const auto ABEEZEE_REGULAR = Font::load("data/fonts/abeezee/ABeeZee-Regular.otf");
+	const auto ABEEZEE_REGULAR = Font::load(ABEEZEE_REGULAR_PATH);
 
 	// paused
 	auto titleTextEntity = ECS::Entity();

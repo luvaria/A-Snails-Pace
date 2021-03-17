@@ -8,6 +8,7 @@
 #include "debug.hpp"
 #include "render.hpp"
 #include "world.hpp"
+#include "collectible.hpp"
 
 // stlib
 #include <memory>
@@ -21,6 +22,25 @@ vec2 get_bounding_box(const Motion& motion)
 {
 	// fabs is to avoid negative scale due to the facing direction.
 	return { abs(motion.scale.x), abs(motion.scale.y) };
+}
+
+//given that the entity is moving from oldPos to newPos, update any tiles occupancy status
+void UpdateTileOccupancy(vec2 oldPos, vec2 newPos)
+{
+	auto scale = TileSystem::getScale();
+	int oldPosxCoord = static_cast<int>(oldPos.x / scale); //index into the tiles array
+	int oldPosyCoord = static_cast<int>(oldPos.y / scale);
+	int newPosxCoord = static_cast<int>(newPos.x / scale);
+	int newPosyCoord = static_cast<int>(newPos.y / scale);
+	//if the tiles are the same, it didn't change tiles, so we don't do anything
+	if (oldPosxCoord != newPosxCoord || oldPosyCoord != newPosyCoord)
+	{
+		auto& tiles = TileSystem::getTiles();
+		auto& oldTile = tiles[oldPosyCoord][oldPosxCoord];
+		auto& newTile = tiles[newPosyCoord][newPosxCoord];
+		oldTile.removeOccupyingEntity();
+		newTile.addOccupyingEntity();
+	}
 }
 
 void bounceProjectileOffWall(Motion& projectileMotion, std::vector<ColoredVertex> projectileVertices, std::vector<ColoredVertex> wallVertices)
@@ -238,10 +258,10 @@ bool isProjectileAndWall(ECS::Entity entity_i, ECS::Entity entity_j)
 bool ShouldCheckCollision(ECS::Entity entity_i, ECS::Entity entity_j)
 {
 	bool isValidSnailCollision_i = ECS::registry<Snail>.has(entity_i) &&
-		(ECS::registry<Spider>.has(entity_j) || ECS::registry<WaterTile>.has(entity_j));
+		(ECS::registry<Spider>.has(entity_j) || ECS::registry<WaterTile>.has(entity_j) || ECS::registry<Collectible>.has(entity_j));
 
 	bool isValidSnailCollision_j = ECS::registry<Snail>.has(entity_j) &&
-		(ECS::registry<Spider>.has(entity_i) || ECS::registry<WaterTile>.has(entity_i));
+		(ECS::registry<Spider>.has(entity_i) || ECS::registry<WaterTile>.has(entity_i) || ECS::registry<Collectible>.has(entity_i));
 
 	bool isValidProjectileCollision_i = ECS::registry<Projectile>.has(entity_i) &&
 		(ECS::registry<Spider>.has(entity_j) || ECS::registry<WallTile>.has(entity_j));
@@ -262,6 +282,10 @@ void stepToDestination(ECS::Entity entity, float step_seconds)
         vec2 newPos = motion.position + (motion.velocity * step_seconds);
         if ((dot(motion.position - newPos, dest.position - newPos) > 0) || (dest.position == newPos))
         {
+			if (ECS::registry<Snail>.has(entity) || ECS::registry<Spider>.has(entity))
+			{
+				UpdateTileOccupancy(motion.position, dest.position);
+			}
             // overshot or perfectly hit destination
             // set velocity back to 0 stop moving
             motion.position = dest.position;
@@ -270,6 +294,10 @@ void stepToDestination(ECS::Entity entity, float step_seconds)
         }
         else
         {
+			if (ECS::registry<Snail>.has(entity) || ECS::registry<Spider>.has(entity)) 
+			{
+				UpdateTileOccupancy(motion.position, newPos);
+			}
             motion.position = newPos;
         }
     }

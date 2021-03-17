@@ -9,16 +9,18 @@
 #include <iostream>
 #include <functional>
 
-enum ButtonEventType { NO_ACTION, START_GAME, SELECT_LEVEL, LOAD_LEVEL, QUIT_GAME, NEXT_LEVEL };
+enum ButtonEventType { NO_ACTION, START_GAME, SELECT_LEVEL, LOAD_LEVEL, QUIT_GAME, NEXT_LEVEL, /*LOAD_SAVE,*/ CLEAR_COLLECT_DATA };
 
 // button tag
 struct MenuButton
 {
 	// true when mouse is hovering over
 	bool selected;
+	// true if cannot be pressed
+	bool disabled;
 	ButtonEventType event = ButtonEventType::NO_ACTION;
 
-	MenuButton(ButtonEventType e) : selected(false), event(e) {}
+	MenuButton(ButtonEventType e) : selected(false), disabled(false), event(e) {}
 };
 
 class Menu : public Subject

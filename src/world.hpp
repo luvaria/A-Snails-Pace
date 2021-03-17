@@ -82,13 +82,11 @@ private:
 	// Loads the audio
 	void init_audio();
 
-	// Number of fish eaten by the snail, displayed in the window title
-	unsigned int points;
-
 	// Game state
 	float current_speed;
 	ECS::Entity player_snail;
 	int attempts;
+	ECS::Entity encountered_npc;
 
 	//stats (for end screen)
 	int enemies_killed;
