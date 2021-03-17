@@ -17,6 +17,7 @@
 #include "controls_overlay.hpp"
 #include "observer.hpp"
 #include "subject.hpp"
+#include "particle.hpp"
 
 // stlib
 #include <cassert>
@@ -168,26 +169,62 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             + std::chrono::milliseconds{ PROJECTILE_PREVIEW_DELAY_MS };
     }
 
+    float step_seconds = 1.0f * (elapsed_ms / 1000.f);
+    
     // Processing the snail state
     assert(ECS::registry<ScreenState>.components.size() <= 1);
     auto& screen = ECS::registry<ScreenState>.components[0];
 
     for (auto entity : ECS::registry<DeathTimer>.entities)
     {
-        // Progress timer
-        auto& counter = ECS::registry<DeathTimer>.get(entity);
-        counter.counter_ms -= elapsed_ms;
+        if(ECS::registry<Snail>.has(entity)) {
+            // Progress timer
+            auto& counter = ECS::registry<DeathTimer>.get(entity);
+            counter.counter_ms -= elapsed_ms;
 
-        // Reduce window brightness if any of the present snails is dying
-        screen.darken_screen_factor = 1 - counter.counter_ms / 3000.f;
+            // Reduce window brightness if any of the present snails is dying
+            screen.darken_screen_factor = 1 - counter.counter_ms / 3000.f;
 
-		// Restart the game once the death timer expired
-		if (counter.counter_ms < 0)
-		{
-			ECS::registry<DeathTimer>.remove(entity);
-			restart(level);
-			return;
-		}
+            if(WaterTile::splashEntityID!=0) {
+                Motion& mot = ECS::registry<Motion>.get(entity);
+                auto mesh_ptr = ECS::registry<ShadedMeshRef>.get(entity).reference_to_cache;
+                float vol = mesh_ptr->mesh.original_size.x * mesh_ptr->mesh.original_size.x * ((mesh_ptr->mesh.original_size.x+mesh_ptr->mesh.original_size.y)/4);
+                float snailDensity = 0.23;
+                float mass = snailDensity * vol;
+                float drownedDist = ((vol - mass) * 9.81)*step_seconds;
+                mot.position.y += drownedDist;
+            }
+            // Restart the game once the death timer expired
+            if (counter.counter_ms < 0)
+            {
+                ECS::registry<DeathTimer>.remove(entity);
+                for (auto& entity : ECS::registry<WaterTile>.entities)
+                {
+                    if(WaterTile::splashEntityID!=entity.id) {
+                        ECS::ContainerInterface::remove_all_components_of(entity);
+                        ECS::registry<WaterTile>.remove(entity);
+                    }
+                }
+                WaterTile::splashEntityID = 0;
+                restart(level);
+                return;
+            }
+        } else if (ECS::registry<Particle>.has(entity) || ECS::registry<Spider>.has(entity)){
+            auto& motion = ECS::registry<Motion>.get(entity);
+            motion.scale *= (ECS::registry<WeatherParticle>.has(entity)) ? (1-(step_seconds/8)) : (1+(step_seconds/3));
+            motion.angle *= (ECS::registry<WeatherParticle>.has(entity)) ? (1+(step_seconds)) : 1;
+
+            auto& counter = ECS::registry<DeathTimer>.get(entity);
+            counter.counter_ms -= elapsed_ms;
+            if (counter.counter_ms < 0)
+            {
+                if(ECS::registry<WeatherParticle>.has(entity) && motion.position.y > (window_size_in_game_units.y+100)) {
+                    ECS::ContainerInterface::remove_all_components_of(entity);
+                } else {
+                    ECS::ContainerInterface::remove_all_components_of(entity);
+                }
+            }
+        }
 	}
 
     TurnType& turnType = ECS::registry<Turn>.components[0].type;
@@ -339,6 +376,9 @@ void WorldSystem::onNotify(Event event) {
                 // Checking Projectile - Spider collisions
                 if (ECS::registry<Spider>.has(event.other_entity))
                 {
+                    auto motion = ECS::registry<Motion>.get(event.other_entity);
+                    ECS::Entity expoldingSpider;
+                    Spider::createExplodingSpider(motion, expoldingSpider);
                     //remove both the spider and the projectile
                     ECS::ContainerInterface::remove_all_components_of(event.entity);
                     ECS::ContainerInterface::remove_all_components_of(event.other_entity);
@@ -358,6 +398,10 @@ void WorldSystem::onNotify(Event event) {
         level = event.level;
 
         restart(level);
+    } else if (event.type == Event::SPLASH) {
+        if((event.entity.id != WaterTile::splashEntityID) && (ECS::registry<WaterTile>.has(event.entity))) {
+            WaterTile::onNotify(Event::SPLASH, event.entity);
+        }
     }
 }
 
@@ -500,7 +544,21 @@ void WorldSystem::goLeft(ECS::Entity &entity, int &moves) {
         nextTile = tiles[abs(motion.angle) == PI ? (yCoord - 1) : (yCoord + 1)][xCoord - 1];
         Tile sideTile = tiles[abs(motion.angle) == PI ? (yCoord - 1) : (yCoord + 1)][(xCoord)];
         if (!(nextTile.type == WALL || leftTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
-            return;
+            motion.angle = motion.angle == 0 ? PI : 0;
+            motion.scale.x = -1*motion.scale.x;
+            yCord = (motion.angle == -PI / 2 ? yCoord + 1 : yCoord - 1);
+            if ((yCord < 0 && yCord > tiles.size() - 1) || (xCoord - 1 < 0)) {
+                motion.angle = motion.angle == 0 ? PI : 0;
+                motion.scale.x = -1*motion.scale.x;
+                return;
+            }
+            nextTile = tiles[abs(motion.angle) == PI ? (yCoord - 1) : (yCoord + 1)][xCoord - 1];
+            Tile sideTile = tiles[abs(motion.angle) == PI ? (yCoord - 1) : (yCoord + 1)][(xCoord)];
+            if (!(nextTile.type == WALL || leftTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
+                motion.angle = motion.angle == 0 ? PI : 0;
+                motion.scale.x = -1*motion.scale.x;
+                return;
+            }
         }
         nextTile = nextTile.type == WALL || leftTile.type == VINE ? leftTile : nextTile;
         changeDirection(motion, currTile, nextTile, DIRECTION_WEST, entity);
@@ -522,6 +580,12 @@ void WorldSystem::goLeft(ECS::Entity &entity, int &moves) {
         motion.scale.x = motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : motion.scale.x;
         motion.angle = motion.lastDirection == DIRECTION_SOUTH ? PI : 0;
         motion.lastDirection = DIRECTION_WEST;
+    }else if (abs(motion.angle) == PI / 2 && currTile.type == VINE) {
+        motion.scale = { motion.scale.y, motion.scale.x };
+        motion.scale.x = motion.angle == -PI / 2 ? motion.lastDirection == DIRECTION_NORTH ? -motion.scale.x : motion.scale.x
+            : motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : -motion.scale.x;
+        motion.lastDirection = DIRECTION_WEST;
+        motion.angle = 0;
     }
     
     if(currTile.x != nextTile.x || currTile.y != nextTile.y) {
@@ -562,7 +626,21 @@ void WorldSystem::goRight(ECS::Entity& entity, int& moves) {
         nextTile = tiles[abs(motion.angle) == PI ? (yCoord - 1) : (yCoord + 1)][xCoord + 1];
         Tile sideTile = tiles[abs(motion.angle) == PI ? (yCoord - 1) : (yCoord + 1)][(xCoord)];
         if (!(nextTile.type == WALL || rightTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
-            return;
+            motion.angle = motion.angle == 0 ? PI : 0;
+            motion.scale.x = -1*motion.scale.x;
+            yCord = abs(motion.angle) == PI ? (yCoord - 1) : (yCoord + 1);
+            if ((yCord < 0 && yCord > tiles.size() - 1) || (xCoord + 1 > tiles[yCord].size() - 1)) {
+                motion.angle = motion.angle == 0 ? PI : 0;
+                motion.scale.x = -1*motion.scale.x;
+                return;
+            }
+            nextTile = tiles[abs(motion.angle) == PI ? (yCoord - 1) : (yCoord + 1)][xCoord + 1];
+            Tile sideTile = tiles[abs(motion.angle) == PI ? (yCoord - 1) : (yCoord + 1)][(xCoord)];
+            if (!(nextTile.type == WALL || rightTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
+                motion.angle = motion.angle == 0 ? PI : 0;
+                motion.scale.x = -1*motion.scale.x;
+                return;
+            }
         }
         nextTile = nextTile.type == WALL || rightTile.type == VINE ? rightTile : nextTile;
         changeDirection(motion, currTile, nextTile, DIRECTION_EAST, entity);
@@ -584,6 +662,12 @@ void WorldSystem::goRight(ECS::Entity& entity, int& moves) {
         motion.scale.x = motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : motion.scale.x;
         motion.angle = motion.lastDirection == DIRECTION_NORTH ? PI : 0;
         motion.lastDirection = DIRECTION_EAST;
+    } else if (abs(motion.angle) == PI / 2 && currTile.type == VINE) {
+        motion.scale = { motion.scale.y, motion.scale.x };
+        motion.scale.x = motion.angle == -PI / 2 ? motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : -motion.scale.x
+            : motion.lastDirection == DIRECTION_NORTH ? -motion.scale.x : motion.scale.x;
+        motion.lastDirection = DIRECTION_EAST;
+        motion.angle = 0;
     }
     
     if(currTile.x != nextTile.x || currTile.y != nextTile.y) {
@@ -631,10 +715,24 @@ void WorldSystem::goUp(ECS::Entity& entity, int& moves) {
         if (xCord > tiles[(yCoord - 1)].size() - 1) {
             return;
         }
-        nextTile = tiles[(yCoord-1)][motion.angle == -PI/2 ? xCoord+1 : xCoord-1];
-        Tile sideTile = tiles[(yCoord)][motion.angle == -PI/2 ? xCoord+1 : xCoord-1];
+        nextTile = tiles[(yCoord-1)][xCord];
+        Tile sideTile = tiles[(yCoord)][xCord];
         if(!(nextTile.type == WALL || upTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
-            return;
+            motion.angle = -1*motion.angle;
+            motion.scale.y = -1*motion.scale.y;
+            xCord = (motion.angle == -PI / 2 ? xCoord + 1 : xCoord - 1);
+            if (xCord > tiles[(yCoord - 1)].size() - 1) {
+                motion.angle = -1*motion.angle;
+                motion.scale.y = -1*motion.scale.y;
+                return;
+            }
+            nextTile = tiles[(yCoord-1)][xCord];
+            Tile sideTile = tiles[(yCoord)][xCord];
+            if (!(nextTile.type == WALL || upTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
+                motion.angle = -1*motion.angle;
+                motion.scale.y = -1*motion.scale.y;
+                return;
+            }
         }
         nextTile = nextTile.type == WALL || upTile.type == VINE ? upTile : nextTile;
         changeDirection(motion, currTile, nextTile, DIRECTION_NORTH, entity);
@@ -669,10 +767,6 @@ void WorldSystem::goDown(ECS::Entity& entity, int& moves) {
             motion.angle = motion.lastDirection == DIRECTION_WEST ? PI / 2 : -PI / 2;
             motion.lastDirection = DIRECTION_SOUTH;
         }
-    } else if (currTile.type == VINE && abs(motion.angle) == PI) {
-        motion.scale = { motion.scale.y, motion.scale.x };
-        motion.angle = motion.lastDirection == DIRECTION_EAST ? PI/2 : -PI/2;
-        motion.lastDirection = DIRECTION_NORTH;
     } else if (upTile.type == WALL) {
         nextTile = tiles[yCoord][xCoord];
         if (motion.angle != 0 && abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
@@ -697,10 +791,24 @@ void WorldSystem::goDown(ECS::Entity& entity, int& moves) {
         if (xCord > tiles[(yCoord + 1)].size() - 1) {
             return;
         }
-        nextTile = tiles[(yCoord + 1)][motion.angle == -PI / 2 ? xCoord + 1 : xCoord - 1];
-        Tile sideTile = tiles[(yCoord)][motion.angle == -PI / 2 ? xCoord + 1 : xCoord - 1];
+        nextTile = tiles[(yCoord + 1)][xCord];
+        Tile sideTile = tiles[(yCoord)][xCord];
         if (!(nextTile.type == WALL || upTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
-            return;
+            motion.angle = -1*motion.angle;
+            motion.scale.y = -1*motion.scale.y;
+            xCord = (motion.angle == -PI / 2 ? xCoord + 1 : xCoord - 1);
+            if (xCord > tiles[(yCoord + 1)].size() - 1) {
+                motion.angle = -1*motion.angle;
+                motion.scale.y = -1*motion.scale.y;
+                return;
+            }
+            nextTile = tiles[(yCoord + 1)][xCord];
+            Tile sideTile = tiles[(yCoord)][xCord];
+            if (!(nextTile.type == WALL || upTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
+                motion.angle = -1*motion.angle;
+                motion.scale.y = -1*motion.scale.y;
+                return;
+            }
         }
         nextTile = nextTile.type == WALL || upTile.type == VINE ? upTile : nextTile;
         changeDirection(motion, currTile, nextTile, DIRECTION_SOUTH, entity);

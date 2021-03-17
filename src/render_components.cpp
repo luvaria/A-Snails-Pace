@@ -113,36 +113,73 @@ bool Texture::is_valid() const
 
 void Effect::load_from_file(std::string vs_path, std::string fs_path)
 {
+    if (vs_path.find("exploding") != std::string::npos) {
+        load_from_file(vs_path, fs_path, shader_path("exploding") + ".gs.glsl", true);
+    }
+    else {
+        load_from_file(vs_path, fs_path, "", false);
+    }
+}
+
+void Effect::load_from_file(std::string vs_path, std::string fs_path, std::string gs_path)
+{
+    load_from_file(vs_path, fs_path, gs_path, true);
+}
+
+void Effect::load_from_file(std::string vs_path, std::string fs_path, std::string gs_path, bool withGeo)
+{
 	// Opening files
 	std::ifstream vs_is(vs_path);
 	std::ifstream fs_is(fs_path);
-	if (!vs_is.good() || !fs_is.good())
-		throw("Failed to load shader files " + vs_path +", "+ fs_path);
+    std::ifstream gs_is(gs_path);
+	if (!vs_is.good() || !fs_is.good() || (withGeo && !gs_is.good()))
+		throw("Failed to load shader files " + vs_path +", "+ fs_path+", "+ gs_path);
 
 	// Reading sources
-	std::stringstream vs_ss, fs_ss;
+	std::stringstream vs_ss, fs_ss, gs_ss;
 	vs_ss << vs_is.rdbuf();
 	fs_ss << fs_is.rdbuf();
+    if(withGeo)
+        gs_ss << gs_is.rdbuf();
 	std::string vs_str = vs_ss.str();
 	std::string fs_str = fs_ss.str();
+    std::string gs_str;
+    if(withGeo)
+        gs_str = gs_ss.str();
 	const char* vs_src = vs_str.c_str();
 	const char* fs_src = fs_str.c_str();
+    const char* gs_src;
+    if(withGeo)
+        gs_src = gs_str.c_str();
 	GLsizei vs_len = (GLsizei)vs_str.size();
 	GLsizei fs_len = (GLsizei)fs_str.size();
+    GLsizei gs_len;
+    if(withGeo)
+        gs_len = (GLsizei)gs_str.size();
 
 	vertex = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertex, 1, &vs_src, &vs_len);
+    if(withGeo) {
+        geometry = glCreateShader(GL_GEOMETRY_SHADER);
+        glShaderSource(geometry, 1, &gs_src, &gs_len);
+    }
 	fragment = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fragment, 1, &fs_src, &fs_len);
-
+    
 	// Compiling
 	gl_compile_shader(vertex);
+    if(withGeo)
+        gl_compile_shader(geometry);
 	gl_compile_shader(fragment);
 
 	// Linking
 	program = glCreateProgram();
-	glAttachShader(program, vertex);
-	glAttachShader(program, fragment);
+    glAttachShader(program, vertex);
+    if(withGeo)
+        glAttachShader(program, geometry);
+    glAttachShader(program, fragment);
+    
+    
 	glLinkProgram(program);
 	{
 		GLint is_linked = 0;
