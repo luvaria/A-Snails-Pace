@@ -44,7 +44,8 @@ struct Text {
      * bottom edge of the screen, but some character with overhanging
      * features (such a 'g', 'j', 'q', etc) may appear cut off.
      */
-    Text(std::string content, std::shared_ptr<Font> font, glm::vec2 position, float scale = 1.0f, glm::vec3 colour = {0.0f, 0.0f, 0.0f}) noexcept;
+    Text(std::string content, std::shared_ptr<Font> font, glm::vec2 position, float scale = 1.0f,
+         glm::vec3 colour = {0.0f, 0.0f, 0.0f}, float alpha = 1.f) noexcept;
 
     /**
      * Construct a Text object from a string, path to a TTF file, and a position.
@@ -53,7 +54,8 @@ struct Text {
      * 
      * See documentation for the constructor taking shared_ptr<Font>.
      */
-    Text(std::string content, const std::string& pathToTTF, glm::vec2 position, float scale = 1.0f, glm::vec3 colour = {0.0f, 0.0f, 0.0f}) noexcept;
+    Text(std::string content, const std::string& pathToTTF, glm::vec2 position, float scale = 1.0f,
+         glm::vec3 colour = {0.0f, 0.0f, 0.0f}, float alpha = 1.f) noexcept;
 
     // The contents of the Text object, as a ASCII- or UTF-8-encoded string
     std::string content;
@@ -71,6 +73,9 @@ struct Text {
 
     // The text's colour. Default value of {0.0f, 0.0f, 0.0f} (black)
     glm::vec3 colour;
+
+    // The text colour alpha value. Default value of 1.f (opaque)
+    float alpha;
 };
 
 // Forward declaration, only for internal use.
@@ -165,3 +170,4 @@ const float OPTION_SCALE = 0.65f;
 const float OVERLAY_SCALE = 0.55f;
 const float DIALOGUE_SCALE = 0.5f;
 const float LEVEL_NAME_SCALE = 0.45f;
+const float SUB_OPTION_SCALE = 0.35f;

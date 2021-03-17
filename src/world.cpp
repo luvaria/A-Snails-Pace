@@ -18,6 +18,7 @@
 #include "parallax_background.hpp"
 #include "observer.hpp"
 #include "subject.hpp"
+#include "collectible.hpp"
 
 // stlib
 #include <cassert>
@@ -34,7 +35,6 @@ int level = 0;
 // Note, this has a lot of OpenGL specific things, could be moved to the renderer; but it also defines the callbacks to the mouse and keyboard. That is why it is called here.
 WorldSystem::WorldSystem(ivec2 window_size_px) :
     running(false),
-    points(0),
     attempts(-1),
     left_mouse_pressed(false),
     snail_move(1), // this might be something we want to load in
@@ -331,6 +331,18 @@ void WorldSystem::onNotify(Event event) {
                     ECS::registry<DeathTimer>.emplace(event.entity);
                     Mix_PlayChannel(-1, salmon_dead_sound, 0);
                 }
+            }
+            else if (ECS::registry<Collectible>.has(event.other_entity))
+            {
+                if (ECS::registry<Inventory>.size() == 0)
+                {
+                    ECS::Entity entity;
+                    ECS::registry<Inventory>.emplace(entity);
+                }
+                int const id = ECS::registry<Collectible>.get(event.other_entity).id;
+                ECS::registry<Inventory>.components[0].collectibles.insert(id);
+                // Remove the collectible from the map
+                ECS::ContainerInterface::remove_all_components_of(event.other_entity);
             }
         }
 

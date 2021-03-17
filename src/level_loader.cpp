@@ -3,6 +3,7 @@
 #include "snail.hpp"
 #include "spider.hpp"
 #include "ai.hpp"
+#include "collectible.hpp"
 #include "tiles/vine.hpp"
 #include "tiles/water.hpp"
 #include "tiles/wall.hpp"
@@ -159,9 +160,16 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 		}
 	}
 
-	// no moves map if preview
+	// no moves map or collectibles if preview
 	if (preview)
 		return;
+
+    for (auto& collectible : level["collectibles"])
+    {
+        int id = collectible["id"];
+        Tile& tile = tiles[collectible["y"]][collectible["x"]];
+        Collectible::createCollectible({ tile.x, tile.y }, id);
+    }
 
 	TileSystem::vec2Map& tileMovesMap = TileSystem::getAllTileMovesMap();
 	int y = 0;

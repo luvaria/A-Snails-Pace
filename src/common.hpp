@@ -4,6 +4,8 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <unordered_set>
+#include <unordered_map>
 #include <stdexcept>
 
 // glfw (OpenGL)
@@ -26,6 +28,7 @@ inline std::string textures_path(const std::string& name) { return data_path() +
 inline std::string audio_path(const std::string& name) { return data_path() + "/audio/" + name; };
 inline std::string mesh_path(const std::string& name) { return data_path() + "/meshes/" + name; };
 inline std::string levels_path(const std::string& name) { return data_path() + "/levels/" + name; };
+inline std::string save_path(const std::string& name) { return data_path() + "/saves/" + name; };
 inline std::string backgrounds_path(const std::string& name) { return data_path() + "/backgrounds/" + name; };
 
 // The 'Transform' component handles transformations passed to the Vertex shader
@@ -47,6 +50,11 @@ struct Transform {
 
 // for use with levels_path(): use indices, starting from 0
 const std::vector<std::string> levels = { "demo.json", "demo-2.json", "level-1.json" };
+
+const std::unordered_map<int, std::string> collectibleMap =
+{
+    {0, "spider"},
+};
 
 // All data relevant to the shape and motion of entities
 struct Motion {
@@ -81,6 +89,12 @@ enum TurnType { PLAYER_WAITING, PLAYER_UPDATE, ENEMY, CAMERA };
 struct Turn
 {
     TurnType type;
+};
+
+typedef int CollectId;
+struct Inventory
+{
+    std::unordered_set<CollectId> collectibles;
 };
 
 // direction a level scrolls in

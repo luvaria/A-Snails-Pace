@@ -53,7 +53,7 @@ struct AI {
 class BTSequence : public BTNode {
 public:
     BTSequence(std::vector<std::shared_ptr<BTNode>> children)
-        : m_children(std::move(children)), m_index(0) {
+        : m_index(0), m_children(std::move(children)) {
 
     }
 
@@ -79,7 +79,7 @@ private:
 
         // select a new active child and initialize its internal state
         if (state == BTState::Success) {
-            std::cout << m_index << std::endl;
+            //std::cout << m_index << std::endl;
             ++m_index;
             if (m_index >= m_children.size()) {
                 return BTState::Success;
