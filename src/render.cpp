@@ -1,6 +1,10 @@
 // internal
+#include "render_components.hpp"
+#include "tiny_ecs.hpp"
+#include "spider.hpp"
+#include "snail.hpp"
+#include "particle.hpp"
 #include "render.hpp"
-
 #include "text.hpp"
 
 #include <iostream>
@@ -56,7 +60,25 @@ void RenderSystem::drawTexturedMesh(ECS::Entity entity, const mat3& projection, 
 	GLint transform_uloc = glGetUniformLocation(texmesh.effect.program, "transform");
 	GLint projection_uloc = glGetUniformLocation(texmesh.effect.program, "projection");
 	gl_has_errors();
+    GLint time = glGetUniformLocation(texmesh.effect.program, "time");
+    glUniform1f(time, static_cast<float>(glfwGetTime()));
+    if(ECS::registry<Spider>.has(entity) && ECS::registry<DeathTimer>.has(entity) && texmesh.effect.geometry.resource!=0) {
+        DeathTimer& dt = ECS::registry<DeathTimer>.get(entity);
+        glUniform1f(time, static_cast<float>(10*Particle::timer - dt.counter_ms));
+        float step_seconds = 1.0f * (elapsed_ms / 1000.f);
+        GLint stepSeconds = glGetUniformLocation(texmesh.effect.program, "step_seconds");
+        glUniform1f(stepSeconds, static_cast<float>(step_seconds));
 
+        GLint centerPointX = glGetUniformLocation(texmesh.effect.program, "centerPointX");
+        glUniform1f(centerPointX, static_cast<float>(motion.position.x ));
+        GLint centerPointY = glGetUniformLocation(texmesh.effect.program, "centerPointY");
+        glUniform1f(centerPointY, static_cast<float>(motion.position.y ));
+    }
+   
+//    GLuint time_uloc       = glGetUniformLocation(screen_sprite.effect.program, "time");
+//    glUniform1f(time_uloc, static_cast<float>(glfwGetTime() * 10.0f));
+    gl_has_errors();
+    
 	// Setting vertex and index buffers
 	glBindBuffer(GL_ARRAY_BUFFER, texmesh.mesh.vbo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, texmesh.mesh.ibo);

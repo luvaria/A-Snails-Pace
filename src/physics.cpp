@@ -9,6 +9,7 @@
 #include "render.hpp"
 #include "world.hpp"
 #include "collectible.hpp"
+#include "particle.hpp"
 
 // stlib
 #include <memory>
@@ -255,6 +256,9 @@ bool ShouldCheckCollision(ECS::Entity entity_i, ECS::Entity entity_j)
 
 void stepToDestination(ECS::Entity entity, float step_seconds)
 {
+    
+    auto& motion = ECS::registry<Motion>.get(entity);
+    vec2 oldPosition = motion.position;
     auto& destReg = ECS::registry<Destination>;
     if (destReg.has(entity))
     {
@@ -274,16 +278,59 @@ void stepToDestination(ECS::Entity entity, float step_seconds)
             motion.position = newPos;
         }
     }
+    if(ECS::registry<Snail>.has(entity)) {
+        motion = ECS::registry<Motion>.get(entity);
+        for (auto entity : ECS::registry<BlurParticle>.entities)
+        {
+            vec2 velocity = motion.position - oldPosition;
+            auto& motion2 = ECS::registry<Motion>.get(entity);
+            float gravityEffect = 1.6;
+//            motion.velocity += gravityEffect * velocity;
+            motion2.position += (velocity + motion2.velocity);
+            float scaleFactor = 0.99;
+            motion2.scale *= scaleFactor;
+            motion2.angle = motion.angle;
+            motion2.lastDirection = motion.lastDirection;
+        }
+    }
 }
 
 void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 {
     (void)window_size_in_game_units;
+    float step_seconds = 1.0f * (elapsed_ms / 1000.f);
+    WeatherParticle::nextSpawn -= elapsed_ms;
+    ECS::Entity newSnowflakeParticle;
+    if (ECS::registry<WeatherParticle>.components.size() <= WeatherParticle::count && WeatherParticle::nextSpawn < 0.f)
+    {
+        Particle::createWeatherParticle("snowflake", newSnowflakeParticle);
+        WeatherParticle::nextSpawn = uniform_dist(rng);
+    }
+    for (auto entity : ECS::registry<WeatherParticle>.entities)
+    {
+        auto& motion = ECS::registry<Motion>.get(entity);
+        DeathTimer dt = ECS::registry<DeathTimer>.get(entity);
+        int phaseTime = WeatherParticle::timer/3;
+        if(!(ECS::registry<RejectedStage3>.has(entity)) && (dt.counter_ms <= WeatherParticle::timer-(2*phaseTime)) ) {
+            if(randomBool()){
+                Particle::setP3Motion(motion);
+            } else {
+                ECS::registry<RejectedStage3>.emplace(entity);
+            }
+        } else if(!(ECS::registry<RejectedStage2>.has(entity)) && (dt.counter_ms <= WeatherParticle::timer-(phaseTime))) {
+            if(randomBool()){
+                Particle::setP2Motion(motion);
+            } else {
+                ECS::registry<RejectedStage2>.emplace(entity);
+            }
+        }
+        vec2 velocity = motion.velocity;
+        motion.position += velocity * step_seconds;
+    }
 
+    
     // Move entities based on how much time has passed, this is to (partially) avoid
 	// having entities move at different speed based on the machine.
-
-	float step_seconds = 1.0f * (elapsed_ms / 1000.f);
 
     TurnType& turnType = ECS::registry<Turn>.components[0].type;
     if (turnType == PLAYER_WAITING)
@@ -301,6 +348,9 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     {
         auto& snailEntity = ECS::registry<Snail>.entities[0];
 	    stepToDestination(snailEntity, step_seconds);
+        ECS::Entity entity;
+        auto& snailMotion = ECS::registry<Motion>.get(snailEntity);
+        Particle::createParticle(snailMotion, entity);
     }
 	else if (turnType == ENEMY)
     {
@@ -366,14 +416,22 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 		{
 			Motion& motion_j = motion_container.components[j];
 			ECS::Entity entity_j = motion_container.entities[j];
-			if (ShouldCheckCollision(entity_i, entity_j))
+			if (!ECS::registry<DeathTimer>.has(entity_i) && !ECS::registry<DeathTimer>.has(entity_j) && ShouldCheckCollision(entity_i, entity_j))
 			{
 				bool doPenetrationFree = isProjectileAndWall(entity_i, entity_j);
 				if (collides(entity_i, entity_j, motion_i, motion_j, doPenetrationFree))
 				{
-					//notify both entities of collision
-					notify(Event(Event::COLLISION, entity_i, entity_j));
-					notify(Event(Event::COLLISION, entity_j, entity_i));
+                    if((entity_i.id != WaterTile::splashEntityID && entity_j.id != WaterTile::splashEntityID) && (ECS::registry<WaterTile>.has(entity_i) || ECS::registry<WaterTile>.has(entity_j))) {
+                        ECS::Entity e = ECS::registry<WaterTile>.has(entity_i) ? entity_i : entity_j;
+                        notify(Event(Event::SPLASH, e));
+                    } else {
+                        notify(Event(Event::COLLISION, entity_i, entity_j));
+                        notify(Event(Event::COLLISION, entity_j, entity_i));
+                        //notify both entities of collision
+                        notify(Event(Event::COLLISION, entity_i, entity_j));
+                        notify(Event(Event::COLLISION, entity_j, entity_i));
+                    }
+                    
 				}
 			}
 		}
