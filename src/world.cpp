@@ -355,6 +355,14 @@ void WorldSystem::onNotify(Event event) {
                 // Checking Projectile - Spider collisions
                 if (ECS::registry<Spider>.has(event.other_entity))
                 {
+                    // tile no longer occupied by spider
+                    float scale = TileSystem::getScale();
+                    auto& motion = ECS::registry<Motion>.get(event.other_entity);
+                    int xCoord = static_cast<int>(motion.position.x / scale);
+                    int yCoord = static_cast<int>(motion.position.y / scale);
+                    Tile& t = TileSystem::getTiles()[yCoord][xCoord];
+                    t.removeOccupyingEntity();
+
                     // Remove the spider but not the projectile
                     ECS::ContainerInterface::remove_all_components_of(event.other_entity);
                 }
@@ -472,11 +480,6 @@ void WorldSystem::changeDirection(Motion& motion, Tile& currTile, Tile& nextTile
 
     Destination& dest = ECS::registry<Destination>.has(entity) ? ECS::registry<Destination>.get(entity) : ECS::registry<Destination>.emplace(entity);
     dest.position = { nextTile.x, nextTile.y };
-    if (nextTile.x != currTile.x || nextTile.y != currTile.y) 
-    {
-        currTile.setOccupied(false);
-        nextTile.setOccupied(true);
-    }
     // give velocity to reach destination in set time
     // this velocity will be set to 0 once destination is reached in physics.cpp
     motion.velocity = (dest.position - motion.position)/k_move_seconds;
