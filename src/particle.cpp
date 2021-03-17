@@ -58,7 +58,7 @@ ECS::Entity Particle::createWeatherParticle(std::string particleName, ECS::Entit
         RenderSystem::createSprite(resource, textures_path(key + ".png"), "textured", false);
     }
         // Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
-    ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::BACKGROUND_2);
+    ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::BACKGROUND);
 
 //    resource.texture.alpha = 0.6f;
     // Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
