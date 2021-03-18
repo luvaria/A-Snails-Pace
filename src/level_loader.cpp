@@ -1,6 +1,7 @@
 // Header
 #include "level_loader.hpp"
 #include "snail.hpp"
+#include "npc.hpp"
 #include "spider.hpp"
 #include "bird.hpp"
 #include "ai.hpp"
@@ -26,6 +27,8 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 {
 	std::ifstream i(levels_path(levels[levelIndex]));
 	json level = json::parse(i);
+
+	std::string levelName = level["name"];
 
 	AISystem::aiPathFindingAlgorithm = level["AI-PathFinding-Algorithm"];
 
@@ -113,6 +116,11 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 				tile.type = VINE;
 				VineTile::createVineTile(tile, entity);
 				break;
+			case 'N':
+				tile.type = INACCESSIBLE;
+				tile.addOccupyingEntity();
+				NPC::createNPC(tile, levelName, entity);
+				break;
 			default:
 				tile.type = EMPTY;
 				break;
@@ -140,7 +148,7 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 					continue;
 				Tile& tile = tiles[snail["y"]][snail["x"]];
 				// may not want this for snail location depending on enemy type and AI
-				tile.setOccupied(true);
+				tile.addOccupyingEntity();
 				Snail::createSnail({ tile.x, tile.y }, createTaggedEntity(preview));
 			}
 			break;
@@ -151,7 +159,7 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 				if (preview && (xNotInPreviewArea(spiderPos.x, previewOrigin) || yNotInPreviewArea(spiderPos.y, previewOrigin)))
 					continue;
 				Tile& tile = tiles[spider["y"]][spider["x"]];
-				tile.setOccupied(true);
+				tile.addOccupyingEntity();
 				Spider::createSpider({ tile.x, tile.y }, createTaggedEntity(preview));
 			}
 			break;
