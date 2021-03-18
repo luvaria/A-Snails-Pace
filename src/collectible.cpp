@@ -18,7 +18,7 @@ ECS::Entity Collectible::createCollectible(vec2 position, int id)
     if (resource.mesh.vertices.size() == 0)
     {
         resource.mesh.loadFromOBJFile(mesh_path(name +".obj"));
-        RenderSystem::createColoredMesh(resource, name);
+        RenderSystem::createColoredMesh(resource, "colored_mesh");
     }
 
     std::string key_min = "min" + name;
@@ -40,7 +40,7 @@ ECS::Entity Collectible::createCollectible(vec2 position, int id)
     motion.velocity = { 0.f, 0.f };
     motion.scale = resource.mesh.original_size / resource.mesh.original_size.x * TileSystem::getScale();
     motion.scale.y *= -1; // fix orientation
-    motion.scale *= 0.5f;
+    motion.scale *= 0.8f;
     motion.lastDirection = DIRECTION_EAST;
 
     // Create a Collectible component
