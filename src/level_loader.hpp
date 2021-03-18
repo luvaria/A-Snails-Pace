@@ -20,7 +20,7 @@ private:
 	enum string_code {
 		eSnail,
 		eSpider,
-		eBird
+		eSlug
 	};
 	static string_code hashit(std::string const& inString);
 

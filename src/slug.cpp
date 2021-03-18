@@ -1,28 +1,28 @@
 // Header
-#include "bird.hpp"
+#include "slug.hpp"
 #include "render.hpp"
 #include "ai.hpp"
 #include "tiles/tiles.hpp"
 
-ECS::Entity Bird::createBird(vec2 position, ECS::Entity entity)
+ECS::Entity Slug::createSlug(vec2 position, ECS::Entity entity)
 {
 	// Create rendering primitives
-	std::string key = "bird";
+	std::string key = "slug";
 	ShadedMesh& resource = cache_resource(key);
 	if (resource.mesh.vertices.size() == 0)
 	{
-		resource.mesh.loadFromOBJFile(mesh_path("bird.obj"));
-		RenderSystem::createColoredMesh(resource, "bird");
+		resource.mesh.loadFromOBJFile(mesh_path("slug.obj"));
+		RenderSystem::createColoredMesh(resource, "slug");
 	}
 
-	
-	std::string key_min = "minBird";
+
+	std::string key_min = "minSlug";
 	ShadedMesh& resource_min = cache_resource(key_min);
 	if (resource_min.mesh.vertices.size() == 0)
 	{
-		resource_min.mesh.loadFromMinOBJFile(mesh_path("minbird.obj"));
+		resource_min.mesh.loadFromMinOBJFile(mesh_path("slug-min.obj"));
 	}
-	
+
 	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
 	//we use the same entity for min and regular meshes, so you can access either one.
 	ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::CHARACTER);
@@ -36,10 +36,10 @@ ECS::Entity Bird::createBird(vec2 position, ECS::Entity entity)
 	motion.scale = resource.mesh.original_size / resource.mesh.original_size.x * TileSystem::getScale();
 	motion.scale.y *= -1; // fix orientation
 	motion.scale *= 0.9f;
-	motion.lastDirection = DIRECTION_WEST;
+	motion.lastDirection = DIRECTION_EAST;
 
 	ECS::registry<AI>.emplace(entity);
-	ECS::registry<Bird>.emplace(entity);
+	ECS::registry<Slug>.emplace(entity);
 
 	// Adding Behaviour Tree to Bird
 

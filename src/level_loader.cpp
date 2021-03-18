@@ -4,6 +4,7 @@
 #include "npc.hpp"
 #include "spider.hpp"
 #include "bird.hpp"
+#include "slug.hpp"
 #include "ai.hpp"
 #include "collectible.hpp"
 #include "tiles/vine.hpp"
@@ -163,16 +164,16 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 				Spider::createSpider({ tile.x, tile.y }, createTaggedEntity(preview));
 			}
 			break;
-			// added this for bird
-		case eBird:
-			for (auto& bird : it.value())
+			// added this for slug
+		case eSlug:
+			for (auto& slug : it.value())
 			{
-				ivec2 birdPos = { bird["x"], bird["y"] };
-				if (preview && (xNotInPreviewArea(birdPos.x, previewOrigin) || yNotInPreviewArea(birdPos.y, previewOrigin)))
+				ivec2 slugPos = { slug["x"], slug["y"] };
+				if (preview && (xNotInPreviewArea(slugPos.x, previewOrigin) || yNotInPreviewArea(slugPos.y, previewOrigin)))
 					continue;
-				Tile& tile = tiles[bird["y"]][bird["x"]];
+				Tile& tile = tiles[slug["y"]][slug["x"]];
 				tile.addOccupyingEntity();
-				Bird::createBird({ tile.x, tile.y }, createTaggedEntity(preview));
+				Slug::createSlug({ tile.x, tile.y }, createTaggedEntity(preview));
 			}
 			break;
 		default:
@@ -238,7 +239,7 @@ void LevelLoader::previewLevel(int levelIndex, vec2 offset)
 LevelLoader::string_code LevelLoader::hashit(std::string const& inString) {
 	if (inString == "snail") return eSnail;
 	if (inString == "spider") return eSpider;
-	if (inString == "bird") return eBird;
+	if (inString == "slug") return eSlug;
 	throw std::runtime_error("No hash found for " + inString);
 }
 

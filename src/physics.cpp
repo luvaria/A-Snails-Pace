@@ -13,6 +13,7 @@
 // stlib
 #include <memory>
 #include <snail.hpp>
+#include <slug.hpp>
 #include <spider.hpp>
 #include <bird.hpp>
 #include <iostream>
@@ -282,19 +283,19 @@ bool ShouldCheckCollision(ECS::Entity entity_i, ECS::Entity entity_j)
 {
 	bool isValidSnailCollision_i = ECS::registry<Snail>.has(entity_i) &&
 		(ECS::registry<Spider>.has(entity_j) || ECS::registry<WaterTile>.has(entity_j) ||
-			ECS::registry<Bird>.has(entity_j) || ECS::registry<Collectible>.has(entity_j) || ECS::registry<SlugProjectile>.has(entity_j));
+			ECS::registry<Slug>.has(entity_j) || ECS::registry<Collectible>.has(entity_j) || ECS::registry<SlugProjectile>.has(entity_j));
 
 	bool isValidSnailCollision_j = ECS::registry<Snail>.has(entity_j) &&
 		(ECS::registry<Spider>.has(entity_i) || ECS::registry<WaterTile>.has(entity_i) ||
-			ECS::registry<Bird>.has(entity_i) || ECS::registry<Collectible>.has(entity_i) || ECS::registry<SlugProjectile>.has(entity_i));
+			ECS::registry<Slug>.has(entity_i) || ECS::registry<Collectible>.has(entity_i) || ECS::registry<SlugProjectile>.has(entity_i));
 
 	bool isValidProjectileCollision_i = ECS::registry<Projectile>.has(entity_i) &&
 		(ECS::registry<Spider>.has(entity_j) || ECS::registry<WallTile>.has(entity_j) || 
-			ECS::registry<Bird>.has(entity_j) || ECS::registry<SlugProjectile>.has(entity_j));
+			ECS::registry<Slug>.has(entity_j) || ECS::registry<SlugProjectile>.has(entity_j));
 
 	bool isValidProjectileCollision_j = ECS::registry<Projectile>.has(entity_j) &&
 		(ECS::registry<Spider>.has(entity_i) || ECS::registry<WallTile>.has(entity_i) ||
-			ECS::registry<Bird>.has(entity_i) || ECS::registry<SlugProjectile>.has(entity_i));
+			ECS::registry<Slug>.has(entity_i) || ECS::registry<SlugProjectile>.has(entity_i));
 
 	bool isValidSlugProjectileCollision_i = ECS::registry<SlugProjectile>.has(entity_i) &&
 		(ECS::registry<WallTile>.has(entity_j));
@@ -392,7 +393,7 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             stepToDestination(entity, step_seconds);
         }
 
-		for (auto entity : ECS::registry<Bird>.entities) 
+		for (auto entity : ECS::registry<Slug>.entities) 
 		{
 			stepToDestination(entity, step_seconds);
 		}

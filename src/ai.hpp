@@ -185,6 +185,7 @@ public:
     
 
     virtual BTState process(ECS::Entity e) override {
+        std::cout << "in selector" << std::endl;
         if (m_index >= m_children.size())
             return BTState::Success;
 
@@ -240,6 +241,12 @@ public:
             m_iterationsRemaining = m_iterationsRemaining - 1;
             return BTState::Running;
         }
+        /*
+        if (m_iterationsRemaining != 0 && state == BTState::Failure) {
+            m_iterationsRemaining = 0;
+            return BTState::Failure;
+        }
+        */
         else if (m_iterationsRemaining == 0 && state != BTState::Success) {
             std::cout << "repeat for N should be failing now" << std::endl;
             return BTState::Failure;

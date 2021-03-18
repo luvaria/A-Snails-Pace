@@ -3,6 +3,7 @@
 #include "physics.hpp"
 #include "debug.hpp"
 #include "spider.hpp"
+#include "slug.hpp"
 #include "projectile.hpp"
 #include "fish.hpp"
 #include "ai.hpp"
@@ -165,7 +166,8 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     // remove any offscreen slug projectiles
     for (auto entity : ECS::registry<SlugProjectile>.entities) {
         auto projectilePosition = ECS::registry<Motion>.get(entity).position;
-        if (offScreen(projectilePosition, window_size_in_game_units, cameraOffset))
+        auto snailPos = ECS::registry<Motion>.get(player_snail).position;
+        if (offScreen(projectilePosition, window_size_in_game_units, cameraOffset) && snailPos.x > projectilePosition.x)
         {
             ECS::ContainerInterface::remove_all_components_of(entity);
         }
@@ -338,7 +340,7 @@ void WorldSystem::onNotify(Event event) {
         {
             // Checking Snail - Spider collisions
             if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<WaterTile>.has(event.other_entity)
-                || ECS::registry<Bird>.has(event.other_entity) || ECS::registry<SlugProjectile>.has(event.other_entity))
+                || ECS::registry<Slug>.has(event.other_entity) || ECS::registry<SlugProjectile>.has(event.other_entity))
             {
                 // Initiate death unless already dying
                 if (!ECS::registry<DeathTimer>.has(event.entity))
@@ -369,7 +371,7 @@ void WorldSystem::onNotify(Event event) {
             if (!ECS::registry<Projectile::Preview>.has(event.entity))
             {
                 // Checking Projectile - Spider collisions
-                if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<Bird>.has(event.other_entity) 
+                if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<Slug>.has(event.other_entity) 
                     || ECS::registry<SlugProjectile>.has(event.other_entity))
                 {
                     // tile no longer occupied by spider
@@ -828,128 +830,7 @@ void WorldSystem::fallDown(ECS::Entity& entity, int& moves) {
     }
     return;
 }
-/*
-void WorldSystem::birdUp(ECS::Entity& entity, int& moves) {
-    float scale = TileSystem::getScale();
-    auto& tiles = TileSystem::getTiles();
 
-    auto& motion = ECS::registry<Motion>.get(entity);
-    int xCoord = static_cast<int>(motion.position.x / scale);
-    int yCoord = static_cast<int>(motion.position.y / scale);
-    if (yCoord - 1 < 0) {
-        return;
-    }
-    Tile currTile = tiles[yCoord][xCoord];
-    Tile upTile = tiles[yCoord - 1][xCoord];
-    Tile nextTile = currTile;
-    Destination& dest = ECS::registry<Destination>.has(entity) ? ECS::registry<Destination>.get(entity) : ECS::registry<Destination>.emplace(entity);
-    dest.position = { nextTile.x, nextTile.y };
-    if (nextTile.x != currTile.x || nextTile.y != currTile.y)
-    {
-        currTile.setOccupied(false);
-        nextTile.setOccupied(true);
-    }
-    // give velocity to reach destination in set time
-    // this velocity will be set to 0 once destination is reached in physics.cpp
-    motion.velocity = (dest.position - motion.position) / k_move_seconds;
-
-    
-    moves--;
-    
-}
-
-void WorldSystem::birdDown(ECS::Entity& entity, int& moves) {
-    float scale = TileSystem::getScale();
-    auto& tiles = TileSystem::getTiles();
-
-    auto& motion = ECS::registry<Motion>.get(entity);
-    int xCoord = static_cast<int>(motion.position.x / scale);
-    int yCoord = static_cast<int>(motion.position.y / scale);
-    if (yCoord + 1 > tiles.size() - 1) {
-        return;
-    }
-    Tile currTile = tiles[yCoord][xCoord];
-    Tile downTile = tiles[yCoord + 1][xCoord];
-    Tile nextTile = currTile;
-    Destination& dest = ECS::registry<Destination>.has(entity) ? ECS::registry<Destination>.get(entity) : ECS::registry<Destination>.emplace(entity);
-    dest.position = { nextTile.x, nextTile.y };
-    if (nextTile.x != currTile.x || nextTile.y != currTile.y)
-    {
-        currTile.setOccupied(false);
-        nextTile.setOccupied(true);
-    }
-    // give velocity to reach destination in set time
-    // this velocity will be set to 0 once destination is reached in physics.cpp
-    motion.velocity = (dest.position - motion.position) / k_move_seconds;
-
-    
-    moves--;
-    
-}
-
-void WorldSystem::birdLeft(ECS::Entity& entity, int& moves) {
-    float scale = TileSystem::getScale();
-    auto& tiles = TileSystem::getTiles();
-
-    auto& motion = ECS::registry<Motion>.get(entity);
-    int xCoord = static_cast<int>(motion.position.x / scale);
-    int yCoord = static_cast<int>(motion.position.y / scale);
-    auto& camera = ECS::registry<Camera>.entities[0];
-    vec2 cameraOffset = ECS::registry<Motion>.get(camera).position;
-    int cameraOffsetX = cameraOffset.x / TileSystem::getScale();
-    if (xCoord - 1 < 0 || xCoord - 1 < cameraOffsetX) {
-        return;
-    }
-    Tile currTile = tiles[yCoord][xCoord];
-    Tile leftTile = tiles[yCoord][xCoord - 1];
-    Tile nextTile = currTile;
-
-    Destination& dest = ECS::registry<Destination>.has(entity) ? ECS::registry<Destination>.get(entity) : ECS::registry<Destination>.emplace(entity);
-    dest.position = { nextTile.x, nextTile.y };
-    if (nextTile.x != currTile.x || nextTile.y != currTile.y)
-    {
-        currTile.setOccupied(false);
-        nextTile.setOccupied(true);
-    }
-    // give velocity to reach destination in set time
-    // this velocity will be set to 0 once destination is reached in physics.cpp
-    motion.velocity = (dest.position - motion.position) / k_move_seconds;
-    motion.lastDirection = DIRECTION_WEST;
-
-    moves--;
-    
-}
-
-void WorldSystem::birdRight(ECS::Entity& entity, int& moves) {
-    float scale = TileSystem::getScale();
-    auto& tiles = TileSystem::getTiles();
-
-    auto& motion = ECS::registry<Motion>.get(entity);
-    int xCoord = static_cast<int>(motion.position.x / scale);
-    int yCoord = static_cast<int>(motion.position.y / scale);
-    if (xCoord + 1 > tiles[yCoord].size() - 1) {
-        return;
-    }
-    Tile currTile = tiles[yCoord][xCoord];
-    Tile rightTile = tiles[yCoord][xCoord + 1];
-    Tile nextTile = currTile;
-
-    Destination& dest = ECS::registry<Destination>.has(entity) ? ECS::registry<Destination>.get(entity) : ECS::registry<Destination>.emplace(entity);
-    dest.position = { nextTile.x, nextTile.y };
-    if (nextTile.x != currTile.x || nextTile.y != currTile.y)
-    {
-        currTile.setOccupied(false);
-        nextTile.setOccupied(true);
-    }
-    // give velocity to reach destination in set time
-    // this velocity will be set to 0 once destination is reached in physics.cpp
-    motion.velocity = (dest.position - motion.position) / k_move_seconds;
-    motion.lastDirection = DIRECTION_EAST;
-
-    moves--;
-
-}
-*/
 
 // On key callback
 // Check out https://www.glfw.org/docs/3.3/input_guide.html
