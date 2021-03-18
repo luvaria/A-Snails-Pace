@@ -200,12 +200,15 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     for (auto entity : ECS::registry<DeathTimer>.entities)
     {
         if(ECS::registry<Snail>.has(entity)) {
+            auto& texmesh = *ECS::registry<ShadedMeshRef>.get(entity).reference_to_cache;
+            texmesh.texture.color = {0.8, 0.2, 0.2};
+            
             // Progress timer
             auto& counter = ECS::registry<DeathTimer>.get(entity);
             counter.counter_ms -= elapsed_ms;
 
             // Reduce window brightness if any of the present snails is dying
-            screen.darken_screen_factor = 1 - counter.counter_ms / 3000.f;
+            screen.darken_screen_factor = 1 - counter.counter_ms / 500.f;
 
             if(WaterTile::splashEntityID!=0) {
                 Motion& mot = ECS::registry<Motion>.get(entity);
@@ -347,7 +350,8 @@ void WorldSystem::restart(int newLevel)
     notify(Event(Event::LEVEL_LOADED));
     // can't access player_snail in level loader
     player_snail = ECS::registry<Player>.entities[0];
-
+    auto& texmesh = *ECS::registry<ShadedMeshRef>.get(player_snail).reference_to_cache;
+    texmesh.texture.color = {1, 1, 1};
     if (ECS::registry<Inventory>.components[0].equipped != -1)
     {
         Collectible::equip(player_snail, ECS::registry<Inventory>.components[0].equipped);

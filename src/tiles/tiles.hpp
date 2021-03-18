@@ -40,7 +40,7 @@ public:
     {
         if (numOccupyingEntities == 0) 
         {
-            throw std::runtime_error("tried to remove an occupying entity when there were none");
+            return;
         }
         numOccupyingEntities--;
         if (numOccupyingEntities == 0)
