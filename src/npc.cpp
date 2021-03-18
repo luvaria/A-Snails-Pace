@@ -136,7 +136,7 @@ void NPC::onNotify(Event event)
                     if (inv.equipped == path.first)
 					{
 						curNode = path.second.second;
-						// TODO: handle points gain
+						inv.points += path.second.first;
 					}
 				}
 			}
