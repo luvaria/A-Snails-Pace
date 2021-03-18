@@ -3,7 +3,7 @@
 #include "text.hpp"
 
 const float BOX_LENGTH = 150.f;
-const float BOX_OFFSET = BOX_LENGTH/4.f;
+const float BOX_OFFSET = BOX_LENGTH * 0.75f;
 const vec3 BUTTON_BACKGROUND_COLOUR = { 0.f, 0.f, 0.502f }; // navy blue
 const vec3 BUTTON_EQUIPPED_COLOUR = { 0.93f, 0.8f, 0.68f }; // golden
 const vec3 BUTTON_SELECTED_COLOUR = { 0.26f, 0.39f, 0.50f }; // blue whale
@@ -60,7 +60,7 @@ void CollectMenu::loadEntities()
         motion.scale = normalize(motion.scale) * BOX_LENGTH;
         ECS::registry<CollectMenuTag>.emplace(collectible);
 
-        ECS::Entity entity = createButtonBackground(position, { BOX_LENGTH, BOX_LENGTH });
+        ECS::Entity entity = createButtonBackground(position, { BOX_LENGTH, BOX_LENGTH }, id);
         ECS::registry<MenuButton>.emplace(entity,ButtonEventType::EQUIP_COLLECTIBLE);
         buttonEntities.push_back(entity);
         collectible_ids.push_back(id);
@@ -167,11 +167,11 @@ void CollectMenu::selectedKeyEvent() {
     }
 }
 
-ECS::Entity CollectMenu::createButtonBackground(vec2 const& position, vec2 const& scale)
+ECS::Entity CollectMenu::createButtonBackground(vec2 const& position, vec2 const& scale, int id)
 {
     auto entity = ECS::Entity();
 
-    std::string key = "collect_button";
+    std::string key = "collect_button" + std::to_string(id);
     ShadedMesh& resource = cache_resource(key);
     if (resource.effect.program.resource == 0) {
         // create a procedural circle

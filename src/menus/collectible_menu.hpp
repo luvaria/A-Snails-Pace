@@ -21,7 +21,7 @@ private:
     // only for this subclass, may be useful for all subclasses?
     ///void updateDisabled(MenuButton& button);
 
-    ECS::Entity createButtonBackground(vec2 const& position, vec2 const& scale);
+    ECS::Entity createButtonBackground(vec2 const& position, vec2 const& scale, int id);
     void updateButtonBackgroundColor(ECS::Entity buttonBackground, vec3 const& color);
 
     // something to preserve order with buttons
