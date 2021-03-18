@@ -866,23 +866,23 @@ void WorldSystem::goDown(ECS::Entity& entity, int& moves) {
             return;
         }
         nextTile = tiles[(yCoord + 1)][xCord];
-        Tile sideTile = tiles[(yCoord)][xCord];
-        if (!(nextTile.type == WALL || upTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
-            motion.angle = -1*motion.angle;
-            motion.scale.y = -1*motion.scale.y;
-            xCord = (motion.angle == -PI / 2 ? xCoord + 1 : xCoord - 1);
-            if (xCord > tiles[(yCoord + 1)].size() - 1) {
-                motion.angle = -1*motion.angle;
-                motion.scale.y = -1*motion.scale.y;
-                return;
-            }
-            nextTile = tiles[(yCoord + 1)][xCord];
-            Tile sideTile = tiles[(yCoord)][xCord];
-            if (!(nextTile.type == WALL || upTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
-                motion.angle = -1*motion.angle;
-                motion.scale.y = -1*motion.scale.y;
-                return;
-            }
+         Tile sideTile = tiles[(yCoord)][xCord];
+         if (!(nextTile.type == WALL || downTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
+             motion.angle = -1*motion.angle;
+             motion.scale.y = -1*motion.scale.y;
+             xCord = (motion.angle == -PI / 2 ? xCoord + 1 : xCoord - 1);
+             if (xCord > tiles[(yCoord + 1)].size() - 1) {
+                 motion.angle = -1*motion.angle;
+                 motion.scale.y = -1*motion.scale.y;
+                 return;
+             }
+             nextTile = tiles[(yCoord + 1)][xCord];
+             Tile sideTile = tiles[(yCoord)][xCord];
+             if (!(nextTile.type == WALL || downTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
+                 motion.angle = -1*motion.angle;
+                 motion.scale.y = -1*motion.scale.y;
+                 return;
+             }
         }
         nextTile = nextTile.type == WALL || downTile.type == VINE ? downTile : nextTile;
         changeDirection(motion, currTile, nextTile, DIRECTION_SOUTH, entity);
