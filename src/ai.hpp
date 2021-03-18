@@ -255,14 +255,14 @@ private:
 
 class IsSnailInRange : public BTNode {
 public:
-    IsSnailInRange() {
+    IsSnailInRange(){
 
     }
-private:
-    void init(ECS::Entity e) override {
 
+    void init(ECS::Entity e) override {
     }
     BTState process(ECS::Entity e) override;
+private:
 };
 
 class LookForSnail : public BTNode {

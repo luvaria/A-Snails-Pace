@@ -171,7 +171,7 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 				if (preview && (xNotInPreviewArea(birdPos.x, previewOrigin) || yNotInPreviewArea(birdPos.y, previewOrigin)))
 					continue;
 				Tile& tile = tiles[bird["y"]][bird["x"]];
-				tile.setOccupied(true);
+				tile.addOccupyingEntity();
 				Bird::createBird({ tile.x, tile.y }, createTaggedEntity(preview));
 			}
 			break;

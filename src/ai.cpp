@@ -414,6 +414,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
 }
 
 BTState LookForSnail::process(ECS::Entity e) {
+    std::cout << "in look for snail" << std::endl;
     // before for loop
     auto& snailEntity = ECS::registry<Snail>.entities[0];
     float scale = TileSystem::getScale();
@@ -518,19 +519,28 @@ BTState IsSnailInRange::process(ECS::Entity e) {
     int xMax = aiCoord.x + range;
     int xMin = aiCoord.x - range;
     int yMax = aiCoord.y + range;
-    int yMin = aiCoord.x - range;
+    int yMin = aiCoord.y - range;
 
 
     if (xMax >= snailCoord.x && xMin <= snailCoord.x) {
-        //std::cout << "success1" << std::endl;
-        return BTState::Success;
+        std::cout << "success1" << std::endl;
+        if (yMax >= snailCoord.y && yMin <= snailCoord.y) {
+            std::cout << "success2" << std::endl;
+            return BTState::Success;
+        }
+        else {
+            return BTState::Failure;
+        }
     }
+
+    /*
     else if (yMax <= snailCoord.y && yMin >= snailCoord.y) {
-        //std::cout << "success2" << std::endl;
+        std::cout << "success2" << std::endl;
         return BTState::Success;
     }
+    */
     else {
-        //std::cout << "failure" << std::endl;
+        std::cout << "failure" << std::endl;
         return BTState::Failure;
     }
 }

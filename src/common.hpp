@@ -50,7 +50,7 @@ struct Transform {
 #define AI_PF_ALGO_A_STAR "Astar"
 
 // for use with levels_path(): use indices, starting from 0
-const std::vector<std::string> levels = { "demo.json", "demo-2.json", "level-1.json" };
+const std::vector<std::string> levels = { "demo.json", "demo-2.json", "level-1.json", "level-2.json"};
 
 const std::unordered_map<int, std::string> collectibleMap =
 {

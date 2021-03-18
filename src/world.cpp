@@ -828,7 +828,7 @@ void WorldSystem::fallDown(ECS::Entity& entity, int& moves) {
     }
     return;
 }
-
+/*
 void WorldSystem::birdUp(ECS::Entity& entity, int& moves) {
     float scale = TileSystem::getScale();
     auto& tiles = TileSystem::getTiles();
@@ -949,6 +949,7 @@ void WorldSystem::birdRight(ECS::Entity& entity, int& moves) {
     moves--;
 
 }
+*/
 
 // On key callback
 // Check out https://www.glfw.org/docs/3.3/input_guide.html
