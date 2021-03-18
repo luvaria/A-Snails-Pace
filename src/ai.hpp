@@ -195,12 +195,19 @@ public:
 
         // select a new active child and initialize its internal state
         if (state == BTState::Success) {
+            std::cout << "Selector Node has succeeded" << std::endl;
             return BTState::Success;
         }
-        else {
+        else if (state == BTState::Failure) {
+            std::cout << "leaf node has failed, move on to next leaf node" << std::endl;
+            m_index++;
             const auto& nextChild = m_children[m_index];
             assert(nextChild);
             nextChild->init(e);
+            return BTState::Running;
+        }
+        else {
+            std::cout << "run the same node" << std::endl;
             return BTState::Running;
         }
         
@@ -233,7 +240,8 @@ public:
             m_iterationsRemaining = m_iterationsRemaining - 1;
             return BTState::Running;
         }
-        else if (m_iterationsRemaining == 0 && state == BTState::Failure) {
+        else if (m_iterationsRemaining == 0 && state != BTState::Success) {
+            std::cout << "repeat for N should be failing now" << std::endl;
             return BTState::Failure;
         }
         else {
@@ -286,15 +294,14 @@ private:
 
 class FireXShots : public BTNode {
 public:
-    FireXShots(int n) noexcept {
-        m_Shots = n;
+    FireXShots() {
+
     }
     void init(ECS::Entity e) override {
-        m_Shots = 1 + rand() % 3;
+        
     }
     BTState process(ECS::Entity e) override;
 private:
-    int m_Shots;
 };
 
 class RandomSelector : public BTNode {

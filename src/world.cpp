@@ -160,6 +160,15 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 		}
 	}
 
+    // remove any offscreen slug projectiles
+    for (auto entity : ECS::registry<SlugProjectile>.entities) {
+        auto projectilePosition = ECS::registry<Motion>.get(entity).position;
+        if (offScreen(projectilePosition, window_size_in_game_units, cameraOffset))
+        {
+            ECS::ContainerInterface::remove_all_components_of(entity);
+        }
+    }
+
     if (left_mouse_pressed && (std::chrono::high_resolution_clock::now() > can_show_projectile_preview_time))
     {
         double mouse_pos_x, mouse_pos_y;
@@ -323,7 +332,8 @@ void WorldSystem::onNotify(Event event) {
         if (ECS::registry<Snail>.has(event.entity))
         {
             // Checking Snail - Spider collisions
-            if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<WaterTile>.has(event.other_entity) || ECS::registry<Bird>.has(event.other_entity))
+            if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<WaterTile>.has(event.other_entity)
+                || ECS::registry<Bird>.has(event.other_entity) || ECS::registry<SlugProjectile>.has(event.other_entity))
             {
                 // Initiate death unless already dying
                 if (!ECS::registry<DeathTimer>.has(event.entity))
@@ -354,7 +364,8 @@ void WorldSystem::onNotify(Event event) {
             if (!ECS::registry<Projectile::Preview>.has(event.entity))
             {
                 // Checking Projectile - Spider collisions
-                if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<Bird>.has(event.other_entity))
+                if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<Bird>.has(event.other_entity) 
+                    || ECS::registry<SlugProjectile>.has(event.other_entity))
                 {
                     // Remove the spider but not the projectile
                     ECS::ContainerInterface::remove_all_components_of(event.other_entity);

@@ -14,3 +14,7 @@ struct Projectile
 	    static void removeCurrent();
 	};
 };
+
+struct SlugProjectile {
+	static ECS::Entity createProjectile(vec2 position, vec2 velocity);
+};

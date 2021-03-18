@@ -187,10 +187,19 @@ bool collides(ECS::Entity& entity1, ECS::Entity& entity2, Motion& motion1, Motio
 	{
 		if (doPenetrationFree)
 		{
+			// edited this to fit SlugProjectile...
 			if (ECS::registry<Projectile>.has(entity1))
 			{
 				//projectile is entity1, wall is entity2
 				bounceProjectileOffWall(motion1, vertices1, vertices2);
+			}
+			else if (ECS::registry<SlugProjectile>.has(entity1)) {
+				std::cout << "in penetration free #3" << std::endl;
+				bounceProjectileOffWall(motion1, vertices1, vertices2);
+			}
+			else if (ECS::registry<SlugProjectile>.has(entity2)) {
+				std::cout << "in penetration free #4" << std::endl;
+				bounceProjectileOffWall(motion2, vertices2, vertices1);
 			}
 			else
 			{
@@ -210,10 +219,19 @@ bool collides(ECS::Entity& entity1, ECS::Entity& entity2, Motion& motion1, Motio
 			{
 				if (doPenetrationFree)
 				{
+					// edited this to fit SlugProjectile...
 					if (ECS::registry<Projectile>.has(entity1))
 					{
 						//projectile is entity1, wall is entity2
 						bounceProjectileOffWall(motion1, vertices1, vertices2);
+					}
+					else if (ECS::registry<SlugProjectile>.has(entity1)) {
+						std::cout << "in penetration free #1" << std::endl;
+						bounceProjectileOffWall(motion1, vertices1, vertices2);
+					}
+					else if (ECS::registry<SlugProjectile>.has(entity2)) {
+						std::cout << "in penetration free #2" << std::endl;
+						bounceProjectileOffWall(motion2, vertices2, vertices1);
 					}
 					else
 					{
@@ -232,28 +250,43 @@ bool collides(ECS::Entity& entity1, ECS::Entity& entity2, Motion& motion1, Motio
 //returns true if entity_i and entity_j is a (Projectile,WallTile) pair in either order
 bool isProjectileAndWall(ECS::Entity entity_i, ECS::Entity entity_j)
 {
+	// edited to fit SlugProjectile
 	return (ECS::registry<Projectile>.has(entity_i) && ECS::registry<WallTile>.has(entity_j)) ||
-		(ECS::registry<WallTile>.has(entity_i) && ECS::registry<Projectile>.has(entity_j));
+		(ECS::registry<WallTile>.has(entity_i) && ECS::registry<Projectile>.has(entity_j)) ||
+		(ECS::registry<SlugProjectile>.has(entity_i) && ECS::registry<WallTile>.has(entity_j)) ||
+		(ECS::registry<WallTile>.has(entity_i) && ECS::registry<SlugProjectile>.has(entity_j));
 }
 
 //returns true if we have a possibility of caring if entity_i and entity_j collide
-//was edited to check collision with bird
+//was edited to check collision with slug and slug projectile
 bool ShouldCheckCollision(ECS::Entity entity_i, ECS::Entity entity_j)
 {
 	bool isValidSnailCollision_i = ECS::registry<Snail>.has(entity_i) &&
-		(ECS::registry<Spider>.has(entity_j) || ECS::registry<WaterTile>.has(entity_j) || ECS::registry<Bird>.has(entity_j) || ECS::registry<Collectible>.has(entity_j));
+		(ECS::registry<Spider>.has(entity_j) || ECS::registry<WaterTile>.has(entity_j) ||
+			ECS::registry<Bird>.has(entity_j) || ECS::registry<Collectible>.has(entity_j) || ECS::registry<SlugProjectile>.has(entity_j));
 
 	bool isValidSnailCollision_j = ECS::registry<Snail>.has(entity_j) &&
-		(ECS::registry<Spider>.has(entity_i) || ECS::registry<WaterTile>.has(entity_i) || ECS::registry<Bird>.has(entity_i) || ECS::registry<Collectible>.has(entity_i));
+		(ECS::registry<Spider>.has(entity_i) || ECS::registry<WaterTile>.has(entity_i) ||
+			ECS::registry<Bird>.has(entity_i) || ECS::registry<Collectible>.has(entity_i) || ECS::registry<SlugProjectile>.has(entity_i));
 
 	bool isValidProjectileCollision_i = ECS::registry<Projectile>.has(entity_i) &&
-		(ECS::registry<Spider>.has(entity_j) || ECS::registry<WallTile>.has(entity_j) || ECS::registry<Bird>.has(entity_j));
+		(ECS::registry<Spider>.has(entity_j) || ECS::registry<WallTile>.has(entity_j) || 
+			ECS::registry<Bird>.has(entity_j) || ECS::registry<SlugProjectile>.has(entity_j));
 
 	bool isValidProjectileCollision_j = ECS::registry<Projectile>.has(entity_j) &&
-		(ECS::registry<Spider>.has(entity_i) || ECS::registry<WallTile>.has(entity_i) || ECS::registry<Bird>.has(entity_i));
+		(ECS::registry<Spider>.has(entity_i) || ECS::registry<WallTile>.has(entity_i) ||
+			ECS::registry<Bird>.has(entity_i) || ECS::registry<SlugProjectile>.has(entity_i));
+
+	bool isValidSlugProjectileCollision_i = ECS::registry<SlugProjectile>.has(entity_i) &&
+		(ECS::registry<WallTile>.has(entity_j));
+
+	bool isValidSlugProjectileCollision_j = ECS::registry<SlugProjectile>.has(entity_j) &&
+		(ECS::registry<WallTile>.has(entity_i));
 	
 
-	return isValidSnailCollision_i || isValidSnailCollision_j || isValidProjectileCollision_i || isValidProjectileCollision_j;
+	return isValidSnailCollision_i || isValidSnailCollision_j || 
+		isValidProjectileCollision_i || isValidProjectileCollision_j ||
+		isValidSlugProjectileCollision_i || isValidSlugProjectileCollision_j;
 }
 
 void stepToDestination(ECS::Entity entity, float step_seconds)
@@ -316,6 +349,14 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             vec2 velocity = motion.velocity;
             motion.position += velocity * step_seconds;
         }
+		// making sure slug projectiles move
+		for (auto entity : ECS::registry<SlugProjectile>.entities)
+		{
+			auto& motion = ECS::registry<Motion>.get(entity);
+			vec2 velocity = motion.velocity;
+			motion.position += velocity * step_seconds;
+		}
+
 
         // move enemies
         // eventually this could be an enemy registry, but we only have spiders for now
