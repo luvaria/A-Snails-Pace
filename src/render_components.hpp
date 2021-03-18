@@ -180,7 +180,7 @@ struct DebugComponent
 // A timer that will be associated to dying snail
 struct DeathTimer
 {
-	float counter_ms = 1000;
+	float counter_ms = 1500;
 };
 
 struct Parallax

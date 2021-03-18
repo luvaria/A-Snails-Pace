@@ -95,7 +95,7 @@ ECS::Entity WaterTile::createWaterSplashTile(vec2 position, ECS::Entity entity)
 
     //setting the animation information
     SpriteSheet& spriteSheet = ECS::registry<SpriteSheet>.emplace(entity);
-    spriteSheet.animationSpeed = 55;
+    spriteSheet.animationSpeed = 100;
     spriteSheet.numAnimationFrames = 14;
     spriteSheet.currentAnimationNumber = 0; //leaves move when the level starts.
 
