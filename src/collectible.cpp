@@ -1,6 +1,7 @@
 #include "collectible.hpp"
 #include "render.hpp"
 #include "tiles/tiles.hpp"
+#include "snail.hpp"
 
 ECS::Entity Collectible::createCollectible(vec2 position, int id)
 {
@@ -30,8 +31,8 @@ ECS::Entity Collectible::createCollectible(vec2 position, int id)
 
     // Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
     //we use the same entity for min and regular meshes, so you can access either one.
-    ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::CHARACTER);
-    ECS::registry<MinShadedMeshRef>.emplace(entity, resource_min, RenderBucket::CHARACTER);
+    ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::FOREGROUND);
+    ECS::registry<MinShadedMeshRef>.emplace(entity, resource_min, RenderBucket::FOREGROUND);
 
     // Setting initial motion values
     Motion& motion = ECS::registry<Motion>.emplace(entity);
@@ -52,6 +53,37 @@ ECS::Entity Collectible::createCollectible(vec2 position, int id)
 
 void Collectible::equip(ECS::Entity host, int id)
 {
-    // TODO #54: implement this
-    return;
+    auto& motion = ECS::registry<Motion>.get(host);
+    auto collectEntity = createCollectible(motion.position, id);
+    if (ECS::registry<Equipped>.has(host))
+    {
+        // remove current equipped
+        ECS::registry<Equipped>.remove(host);
+    }
+    ECS::registry<Equipped>.emplace(host, collectEntity);
+}
+
+void Equipped::moveEquippedWithHost()
+{
+    for (size_t i = 0; i < ECS::registry<Equipped>.size(); i++)
+    {
+        // TODO #54: get it to sit nicely on top of snail
+        ECS::Entity& hostEntity = ECS::registry<Equipped>.entities[i];
+        ECS::Entity& collectEntity = ECS::registry<Equipped>.components[i].collectible;
+        auto& hostMotion = ECS::registry<Motion>.get(hostEntity);
+        auto& collectMotion = ECS::registry<Motion>.get(collectEntity);
+        collectMotion.position = hostMotion.position;
+        collectMotion.angle = hostMotion.angle;
+    }
+}
+
+bool Equipped::isEquipped(ECS::Entity collectible)
+{
+    for (auto& equipped : ECS::registry<Equipped>.components)
+    {
+        ECS::Entity equippedEntity = equipped.collectible;
+        if (equippedEntity.id == collectible.id)
+            return true;
+    }
+    return false;
 }

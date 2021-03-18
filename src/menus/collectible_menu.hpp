@@ -19,7 +19,13 @@ private:
     void selectedKeyEvent();
 
     // only for this subclass, may be useful for all subclasses?
-    void updateDisabled(MenuButton& button);
+    ///void updateDisabled(MenuButton& button);
+
+    ECS::Entity createButtonBackground(vec2 const& position, vec2 const& scale);
+    void updateButtonBackgroundColor(ECS::Entity buttonBackground, vec3 const& color);
+
+    // something to preserve order with buttons
+    std::vector<CollectId> collectible_ids;
 };
 
 // component tag

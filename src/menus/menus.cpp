@@ -109,7 +109,14 @@ void MenuSystem::onNotify(Event event)
 		// notify world to load level by passing event on
 		notify(event);
 		break;
-	}
+	case Event::EQUIP_COLLECTIBLE:
+	    // just pass it on to world
+	    notify(event);
+	    break;
+    case Event::CLEAR_COLLECTIBLES:
+        notify(event);
+        break;
+    }
 }
 
 void MenuSystem::closeMenu()
@@ -148,6 +155,7 @@ void MenuSystem::openMenu(Event::MenuType menu)
 		break;
 	case Event::MenuType::COLLECTIBLES_MENU:
         newMenu = new CollectMenu(window);
+        break;
 	default:
 		// no menu opened
 		return;

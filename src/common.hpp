@@ -97,6 +97,8 @@ struct Inventory
 {
     std::unordered_set<CollectId> collectibles;
     CollectId equipped = -1;
+    int points = 0;
+    void clear() { collectibles.clear(); equipped = -1; points = 0; };
 };
 
 // direction a level scrolls in

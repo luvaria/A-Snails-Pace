@@ -130,6 +130,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     if (!running)
         return;
 
+    int points = (ECS::registry<Inventory>.size() == 0) ? 0 : ECS::registry<Inventory>.components[0].points;
     // Updating window title with moves remaining and attempts
     std::stringstream title_ss;
     title_ss << "Moves taken: " << turn_number;
@@ -137,6 +138,8 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 	title_ss << "Camera will move in " << turns_per_camera_move - (turn_number % turns_per_camera_move) << " turn(s)";
     title_ss << ", ";
     title_ss << "Attempts: " << attempts;
+    title_ss << ", ";
+    title_ss << "Points: " << points;
     glfwSetWindowTitle(window, title_ss.str().c_str());
 
     auto& cameraEntity = ECS::registry<Camera>.entities[0];
@@ -293,6 +296,11 @@ void WorldSystem::restart(int newLevel)
     // can't access player_snail in level loader
     player_snail = ECS::registry<Snail>.entities[0];
 
+    if (ECS::registry<Inventory>.components[0].equipped != -1)
+    {
+        Collectible::equip(player_snail, ECS::registry<Inventory>.components[0].equipped);
+    }
+
     // Reset Camera
     Camera::reset();
     turns_per_camera_move = TileSystem::getTurnsForCameraUpdate();
@@ -382,10 +390,32 @@ void WorldSystem::onNotify(Event event) {
         ControlsOverlay::toggleControlsOverlayOff();
 
         // level index exists
-        assert(event.level >= 0 && event.level < levels.size());
-        level = event.level;
+        assert(event.number >= 0 && event.number < levels.size());
+        level = event.number;
 
         restart(level);
+    }
+    else if (event.type == Event::EQUIP_COLLECTIBLE)
+    {
+        ECS::registry<Inventory>.components[0].equipped = event.number;
+        if (ECS::registry<Snail>.has(player_snail))
+        {
+            Collectible::equip(player_snail, event.number);
+        }
+    }
+    else if (event.type == Event::CLEAR_COLLECTIBLES)
+    {
+        if (ECS::registry<Snail>.has(player_snail) && ECS::registry<Equipped>.has(player_snail))
+        {
+            ECS::Entity collectible = ECS::registry<Equipped>.get(player_snail).collectible;
+            ECS::registry<Equipped>.remove(player_snail);
+            ECS::ContainerInterface::remove_all_components_of(collectible);
+        }
+
+        if (ECS::registry<Inventory>.size() != 0)
+        {
+            ECS::registry<Inventory>.components[0].clear();
+        }
     }
 }
 

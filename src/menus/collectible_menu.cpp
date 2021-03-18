@@ -2,7 +2,11 @@
 #include "collectible.hpp"
 #include "text.hpp"
 
-const vec2 SCALED_DIMENSIONS = { 300.f, 300.f };
+const float BOX_LENGTH = 150.f;
+const float BOX_OFFSET = BOX_LENGTH/4.f;
+const vec3 BUTTON_BACKGROUND_COLOUR = { 0.f, 0.f, 0.502f }; // navy blue
+const vec3 BUTTON_EQUIPPED_COLOUR = { 0.93f, 0.8f, 0.68f }; // golden
+const vec3 BUTTON_SELECTED_COLOUR = { 0.26f, 0.39f, 0.50f }; // blue whale
 
 CollectMenu::CollectMenu(GLFWwindow &window) : Menu(window)
 {
@@ -22,26 +26,22 @@ void CollectMenu::step(vec2 /*window_size_in_game_units*/)
 
     // update button colour based on mouseover
     auto& buttonContainer = ECS::registry<MenuButton>;
-    auto& textContainer = ECS::registry<Text>;
-    for (unsigned int i = 0; i < buttonContainer.components.size(); i++)
+    for (unsigned int i = 0; i < buttonEntities.size(); i++)
     {
-        MenuButton& button = buttonContainer.components[i];
-        ECS::Entity buttonEntity = buttonContainer.entities[i];
-        Text& buttonText = textContainer.get(buttonEntity);
+        ECS::Entity buttonEntity = buttonEntities[i];
+        MenuButton& button = buttonContainer.get(buttonEntity);
 
-        updateDisabled(button);
-
-        buttonText.alpha = button.disabled ? 0.5f : 1.f;
-
-        if (button.selected && !button.disabled)
+        if (collectible_ids[i] == ECS::registry<Inventory>.components[0].equipped)
         {
-            buttonText.colour = HIGHLIGHT_COLOUR;
-            buttonText.font = ABEEZEE_ITALIC;
+            updateButtonBackgroundColor(buttonEntity, BUTTON_EQUIPPED_COLOUR);
+        }
+        else if (button.selected)
+        {
+            updateButtonBackgroundColor(buttonEntity, BUTTON_SELECTED_COLOUR);
         }
         else
         {
-            buttonText.colour = DEFAULT_COLOUR;
-            buttonText.font = ABEEZEE_REGULAR;
+            updateButtonBackgroundColor(buttonEntity, BUTTON_BACKGROUND_COLOUR);
         }
     }
 }
@@ -49,10 +49,28 @@ void CollectMenu::step(vec2 /*window_size_in_game_units*/)
 void CollectMenu::loadEntities()
 {
     unsigned cols = 4;
-    unsigned currCol = 0;
+    // 1-indexed for the math
+    unsigned currCol = 1;
+    unsigned currRow = 1;
     for (CollectId id : ECS::registry<Inventory>.components[0].collectibles)
     {
-        Collectible::createCollectible()
+        vec2 position = { (BOX_OFFSET + BOX_LENGTH/2) * currCol, (BOX_OFFSET + BOX_LENGTH/2) * currRow };
+        auto collectible = Collectible::createCollectible(position, id);
+        Motion& motion = ECS::registry<Motion>.get(collectible);
+        motion.scale = normalize(motion.scale) * BOX_LENGTH;
+        ECS::registry<CollectMenuTag>.emplace(collectible);
+
+        ECS::Entity entity = createButtonBackground(position, { BOX_LENGTH, BOX_LENGTH });
+        ECS::registry<MenuButton>.emplace(entity,ButtonEventType::EQUIP_COLLECTIBLE);
+        buttonEntities.push_back(entity);
+        collectible_ids.push_back(id);
+
+        currCol++;
+        if (currCol >= cols)
+        {
+            currCol = 0;
+            currRow++;
+        }
     }
 }
 
@@ -106,15 +124,16 @@ void CollectMenu::on_mouse_move(vec2 mouse_pos)
     activeButtonIndex = -1;
 
     auto& buttonContainer = ECS::registry<MenuButton>;
-    auto& textContainer = ECS::registry<Text>;
     for (unsigned int i = 0; i < buttonContainer.components.size(); i++)
     {
         MenuButton& button = buttonContainer.components[i];
         ECS::Entity buttonEntity = buttonContainer.entities[i];
-        Text& buttonText = textContainer.get(buttonEntity);
+        auto& buttonMotion = ECS::registry<Motion>.get(buttonEntity);
 
         // check whether button is being hovered over
-        button.selected = mouseover(vec2(buttonText.position.x, buttonText.position.y), buttonScale, mouse_pos);
+        vec2 buttonPos = { buttonMotion.position.x - BOX_LENGTH/2, buttonMotion.position.y + BOX_LENGTH/2 };
+        vec2 buttonScale = buttonMotion.scale;
+        button.selected = mouseover(buttonPos, buttonScale, mouse_pos);
         // track for deselect on key press
         if (button.selected)
         {
@@ -130,24 +149,77 @@ void CollectMenu::on_mouse_move(vec2 mouse_pos)
     }
 }
 
-void CollectMenu::selectedKeyEvent()
-{
-    auto& buttonContainer = ECS::registry<MenuButton>;
-    for (unsigned int i = 0; i < buttonContainer.components.size(); i++)
-    {
-        MenuButton& button = buttonContainer.components[i];
+void CollectMenu::selectedKeyEvent() {
+    auto &buttonContainer = ECS::registry<MenuButton>;
+    for (unsigned int i = 0; i < buttonContainer.components.size(); i++) {
+        MenuButton &button = buttonContainer.components[i];
 
         // perform action for button being hovered over (and pressed)
-        if (button.selected)
-        {
-            switch (button.event)
-            {
-                case ButtonEventType::LOAD_LEVEL:
-                    notify(Event(Event::EventType::LOAD_LEVEL, activeButtonIndex));
-                    notify(Event(Event::EventType::MENU_CLOSE_ALL));
+        if (button.selected) {
+            switch (button.event) {
+                case ButtonEventType::EQUIP_COLLECTIBLE:
+                    notify(Event(Event::EventType::EQUIP_COLLECTIBLE, collectible_ids[activeButtonIndex]));
                     break;
                 default:
                     break;
             }
         }
     }
+}
+
+ECS::Entity CollectMenu::createButtonBackground(vec2 const& position, vec2 const& scale)
+{
+    auto entity = ECS::Entity();
+
+    std::string key = "collect_button";
+    ShadedMesh& resource = cache_resource(key);
+    if (resource.effect.program.resource == 0) {
+        // create a procedural circle
+        constexpr float z = -0.1f;
+        vec3 color = {1.f,1.f,1.f};
+
+        // Corner points
+        ColoredVertex v;
+        v.position = { -0.5,-0.5,z };
+        v.color = color;
+        resource.mesh.vertices.push_back(v);
+        v.position = { -0.5,0.5,z };
+        v.color = color;
+        resource.mesh.vertices.push_back(v);
+        v.position = { 0.5,0.5,z };
+        v.color = color;
+        resource.mesh.vertices.push_back(v);
+        v.position = { 0.5,-0.5,z };
+        v.color = color;
+        resource.mesh.vertices.push_back(v);
+
+        // Two triangles
+        resource.mesh.vertex_indices.push_back(0);
+        resource.mesh.vertex_indices.push_back(1);
+        resource.mesh.vertex_indices.push_back(3);
+        resource.mesh.vertex_indices.push_back(1);
+        resource.mesh.vertex_indices.push_back(2);
+        resource.mesh.vertex_indices.push_back(3);
+
+        RenderSystem::createColoredMesh(resource, "colored_mesh");
+    }
+
+    // Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
+    ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::BACKGROUND);
+
+    // Create motion
+    auto& motion = ECS::registry<Motion>.emplace(entity);
+    motion.angle = 0.f;
+    motion.velocity = { 0, 0 };
+    motion.position = position;
+    motion.scale = scale;
+
+    ECS::registry<CollectMenuTag>.emplace(entity);
+
+    return entity;
+}
+
+void CollectMenu::updateButtonBackgroundColor(ECS::Entity buttonBackground, vec3 const& color)
+{
+    ECS::registry<ShadedMeshRef>.get(buttonBackground).reference_to_cache->texture.color = color;
+}

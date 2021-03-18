@@ -264,7 +264,7 @@ void StartMenu::selectedKeyEvent()
                 notify(Event(Event::MENU_OPEN, Event::COLLECTIBLES_MENU));
 			    break;
 			case ButtonEventType::CLEAR_COLLECT_DATA:
-                ECS::registry<Inventory>.components[0].collectibles.clear();
+                notify(Event(Event::CLEAR_COLLECTIBLES));
 			    break;
 			default:
 				break;
@@ -275,7 +275,7 @@ void StartMenu::selectedKeyEvent()
 
 void StartMenu::updateDisabled(MenuButton &button)
 {
-    if (button.event == ButtonEventType::CLEAR_COLLECT_DATA)
+    if ((button.event == ButtonEventType::CLEAR_COLLECT_DATA) || (button.event == ButtonEventType::COLLECTIBLES))
     {
         button.disabled = (ECS::registry<Inventory>.size() == 0) || ECS::registry<Inventory>.components[0].collectibles.empty();
     }
