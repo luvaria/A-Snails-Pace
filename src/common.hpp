@@ -54,7 +54,8 @@ const std::vector<std::string> levels = { "demo.json", "demo-2.json", "level-1.j
 
 const std::unordered_map<int, std::string> collectibleMap =
 {
-    {0, "spider"},
+    { 0, "tophat" },
+	{ 1, "bbcap" }
 };
 
 // All data relevant to the shape and motion of entities
