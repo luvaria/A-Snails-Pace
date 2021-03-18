@@ -63,6 +63,19 @@ void Collectible::equip(ECS::Entity host, int id)
     ECS::registry<Equipped>.emplace(host, collectEntity);
 }
 
+void Collectible::unequip(ECS::Entity host, int id)
+{
+    if (ECS::registry<Equipped>.has(host))
+    {
+        ECS::Entity collectible = ECS::registry<Equipped>.get(host).collectible;
+        if (ECS::registry<Collectible>.get(collectible).id == id)
+        {
+            ECS::registry<Equipped>.remove(host);
+            ECS::ContainerInterface::remove_all_components_of(collectible);
+        }
+    }
+}
+
 void Equipped::moveEquippedWithHost()
 {
     for (size_t i = 0; i < ECS::registry<Equipped>.size(); i++)

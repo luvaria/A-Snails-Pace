@@ -7,6 +7,7 @@ struct Collectible
 {
     static ECS::Entity createCollectible(vec2 position, int id);
     static void equip(ECS::Entity host, int id);
+    static void unequip(ECS::Entity host, int id);
     int id = -1;
 };
 

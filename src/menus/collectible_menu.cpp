@@ -99,10 +99,10 @@ void CollectMenu::on_key(int key, int, int action, int /*mod*/)
                 // exit collect select (go back to start menu)
                 exit();
                 break;
-            case GLFW_KEY_DOWN:
+            case GLFW_KEY_LEFT:
                 selectNextButton();
                 break;
-            case GLFW_KEY_UP:
+            case GLFW_KEY_RIGHT:
                 selectPreviousButton();
                 break;
             case GLFW_KEY_ENTER:

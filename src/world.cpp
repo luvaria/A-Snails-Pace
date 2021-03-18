@@ -397,10 +397,25 @@ void WorldSystem::onNotify(Event event) {
     }
     else if (event.type == Event::EQUIP_COLLECTIBLE)
     {
-        ECS::registry<Inventory>.components[0].equipped = event.number;
-        if (ECS::registry<Snail>.has(player_snail))
+        CollectId& currEquipped = ECS::registry<Inventory>.components[0].equipped;
+        CollectId toEquip = event.number;
+        if (currEquipped == toEquip)
         {
-            Collectible::equip(player_snail, event.number);
+            // already equipped so unequip
+            currEquipped = -1;
+            if (ECS::registry<Snail>.has(player_snail))
+            {
+                Collectible::unequip(player_snail, currEquipped);
+            }
+        }
+        else
+        {
+            // equip
+            currEquipped = toEquip;
+            if (ECS::registry<Snail>.has(player_snail))
+            {
+                Collectible::equip(player_snail, event.number);
+            }
         }
     }
     else if (event.type == Event::CLEAR_COLLECTIBLES)
