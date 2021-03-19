@@ -148,7 +148,8 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 				Tile& tile = tiles[snail["y"]][snail["x"]];
 				// may not want this for snail location depending on enemy type and AI
 				tile.addOccupyingEntity();
-				Snail::createSnail({ tile.x, tile.y }, createTaggedEntity(preview));
+				ECS::Entity snail = Snail::createSnail({ tile.x, tile.y }, createTaggedEntity(preview));
+				ECS::registry<Player>.emplace(snail);
 			}
 			break;
 		case eSpider:

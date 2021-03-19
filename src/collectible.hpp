@@ -15,8 +15,6 @@ struct Collectible
 struct Equipped
 {
     Equipped(ECS::Entity collectible) : collectible(collectible) {}
-    // allows physics system to ignore collisions with equipped collectibles
-    static bool isEquipped(ECS::Entity collectible);
     static void moveEquippedWithHost();
     ECS::Entity collectible;
 };

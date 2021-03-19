@@ -294,7 +294,7 @@ void WorldSystem::restart(int newLevel)
     // register NPCs in observer pattern
     notify(Event(Event::LEVEL_LOADED));
     // can't access player_snail in level loader
-    player_snail = ECS::registry<Snail>.entities[0];
+    player_snail = ECS::registry<Player>.entities[0];
 
     if (ECS::registry<Inventory>.components[0].equipped != -1)
     {

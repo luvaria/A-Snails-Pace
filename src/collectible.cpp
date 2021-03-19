@@ -59,6 +59,7 @@ void Collectible::equip(ECS::Entity host, int id)
 
     auto& motion = ECS::registry<Motion>.get(host);
     auto collectEntity = createCollectible(motion.position, id);
+    ECS::registry<NoCollide>.emplace(collectEntity);
     
     ECS::registry<Equipped>.emplace(host, collectEntity);
 }
@@ -113,15 +114,4 @@ void Equipped::moveEquippedWithHost()
         }
 
     }
-}
-
-bool Equipped::isEquipped(ECS::Entity collectible)
-{
-    for (auto& equipped : ECS::registry<Equipped>.components)
-    {
-        ECS::Entity equippedEntity = equipped.collectible;
-        if (equippedEntity.id == collectible.id)
-            return true;
-    }
-    return false;
 }

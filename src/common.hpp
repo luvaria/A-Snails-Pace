@@ -58,6 +58,11 @@ const std::unordered_map<int, std::string> collectibleMap =
 	{ 1, "bbcap" }
 };
 
+struct Player
+{
+	// tag component
+};
+
 // All data relevant to the shape and motion of entities
 struct Motion {
 	vec2 position = { 0, 0 };
@@ -100,6 +105,12 @@ struct Inventory
     CollectId equipped = -1;
     int points = 0;
     void clear() { collectibles.clear(); equipped = -1; points = 0; };
+};
+
+// collectible equipped; ignore collisions
+struct NoCollide
+{
+
 };
 
 // direction a level scrolls in

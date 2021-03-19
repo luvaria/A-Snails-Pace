@@ -259,11 +259,11 @@ bool ShouldCheckCollision(ECS::Entity entity_i, ECS::Entity entity_j)
 {
 	bool isValidSnailCollision_i = ECS::registry<Snail>.has(entity_i) &&
 		(ECS::registry<Spider>.has(entity_j) || ECS::registry<WaterTile>.has(entity_j) ||
-                (ECS::registry<Collectible>.has(entity_j) && !Equipped::isEquipped(entity_j)));
+                (!ECS::registry<NoCollide>.has(entity_i) && ECS::registry<Collectible>.has(entity_i)));
 
 	bool isValidSnailCollision_j = ECS::registry<Snail>.has(entity_j) &&
 		(ECS::registry<Spider>.has(entity_i) || ECS::registry<WaterTile>.has(entity_i) ||
-		        (ECS::registry<Collectible>.has(entity_i) && !Equipped::isEquipped(entity_i)));
+		        (!ECS::registry<NoCollide>.has(entity_i) && ECS::registry<Collectible>.has(entity_i)));
 
 	bool isValidProjectileCollision_i = ECS::registry<Projectile>.has(entity_i) &&
 		(ECS::registry<Spider>.has(entity_j) || ECS::registry<WallTile>.has(entity_j));
