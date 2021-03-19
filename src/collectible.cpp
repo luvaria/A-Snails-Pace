@@ -85,11 +85,35 @@ void Equipped::moveEquippedWithHost()
         ECS::Entity& collectEntity = ECS::registry<Equipped>.components[i].collectible;
         auto& hostMotion = ECS::registry<Motion>.get(hostEntity);
         auto& collectMotion = ECS::registry<Motion>.get(collectEntity);
-        collectMotion.position = hostMotion.position;
         collectMotion.angle = hostMotion.angle;
+
+        const int HOST_SCALE_X_SIGN = hostMotion.scale.x / abs(hostMotion.scale.x);
+        const int HOST_SCALE_Y_SIGN = hostMotion.scale.y / abs(hostMotion.scale.y);
+
         // match scale signs (flip)
-        collectMotion.scale.x = abs(collectMotion.scale.x) * hostMotion.scale.x / abs(hostMotion.scale.x);
-        collectMotion.scale.y = abs(collectMotion.scale.y) * hostMotion.scale.y / abs(hostMotion.scale.y);
+        collectMotion.scale.x = abs(collectMotion.scale.x) * HOST_SCALE_X_SIGN;
+        collectMotion.scale.y = abs(collectMotion.scale.y) * HOST_SCALE_Y_SIGN;
+
+        // shift pos above snail based on facing direction
+        collectMotion.lastDirection = hostMotion.lastDirection;
+        collectMotion.position = hostMotion.position;
+        const float COLLECTIBLE_SHIFT = 0.5f * abs(collectMotion.scale.y);
+        switch (collectMotion.lastDirection)
+        {
+        case DIRECTION_NORTH:
+            collectMotion.position.x += COLLECTIBLE_SHIFT * HOST_SCALE_X_SIGN * HOST_SCALE_Y_SIGN;
+            break;
+        case DIRECTION_SOUTH:
+            collectMotion.position.x -= COLLECTIBLE_SHIFT * HOST_SCALE_X_SIGN * HOST_SCALE_Y_SIGN;
+            break;
+        case DIRECTION_WEST:
+            collectMotion.position.y -= COLLECTIBLE_SHIFT * HOST_SCALE_X_SIGN * HOST_SCALE_Y_SIGN;
+            break;
+        case DIRECTION_EAST:
+            collectMotion.position.y += COLLECTIBLE_SHIFT * HOST_SCALE_X_SIGN * HOST_SCALE_Y_SIGN;
+            break;
+        }
+
     }
 }
 
