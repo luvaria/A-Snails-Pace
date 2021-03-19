@@ -20,7 +20,7 @@ public:
 
 	// typed event with no additional arguments
 	Event(EventType t) : type(t) {}
-	// level load or player equip
+	// level load
 	Event(EventType t, int numInt) : type(t), number(numInt) {}
 	// menu open or close
 	Event(EventType t, MenuType m) : type(t), menu(m) {}
