@@ -31,8 +31,8 @@ ECS::Entity Collectible::createCollectible(vec2 position, int id)
 
     // Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
     //we use the same entity for min and regular meshes, so you can access either one.
-    ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::FOREGROUND);
-    ECS::registry<MinShadedMeshRef>.emplace(entity, resource_min, RenderBucket::FOREGROUND);
+    ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::COLLECTIBLE);
+    ECS::registry<MinShadedMeshRef>.emplace(entity, resource_min, RenderBucket::COLLECTIBLE);
 
     // Setting initial motion values
     Motion& motion = ECS::registry<Motion>.emplace(entity);

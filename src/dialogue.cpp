@@ -244,7 +244,7 @@ void DialogueSystem::createTextBox()
 	}
 
 	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
-	ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::FOREGROUND);
+	ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::OVERLAY);
 	ECS::registry<Dialogue>.emplace(entity);
 	ECS::registry<Overlay>.emplace(entity);
 
