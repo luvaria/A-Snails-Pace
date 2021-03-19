@@ -349,6 +349,8 @@ void WorldSystem::onNotify(Event event) {
             {
                 int const id = ECS::registry<Collectible>.get(event.other_entity).id;
                 ECS::registry<Inventory>.components[0].collectibles.insert(id);
+                // Equip collectible (creates new entity)
+                Collectible::equip(event.entity, id);
                 // Remove the collectible from the map
                 ECS::ContainerInterface::remove_all_components_of(event.other_entity);
             }

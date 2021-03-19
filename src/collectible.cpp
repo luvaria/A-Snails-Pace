@@ -53,26 +53,23 @@ ECS::Entity Collectible::createCollectible(vec2 position, int id)
 
 void Collectible::equip(ECS::Entity host, int id)
 {
+    unequip(host);
+
+    ECS::registry<Inventory>.components[0].equipped = id;
+
     auto& motion = ECS::registry<Motion>.get(host);
     auto collectEntity = createCollectible(motion.position, id);
-    if (ECS::registry<Equipped>.has(host))
-    {
-        // remove current equipped
-        ECS::registry<Equipped>.remove(host);
-    }
+    
     ECS::registry<Equipped>.emplace(host, collectEntity);
 }
 
-void Collectible::unequip(ECS::Entity host, int id)
+void Collectible::unequip(ECS::Entity host)
 {
     if (ECS::registry<Equipped>.has(host))
     {
         ECS::Entity collectible = ECS::registry<Equipped>.get(host).collectible;
-        if (ECS::registry<Collectible>.get(collectible).id == id)
-        {
-            ECS::registry<Equipped>.remove(host);
-            ECS::ContainerInterface::remove_all_components_of(collectible);
-        }
+        ECS::ContainerInterface::remove_all_components_of(collectible);
+        ECS::registry<Equipped>.remove(host);
     }
 }
 
