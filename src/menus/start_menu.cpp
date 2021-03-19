@@ -122,6 +122,19 @@ void StartMenu::loadEntities()
 	ECS::registry<StartMenuTag>.emplace(selectLevelEntity);
 	buttonEntities.push_back(selectLevelEntity);
 
+    // collectibles menu button
+    auto collectiblesEntity = ECS::Entity();
+    ECS::registry<Text>.insert(
+            collectiblesEntity,
+            Text("Collectibles", ABEEZEE_REGULAR, { 650.0f, 450.0f })
+    );
+    Text& collectiblesText = ECS::registry<Text>.get(collectiblesEntity);
+    collectiblesText.colour = DEFAULT_COLOUR;
+    collectiblesText.scale *= OPTION_SCALE;
+    ECS::registry<MenuButton>.emplace(collectiblesEntity, ButtonEventType::COLLECTIBLES);
+    ECS::registry<StartMenuTag>.emplace(collectiblesEntity);
+    buttonEntities.push_back(collectiblesEntity);
+
     // TODO: enable for M4
 	// load save button
 //    auto loadSaveEntity = ECS::Entity();
@@ -245,8 +258,13 @@ void StartMenu::selectedKeyEvent()
 				resetButtons();
 				notify(Event(Event::MENU_OPEN, Event::LEVEL_SELECT));
 				break;
+			case ButtonEventType::COLLECTIBLES:
+                removeEntities();
+                resetButtons();
+                notify(Event(Event::MENU_OPEN, Event::COLLECTIBLES_MENU));
+			    break;
 			case ButtonEventType::CLEAR_COLLECT_DATA:
-                ECS::registry<Inventory>.components[0].collectibles.clear();
+				ECS::registry<Inventory>.components[0].clear();
 			    break;
 			default:
 				break;
@@ -257,8 +275,8 @@ void StartMenu::selectedKeyEvent()
 
 void StartMenu::updateDisabled(MenuButton &button)
 {
-    if (button.event == ButtonEventType::CLEAR_COLLECT_DATA)
+    if ((button.event == ButtonEventType::CLEAR_COLLECT_DATA) || (button.event == ButtonEventType::COLLECTIBLES))
     {
-        button.disabled = (ECS::registry<Inventory>.size() == 0) || ECS::registry<Inventory>.components[0].collectibles.empty();
+        button.disabled = ECS::registry<Inventory>.components[0].collectibles.empty();
     }
 }
