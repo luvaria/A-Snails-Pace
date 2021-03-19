@@ -5,7 +5,7 @@
 
 struct Particle
 {
-    static ECS::Entity createWeatherParticle(std::string particleName, ECS::Entity entity);
+    static ECS::Entity createWeatherParticle(std::string particleName, ECS::Entity entity, vec2 window_size_in_game_units);
     static ECS::Entity createParticle(Motion motion, ECS::Entity entity = ECS::Entity());
     static void setP1Motion(Motion& mot);
     static void setP2Motion(Motion& mot);

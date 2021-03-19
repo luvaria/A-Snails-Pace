@@ -48,7 +48,7 @@ void Particle::setP3Motion(Motion& mot) {
 }
 
 // Snowflake credits: https://pngio.com/PNG/a44119-png-snowflake.html
-ECS::Entity Particle::createWeatherParticle(std::string particleName, ECS::Entity entity)
+ECS::Entity Particle::createWeatherParticle(std::string particleName, ECS::Entity entity, vec2 window_size_in_game_units)
 {
     // Create rendering primitives
     std::string key = particleName;
@@ -68,10 +68,17 @@ ECS::Entity Particle::createWeatherParticle(std::string particleName, ECS::Entit
     // Setting initial motion values
     Motion& motion = ECS::registry<Motion>.emplace(entity);
     setP1Motion(motion);
-    int minimum_number = -10;
-    int max_number = 1600;
+    
+    assert(ECS::registry<Camera>.size() != 0);
+    auto &cameraEntity = ECS::registry<Camera>.entities[0];
+
+    assert(ECS::registry<Motion>.has(cameraEntity));
+    auto &cameraMotion = ECS::registry<Motion>.get(cameraEntity);
+    
+    int minimum_number = cameraMotion.position.x - 10;
+    int max_number = cameraMotion.position.x + window_size_in_game_units.x + 200;
     float xValue = rand() % (max_number + 1 - minimum_number) + minimum_number;
-    motion.position = { xValue , -10};
+    motion.position = { xValue , cameraMotion.position.y - 10};
 
     // Create an (empty) Snail component
     ECS::registry<Particle>.emplace(entity);
@@ -132,4 +139,4 @@ bool BlurParticle::canCreateNew = true;
 float BlurParticle::timer = Particle::timer;
 float WeatherParticle::timer = Particle::timer*50;
 float WeatherParticle::nextSpawn = 2000;
-float WeatherParticle::count = 1000;
+float WeatherParticle::count = 500;
