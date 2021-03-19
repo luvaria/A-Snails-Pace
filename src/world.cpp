@@ -130,7 +130,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     if (!running)
         return;
 
-    int points = (ECS::registry<Inventory>.size() == 0) ? 0 : ECS::registry<Inventory>.components[0].points;
+    int points = ECS::registry<Inventory>.components[0].points;
     // Updating window title with moves remaining and attempts
     std::stringstream title_ss;
     title_ss << "Moves taken: " << turn_number;
@@ -347,11 +347,6 @@ void WorldSystem::onNotify(Event event) {
             }
             else if (ECS::registry<Collectible>.has(event.other_entity))
             {
-                if (ECS::registry<Inventory>.size() == 0)
-                {
-                    ECS::Entity entity;
-                    ECS::registry<Inventory>.emplace(entity);
-                }
                 int const id = ECS::registry<Collectible>.get(event.other_entity).id;
                 ECS::registry<Inventory>.components[0].collectibles.insert(id);
                 // Remove the collectible from the map

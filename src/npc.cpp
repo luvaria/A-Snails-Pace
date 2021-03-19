@@ -129,7 +129,7 @@ void NPC::onNotify(Event event)
 
 			if (node.collectiblePaths.size() > 0)
 			{
-				Inventory& inv = ECS::registry<Inventory>.size() == 0 ? ECS::registry<Inventory>.emplace(ECS::Entity()) : ECS::registry<Inventory>.components[0];
+				Inventory& inv = ECS::registry<Inventory>.components[0];
 				for (const std::pair<CID, CollectiblePath> path : node.collectiblePaths)
 				{
 

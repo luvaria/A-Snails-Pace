@@ -277,6 +277,6 @@ void StartMenu::updateDisabled(MenuButton &button)
 {
     if ((button.event == ButtonEventType::CLEAR_COLLECT_DATA) || (button.event == ButtonEventType::COLLECTIBLES))
     {
-        button.disabled = (ECS::registry<Inventory>.size() == 0) || ECS::registry<Inventory>.components[0].collectibles.empty();
+        button.disabled = ECS::registry<Inventory>.components[0].collectibles.empty();
     }
 }
