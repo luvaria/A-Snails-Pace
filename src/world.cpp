@@ -608,8 +608,8 @@ void WorldSystem::goLeft(ECS::Entity &entity, int &moves) {
         }
     }
     else if (abs(motion.angle) != PI / 2) {
-        int yCoord = (motion.angle == -PI / 2 ? yCoord + 1 : yCoord - 1);
-        if (yCoord < 0 && yCoord > tiles.size() - 1) {
+        int yCord = (motion.angle == -PI / 2 ? yCoord + 1 : yCoord - 1);
+        if (yCord < 0 && yCord > tiles.size() - 1) {
             return;
         }
         nextTile = tiles[abs(motion.angle) == PI ? (yCoord - 1) : (yCoord + 1)][xCoord - 1];
@@ -617,8 +617,8 @@ void WorldSystem::goLeft(ECS::Entity &entity, int &moves) {
         if (!(nextTile.type == WALL || leftTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
             motion.angle = motion.angle == 0 ? PI : 0;
             motion.scale.x = -1*motion.scale.x;
-            yCoord = (motion.angle == -PI / 2 ? yCoord + 1 : yCoord - 1);
-            if ((yCoord < 0 && yCoord > tiles.size() - 1) || (xCoord - 1 < 0)) {
+            yCord = (motion.angle == -PI / 2 ? yCoord + 1 : yCoord - 1);
+            if ((yCord < 0 && yCord > tiles.size() - 1) || (xCoord - 1 < 0)) {
                 motion.angle = motion.angle == 0 ? PI : 0;
                 motion.scale.x = -1*motion.scale.x;
                 return;
@@ -688,11 +688,11 @@ void WorldSystem::goRight(ECS::Entity& entity, int& moves) {
         }
     }
     else if (abs(motion.angle) != PI / 2) {
-        int yCoord = abs(motion.angle) == PI ? (yCoord - 1) : (yCoord + 1);
-        if (yCoord < 0 && yCoord > tiles.size() - 1) {
+        int yCord = abs(motion.angle) == PI ? (yCoord - 1) : (yCoord + 1);
+        if (yCord < 0 && yCord > tiles.size() - 1) {
             return;
         }
-        if (xCoord + 1 > tiles[yCoord].size() - 1) {
+        if (xCoord + 1 > tiles[yCord].size() - 1) {
             return;
         }
         nextTile = tiles[abs(motion.angle) == PI ? (yCoord - 1) : (yCoord + 1)][xCoord + 1];
@@ -700,8 +700,8 @@ void WorldSystem::goRight(ECS::Entity& entity, int& moves) {
         if (!(nextTile.type == WALL || rightTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
             motion.angle = motion.angle == 0 ? PI : 0;
             motion.scale.x = -1*motion.scale.x;
-            yCoord = abs(motion.angle) == PI ? (yCoord - 1) : (yCoord + 1);
-            if ((yCoord < 0 && yCoord > tiles.size() - 1) || (xCoord + 1 > tiles[yCoord].size() - 1)) {
+            yCord = abs(motion.angle) == PI ? (yCoord - 1) : (yCoord + 1);
+            if ((yCord < 0 && yCord > tiles.size() - 1) || (xCoord + 1 > tiles[yCord].size() - 1)) {
                 motion.angle = motion.angle == 0 ? PI : 0;
                 motion.scale.x = -1*motion.scale.x;
                 return;
@@ -784,23 +784,23 @@ void WorldSystem::goUp(ECS::Entity& entity, int& moves) {
     }
     else if (abs(motion.angle) == PI / 2) {
 
-        int xCoord = (motion.angle == -PI / 2 ? xCoord + 1 : xCoord - 1);
-        if (xCoord > tiles[(yCoord - 1)].size() - 1) {
+        int xCord = (motion.angle == -PI / 2 ? xCoord + 1 : xCoord - 1);
+        if (xCord > tiles[(yCoord - 1)].size() - 1) {
             return;
         }
-        nextTile = tiles[(yCoord-1)][xCoord];
-        Tile sideTile = tiles[(yCoord)][xCoord];
+        nextTile = tiles[(yCoord-1)][xCord];
+        Tile sideTile = tiles[(yCoord)][xCord];
         if(!(nextTile.type == WALL || upTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
             motion.angle = -1*motion.angle;
             motion.scale.y = -1*motion.scale.y;
-            xCoord = (motion.angle == -PI / 2 ? xCoord + 1 : xCoord - 1);
-            if (xCoord > tiles[(yCoord - 1)].size() - 1) {
+            xCord = (motion.angle == -PI / 2 ? xCoord + 1 : xCoord - 1);
+            if (xCord > tiles[(yCoord - 1)].size() - 1) {
                 motion.angle = -1*motion.angle;
                 motion.scale.y = -1*motion.scale.y;
                 return;
             }
-            nextTile = tiles[(yCoord-1)][xCoord];
-            Tile sideTile = tiles[(yCoord)][xCoord];
+            nextTile = tiles[(yCoord-1)][xCord];
+            Tile sideTile = tiles[(yCoord)][xCord];
             if (!(nextTile.type == WALL || upTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
                 motion.angle = -1*motion.angle;
                 motion.scale.y = -1*motion.scale.y;
@@ -865,23 +865,23 @@ void WorldSystem::goDown(ECS::Entity& entity, int& moves) {
     }
     else if (abs(motion.angle) == PI / 2) {
 
-        int xCoord = (motion.angle == -PI / 2 ? xCoord + 1 : xCoord - 1);
-        if (xCoord > tiles[(yCoord + 1)].size() - 1) {
+        int xCord = (motion.angle == -PI / 2 ? xCoord + 1 : xCoord - 1);
+        if (xCord > tiles[(yCoord + 1)].size() - 1) {
             return;
         }
-        nextTile = tiles[(yCoord + 1)][xCoord];
-         Tile sideTile = tiles[(yCoord)][xCoord];
+        nextTile = tiles[(yCoord + 1)][xCord];
+         Tile sideTile = tiles[(yCoord)][xCord];
          if (!(nextTile.type == WALL || downTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
              motion.angle = -1*motion.angle;
              motion.scale.y = -1*motion.scale.y;
-             xCoord = (motion.angle == -PI / 2 ? xCoord + 1 : xCoord - 1);
-             if (xCoord > tiles[(yCoord + 1)].size() - 1) {
+             xCord = (motion.angle == -PI / 2 ? xCoord + 1 : xCoord - 1);
+             if (xCord > tiles[(yCoord + 1)].size() - 1) {
                  motion.angle = -1*motion.angle;
                  motion.scale.y = -1*motion.scale.y;
                  return;
              }
-             nextTile = tiles[(yCoord + 1)][xCoord];
-             Tile sideTile = tiles[(yCoord)][xCoord];
+             nextTile = tiles[(yCoord + 1)][xCord];
+             Tile sideTile = tiles[(yCoord)][xCord];
              if (!(nextTile.type == WALL || downTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
                  motion.angle = -1*motion.angle;
                  motion.scale.y = -1*motion.scale.y;
