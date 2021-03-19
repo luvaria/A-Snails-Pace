@@ -21,15 +21,16 @@ using json = nlohmann::json;
 
 void LoadSaveSystem::loadPlayerFile()
 {
+    // initialize the inventory
+    auto& inventory = (ECS::registry<Inventory>.size() == 0) ?
+                      ECS::registry<Inventory>.emplace(ECS::Entity()) : ECS::registry<Inventory>.components[0];
+
     std::string const filename = std::string(PLAYER_DIR) + std::string(PLAYER_FILE);
     std::ifstream i(save_path(filename));
 
     if (!i) return;
 
     json save = json::parse(i);
-
-    auto& inventory = (ECS::registry<Inventory>.size() == 0) ?
-            ECS::registry<Inventory>.emplace(ECS::Entity()) : ECS::registry<Inventory>.components[0];
 
     for (int id : save[COLLECTIBLE_KEY])
     {
