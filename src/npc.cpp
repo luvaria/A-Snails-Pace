@@ -129,14 +129,14 @@ void NPC::onNotify(Event event)
 
 			if (node.collectiblePaths.size() > 0)
 			{
-				// TODO: check ECS for equipped collectible, but for now, check if a matching collectible is in inventory
-				Inventory& inv = ECS::registry<Inventory>.size() == 0 ? ECS::registry<Inventory>.emplace(ECS::Entity()) : ECS::registry<Inventory>.components[0];
+				Inventory& inv = ECS::registry<Inventory>.components[0];
 				for (const std::pair<CID, CollectiblePath> path : node.collectiblePaths)
 				{
-					if (inv.collectibles.count(path.first))
+
+                    if (inv.equipped == path.first)
 					{
 						curNode = path.second.second;
-						// TODO: handle points gain
+						inv.points += path.second.first;
 					}
 				}
 			}

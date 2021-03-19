@@ -19,10 +19,10 @@
 						<!--each satisfying collectible has some number of gained impression points,-->
 						<!--and the next node to go to-->
 						<collectible cID="0" points="1">1</collectible>
-						<collectible cID="1" points="5">1</collectible>
+						<collectible cID="1" points="5">2</collectible>
 					</collectibles>
 					<!--default node if no collectible condition, or no matching collectible (failure)-->
-					<next>2</next>
+					<next>3</next>
 				</dialogue>
 				<dialogue dID="1">
 					<lines>
@@ -31,6 +31,11 @@
 					</lines>
 				</dialogue>
 				<dialogue dID="2">
+					<lines>
+						<line>Good taste. You may pass.</line>
+					</lines>
+				</dialogue>
+				<dialogue dID="3">
 					<lines>
 						<line>Oof. That's an unfortunate wardrobe choice.</line>
 						<line>Try looking in a mirror next time?</line>

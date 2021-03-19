@@ -58,7 +58,7 @@ ECS::Entity Pebble::createPebble(vec2 position, vec2 scale)
 	}
 
 	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
-	ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::FOREGROUND);
+	ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::PROJECTILE);
 
 	// Create motion
 	auto& motion = ECS::registry<Motion>.emplace(entity);
