@@ -87,6 +87,9 @@ void Equipped::moveEquippedWithHost()
         auto& collectMotion = ECS::registry<Motion>.get(collectEntity);
         collectMotion.position = hostMotion.position;
         collectMotion.angle = hostMotion.angle;
+        // match scale signs (flip)
+        collectMotion.scale.x = abs(collectMotion.scale.x) * hostMotion.scale.x / abs(hostMotion.scale.x);
+        collectMotion.scale.y = abs(collectMotion.scale.y) * hostMotion.scale.y / abs(hostMotion.scale.y);
     }
 }
 
