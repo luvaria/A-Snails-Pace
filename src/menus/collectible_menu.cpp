@@ -156,9 +156,20 @@ void CollectMenu::selectedKeyEvent() {
 
         // perform action for button being hovered over (and pressed)
         if (button.selected) {
+            CollectId& currEquipped = ECS::registry<Inventory>.components[0].equipped;
+            CollectId toEquip = collectible_ids[activeButtonIndex];
             switch (button.event) {
                 case ButtonEventType::EQUIP_COLLECTIBLE:
-                    notify(Event(Event::EventType::EQUIP_COLLECTIBLE, collectible_ids[activeButtonIndex]));
+                    if (currEquipped == toEquip)
+                    {
+                        // already equipped so unequip
+                        currEquipped = -1;
+                    }
+                    else
+                    {
+                        // equip
+                        currEquipped = toEquip;
+                    }
                     break;
                 default:
                     break;

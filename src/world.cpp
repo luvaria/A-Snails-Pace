@@ -390,43 +390,6 @@ void WorldSystem::onNotify(Event event) {
 
         restart(level);
     }
-    else if (event.type == Event::EQUIP_COLLECTIBLE)
-    {
-        CollectId& currEquipped = ECS::registry<Inventory>.components[0].equipped;
-        CollectId toEquip = event.number;
-        if (currEquipped == toEquip)
-        {
-            // already equipped so unequip
-            currEquipped = -1;
-            if (ECS::registry<Snail>.has(player_snail))
-            {
-                Collectible::unequip(player_snail, currEquipped);
-            }
-        }
-        else
-        {
-            // equip
-            currEquipped = toEquip;
-            if (ECS::registry<Snail>.has(player_snail))
-            {
-                Collectible::equip(player_snail, event.number);
-            }
-        }
-    }
-    else if (event.type == Event::CLEAR_COLLECTIBLES)
-    {
-        if (ECS::registry<Snail>.has(player_snail) && ECS::registry<Equipped>.has(player_snail))
-        {
-            ECS::Entity collectible = ECS::registry<Equipped>.get(player_snail).collectible;
-            ECS::registry<Equipped>.remove(player_snail);
-            ECS::ContainerInterface::remove_all_components_of(collectible);
-        }
-
-        if (ECS::registry<Inventory>.size() != 0)
-        {
-            ECS::registry<Inventory>.components[0].clear();
-        }
-    }
 }
 
 // Should the game be over ?

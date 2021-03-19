@@ -264,7 +264,7 @@ void StartMenu::selectedKeyEvent()
                 notify(Event(Event::MENU_OPEN, Event::COLLECTIBLES_MENU));
 			    break;
 			case ButtonEventType::CLEAR_COLLECT_DATA:
-                notify(Event(Event::CLEAR_COLLECTIBLES));
+				ECS::registry<Inventory>.components[0].clear();
 			    break;
 			default:
 				break;
