@@ -77,7 +77,6 @@ void Equipped::moveEquippedWithHost()
 {
     for (size_t i = 0; i < ECS::registry<Equipped>.size(); i++)
     {
-        // TODO #54: get it to sit nicely on top of snail
         ECS::Entity& hostEntity = ECS::registry<Equipped>.entities[i];
         ECS::Entity& collectEntity = ECS::registry<Equipped>.components[i].collectible;
         auto& hostMotion = ECS::registry<Motion>.get(hostEntity);
@@ -86,6 +85,8 @@ void Equipped::moveEquippedWithHost()
 
         const int HOST_SCALE_X_SIGN = hostMotion.scale.x / abs(hostMotion.scale.x);
         const int HOST_SCALE_Y_SIGN = hostMotion.scale.y / abs(hostMotion.scale.y);
+
+        // TODO: hat flipping/shifting with snail motion may need fixing depending on #117
 
         // match scale signs (flip)
         collectMotion.scale.x = abs(collectMotion.scale.x) * HOST_SCALE_X_SIGN;
