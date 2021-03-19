@@ -332,7 +332,7 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     ECS::Entity newSnowflakeParticle;
     if (ECS::registry<WeatherParticle>.components.size() <= WeatherParticle::count && WeatherParticle::nextSpawn < 0.f)
     {
-        Particle::createWeatherParticle("snowflake", newSnowflakeParticle);
+        Particle::createWeatherParticle("snowflake", newSnowflakeParticle, window_size_in_game_units);
         WeatherParticle::nextSpawn = uniform_dist(rng);
     }
     for (auto entity : ECS::registry<WeatherParticle>.entities)

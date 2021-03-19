@@ -220,14 +220,15 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             }
         } else if (ECS::registry<Particle>.has(entity) || ECS::registry<Spider>.has(entity)){
             auto& motion = ECS::registry<Motion>.get(entity);
-            motion.scale *= (ECS::registry<WeatherParticle>.has(entity)) ? (1-(step_seconds/8)) : (1+(step_seconds/3));
-            motion.angle *= (ECS::registry<WeatherParticle>.has(entity)) ? (1+(step_seconds)) : 1;
+            bool isWeatherParticle = ECS::registry<WeatherParticle>.has(entity);
+            motion.scale *= (isWeatherParticle) ? (1-(step_seconds/8)) : (1+(step_seconds/3));
+            motion.angle *= (isWeatherParticle) ? (1+(step_seconds)) : 1;
 
             auto& counter = ECS::registry<DeathTimer>.get(entity);
             counter.counter_ms -= elapsed_ms;
             if (counter.counter_ms < 0)
             {
-                if(ECS::registry<WeatherParticle>.has(entity) && motion.position.y > (window_size_in_game_units.y+100)) {
+                if(isWeatherParticle && offScreen(motion.position, window_size_in_game_units, cameraOffset)) {
                     ECS::ContainerInterface::remove_all_components_of(entity);
                 } else {
                     ECS::ContainerInterface::remove_all_components_of(entity);
