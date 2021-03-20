@@ -351,8 +351,9 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
                 ECS::registry<RejectedStage2>.emplace(entity);
             }
         }
-        vec2 velocity = motion.velocity;
-        motion.position += velocity * step_seconds;
+        float gravity_acceleration = 0.004;
+        motion.velocity += gravity_acceleration * step_seconds;
+        motion.position += motion.velocity * step_seconds;
     }
 
     
