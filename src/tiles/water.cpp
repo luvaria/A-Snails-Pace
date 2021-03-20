@@ -53,7 +53,7 @@ ECS::Entity WaterTile::createWaterTile(vec2 position, ECS::Entity entity)
     return entity;
 }
 
-// Credits: https://www.vectorstock.com/royalty-free-vectors/water-sprite-vectors
+// Credits (WaterSplash): https://opengameart.org/content/water-splash
 ECS::Entity WaterTile::createWaterSplashTile(Tile& tile, ECS::Entity entity)
 {
     ECS::registry<Tile>.insert(entity, std::move(tile));
@@ -67,7 +67,7 @@ ECS::Entity WaterTile::createWaterSplashTile(vec2 position, ECS::Entity entity)
     if (resource.effect.program.resource == 0)
     {
         resource = ShadedMesh();
-        float numFrames = 14.0f;
+        float numFrames = 7.0f;
         float numAnimations = 1.0f;
         resource.texture.frameSize = { 1.0f / numFrames, 1.0f / numAnimations }; // FRAME SIZE HERE!!! this is the percentage of the whole thing...
         RenderSystem::createSprite(resource, textures_path("waterSplash.png"), "spriteSheet", true);
@@ -91,16 +91,13 @@ ECS::Entity WaterTile::createWaterSplashTile(vec2 position, ECS::Entity entity)
     motion.position = position;
     motion.angle = 0.f;
     motion.velocity = { 0.f, 0.f };
-    motion.scale = { TileSystem::getScale()*1.5, TileSystem::getScale()*1.5 };
+    motion.scale = { TileSystem::getScale(), TileSystem::getScale()};
 
     //setting the animation information
     SpriteSheet& spriteSheet = ECS::registry<SpriteSheet>.emplace(entity);
-    spriteSheet.animationSpeed = 100;
-    spriteSheet.numAnimationFrames = 14;
-    spriteSheet.currentAnimationNumber = 0; //leaves move when the level starts.
-
-
-    // Create an (empty) VineTile component
+    spriteSheet.animationSpeed = 200;
+    spriteSheet.numAnimationFrames = 7;
+    spriteSheet.currentAnimationNumber = 0;
     auto& waterTile = ECS::registry<WaterTile>.emplace(entity);
     waterTile.entity = entity;
     return entity;
