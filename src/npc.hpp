@@ -26,8 +26,9 @@ struct NPC : public Observer, public Subject
 	// all nodes of the loaded encounter
 	// index is dID
 	std::vector<npcNode> nodes;
-	int curNode = 0;
+	int curNode = 1; // 0 for when encounter already completed
 	int curLine = 0;
+	int timesTalkedTo = 0;
 
 	// constructor
 	NPC(std::vector<npcNode> nodes);

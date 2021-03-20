@@ -2,6 +2,7 @@
 #include "render.hpp"
 #include "tiles/tiles.hpp"
 #include "snail.hpp"
+#include "npc.hpp"
 
 ECS::Entity Collectible::createCollectible(vec2 position, int id)
 {
@@ -42,7 +43,7 @@ ECS::Entity Collectible::createCollectible(vec2 position, int id)
     motion.scale = resource.mesh.original_size / resource.mesh.original_size.x * TileSystem::getScale();
     motion.scale.y *= -1; // fix orientation
     motion.scale *= 0.8f;
-    motion.lastDirection = DIRECTION_EAST;
+    motion.lastDirection = DIRECTION_WEST;
 
     // Create a Collectible component
     auto& collectible = ECS::registry<Collectible>.emplace(entity);
@@ -53,19 +54,32 @@ ECS::Entity Collectible::createCollectible(vec2 position, int id)
 
 void Collectible::equip(ECS::Entity host, int id)
 {
+    assert(id >= 0 && id < collectibleMap.size());
+
     unequip(host);
 
-    ECS::registry<Inventory>.components[0].equipped = id;
+    if (ECS::registry<Player>.has(host))
+        ECS::registry<Inventory>.components[0].equipped = id;
 
     auto& motion = ECS::registry<Motion>.get(host);
     auto collectEntity = createCollectible(motion.position, id);
     ECS::registry<NoCollide>.emplace(collectEntity);
-    
+
+    // npc hats don't layer over snail hat
+    if (!ECS::registry<Player>.has(host))
+    {
+        auto& collectMeshRef = ECS::registry<ShadedMeshRef>.get(collectEntity);
+        collectMeshRef.renderBucket = RenderBucket::CHARACTER_COLLECTIBLE;
+    }
+
     ECS::registry<Equipped>.emplace(host, collectEntity);
 }
 
 void Collectible::unequip(ECS::Entity host)
 {
+    if (ECS::registry<Player>.has(host))
+        ECS::registry<Inventory>.components[0].equipped = -1;
+
     if (ECS::registry<Equipped>.has(host))
     {
         ECS::Entity collectible = ECS::registry<Equipped>.get(host).collectible;

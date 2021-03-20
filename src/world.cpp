@@ -896,7 +896,26 @@ void WorldSystem::on_key(int key, int, int action, int mod)
             case GLFW_KEY_E:
                 npc.stepEncounter();
                 if (!npc.isActive)
+                {
                     ECS::registry<Turn>.components[0].type = PLAYER_WAITING;
+                }
+                if (npc.timesTalkedTo >= 2)
+                {
+                    // after two interactions, npc disappears
+
+                    // update tile type to EMPTY
+                    Motion& npcMotion = ECS::registry<Motion>.get(encountered_npc);
+                    float scale = TileSystem::getScale();
+                    TileSystem::getTiles()[npcMotion.position.y / scale][npcMotion.position.x / scale].type = EMPTY;
+
+                    // remove npc and its hat
+                    if (ECS::registry<Equipped>.has(encountered_npc))
+                    {
+                        ECS::Entity hatEntity = ECS::registry<Equipped>.get(encountered_npc).collectible;
+                        ECS::ContainerInterface::remove_all_components_of(hatEntity);
+                    }
+                    ECS::ContainerInterface::remove_all_components_of(encountered_npc);
+                }
                 break;
             }
         }
