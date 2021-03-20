@@ -54,7 +54,13 @@ const std::vector<std::string> levels = { "demo.json", "demo-2.json", "level-1.j
 
 const std::unordered_map<int, std::string> collectibleMap =
 {
-    {0, "spider"},
+    { 0, "tophat" },
+	{ 1, "bbcap" }
+};
+
+struct Player
+{
+	// tag component
 };
 
 // All data relevant to the shape and motion of entities
@@ -96,6 +102,15 @@ typedef int CollectId;
 struct Inventory
 {
     std::unordered_set<CollectId> collectibles;
+    CollectId equipped = -1;
+    int points = 0;
+    void clear() { collectibles.clear(); equipped = -1; points = 0; };
+};
+
+// collectible equipped; ignore collisions
+struct NoCollide
+{
+
 };
 
 // direction a level scrolls in

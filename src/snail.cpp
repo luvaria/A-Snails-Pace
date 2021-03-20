@@ -23,8 +23,8 @@ ECS::Entity Snail::createSnail(vec2 position, ECS::Entity entity)
 
 	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
 	//we use the same entity for min and regular meshes, so you can access either one.
-	ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::CHARACTER);
-	ECS::registry<MinShadedMeshRef>.emplace(entity, resource_min, RenderBucket::CHARACTER);
+	ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::PLAYER);
+	ECS::registry<MinShadedMeshRef>.emplace(entity, resource_min, RenderBucket::PLAYER);
 
 	// Setting initial motion values
 	Motion& motion = ECS::registry<Motion>.emplace(entity);

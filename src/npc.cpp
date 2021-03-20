@@ -1,6 +1,7 @@
 // internal
 #include "npc.hpp"
 #include "render.hpp"
+#include "collectible.hpp"
 
 // ext
 #include <../ext/pugixml/src/pugixml.hpp>
@@ -36,7 +37,7 @@ ECS::Entity NPC::createNPC(vec2 position, std::string levelName, ECS::Entity ent
 	motion.scale = resource.mesh.original_size / resource.mesh.original_size.x * TileSystem::getScale();
 	motion.scale *= 0.9f;
 	motion.scale *= -1; // fix orientation
-	motion.lastDirection = DIRECTION_EAST;
+	motion.lastDirection = DIRECTION_WEST;
 
 	// Create an NPC component, loading its dialogue nodes
 	ECS::registry<NPC>.emplace(entity, loadNodes(levelName));
@@ -84,7 +85,10 @@ std::vector<npcNode> NPC::loadNodes(std::string levelName)
 void NPC::beginEncounter()
 {
 	isActive = true;
-	curNode = 0;
+	if (timesTalkedTo > 0)
+	{
+		curNode = 0;
+	}
 	curLine = 0;
 	stepEncounter();
 }
@@ -111,6 +115,7 @@ void NPC::onNotify(Event event)
 		// no more dialogue
 		if (curNode == -1)
 		{
+			timesTalkedTo++;
 			endEncounter();
 			return;
 		}
@@ -129,14 +134,14 @@ void NPC::onNotify(Event event)
 
 			if (node.collectiblePaths.size() > 0)
 			{
-				// TODO: check ECS for equipped collectible, but for now, check if a matching collectible is in inventory
-				Inventory& inv = ECS::registry<Inventory>.size() == 0 ? ECS::registry<Inventory>.emplace(ECS::Entity()) : ECS::registry<Inventory>.components[0];
+				Inventory& inv = ECS::registry<Inventory>.components[0];
 				for (const std::pair<CID, CollectiblePath> path : node.collectiblePaths)
 				{
-					if (inv.collectibles.count(path.first))
+
+                    if (inv.equipped == path.first)
 					{
 						curNode = path.second.second;
-						// TODO: handle points gain
+						inv.points += path.second.first;
 					}
 				}
 			}

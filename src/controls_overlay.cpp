@@ -51,6 +51,14 @@ bool ControlsOverlay::addControlsOverlayIfOn()
     addKeyIcon("Esc", ESC_POS);
     addControlDesc("pause", ESC_POS + vec2(BUTTON_SCALE.x, 0));
 
+    // npc interaction
+    const vec2 TALK_POS = ESC_POS + vec2(0, 60);
+    addKeyIcon("E", TALK_POS);
+    addControlDesc("interact", TALK_POS + vec2(BUTTON_SCALE.x, 0));
+    const vec2 STOP_TALK_POS = TALK_POS + vec2(0, 60);
+    addKeyIcon("Q", STOP_TALK_POS);
+    addControlDesc("stop interacting", STOP_TALK_POS + vec2(BUTTON_SCALE.x, 0));
+
     // wasd
     const vec2 WASD_POS = CONTROLS_POS + vec2(300, 0);
     const float WASD_SEP = 10.f;
@@ -77,8 +85,8 @@ bool ControlsOverlay::addControlsOverlayIfOn()
         resource.mesh.loadFromOBJFile(mesh_path("mouse_icon.obj"));
         RenderSystem::createColoredMesh(resource, "colored_mesh");
     }
-    ECS::registry<ShadedMeshRef>.emplace(leftClick, resource, RenderBucket::FOREGROUND);
-    ECS::registry<ShadedMeshRef>.emplace(rightClick, resource, RenderBucket::FOREGROUND);
+    ECS::registry<ShadedMeshRef>.emplace(leftClick, resource, RenderBucket::OVERLAY);
+    ECS::registry<ShadedMeshRef>.emplace(rightClick, resource, RenderBucket::OVERLAY);
     
     Motion& leftClickMotion = ECS::registry<Motion>.emplace(leftClick);
     Motion& rightClickMotion = ECS::registry<Motion>.emplace(rightClick);
@@ -148,7 +156,7 @@ ECS::Entity ControlsOverlay::addKeyIcon(std::string name, vec2 pos)
     }
 
     // Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
-    ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::FOREGROUND);
+    ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::OVERLAY);
 
     // Create motion
     auto& motion = ECS::registry<Motion>.emplace(entity);

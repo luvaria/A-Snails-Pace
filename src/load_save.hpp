@@ -7,6 +7,8 @@ class LoadSaveSystem
 {
 public:
     static char constexpr COLLECTIBLE_KEY[] = "collectibles";
+    static char constexpr EQUIPPED_KEY[] = "equipped";
+    static char constexpr POINTS_KEY[] = "points";
 
     static char constexpr PLAYER_DIR[] = "player/";
 

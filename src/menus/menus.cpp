@@ -7,6 +7,7 @@
 #include "menus/end_screen.hpp"
 #include "tiles/tiles.hpp"
 #include "text.hpp"
+#include "collectible_menu.hpp"
 
 // stlib
 #include <sstream>
@@ -139,7 +140,7 @@ void MenuSystem::onNotify(Event event)
 		// notify world to load level by passing event on
 		notify(event);
 		break;
-	}
+    }
 }
 
 void MenuSystem::closeMenu()
@@ -182,6 +183,9 @@ void MenuSystem::openMenu(Event::MenuType menu)
 	case Event::MenuType::END_SCREEN:
 		newMenu = new EndScreen(window);
 		break;
+	case Event::MenuType::COLLECTIBLES_MENU:
+        newMenu = new CollectMenu(window);
+        break;
 	default:
 		// no menu opened
 		return;

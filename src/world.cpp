@@ -100,6 +100,8 @@ WorldSystem::~WorldSystem() {
 
     // Close the window
     glfwDestroyWindow(window);
+    
+    glfwTerminate();
 }
 
 void WorldSystem::init_audio()
@@ -131,6 +133,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     if (!running)
         return;
 
+    int points = ECS::registry<Inventory>.components[0].points;
     // Updating window title with moves remaining and attempts
     std::stringstream title_ss;
     title_ss << "Moves taken: " << turn_number;
@@ -138,6 +141,8 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 	title_ss << "Camera will move in " << turns_per_camera_move - (turn_number % turns_per_camera_move) << " turn(s)";
     title_ss << ", ";
     title_ss << "Attempts: " << attempts;
+    title_ss << ", ";
+    title_ss << "Points: " << points;
     glfwSetWindowTitle(window, title_ss.str().c_str());
 
     auto& cameraEntity = ECS::registry<Camera>.entities[0];
@@ -305,7 +310,12 @@ void WorldSystem::restart(int newLevel)
     // register NPCs in observer pattern
     notify(Event(Event::LEVEL_LOADED));
     // can't access player_snail in level loader
-    player_snail = ECS::registry<Snail>.entities[0];
+    player_snail = ECS::registry<Player>.entities[0];
+
+    if (ECS::registry<Inventory>.components[0].equipped != -1)
+    {
+        Collectible::equip(player_snail, ECS::registry<Inventory>.components[0].equipped);
+    }
 
     // Reset Camera
     Camera::reset();
@@ -371,13 +381,10 @@ void WorldSystem::onNotify(Event event) {
             }
             else if (ECS::registry<Collectible>.has(event.other_entity))
             {
-                if (ECS::registry<Inventory>.size() == 0)
-                {
-                    ECS::Entity entity;
-                    ECS::registry<Inventory>.emplace(entity);
-                }
                 int const id = ECS::registry<Collectible>.get(event.other_entity).id;
                 ECS::registry<Inventory>.components[0].collectibles.insert(id);
+                // Equip collectible (creates new entity)
+                Collectible::equip(event.entity, id);
                 // Remove the collectible from the map
                 ECS::ContainerInterface::remove_all_components_of(event.other_entity);
             }
@@ -418,8 +425,8 @@ void WorldSystem::onNotify(Event event) {
         ControlsOverlay::toggleControlsOverlayOff();
 
         // level index exists
-        assert(event.level >= 0 && event.level < levels.size());
-        level = event.level;
+        assert(event.number >= 0 && event.number < levels.size());
+        level = event.number;
 
         restart(level);
     }
@@ -925,7 +932,26 @@ void WorldSystem::on_key(int key, int, int action, int mod)
             case GLFW_KEY_E:
                 npc.stepEncounter();
                 if (!npc.isActive)
+                {
                     ECS::registry<Turn>.components[0].type = PLAYER_WAITING;
+                }
+                if (npc.timesTalkedTo >= 2)
+                {
+                    // after two interactions, npc disappears
+
+                    // update tile type to EMPTY
+                    Motion& npcMotion = ECS::registry<Motion>.get(encountered_npc);
+                    float scale = TileSystem::getScale();
+                    TileSystem::getTiles()[npcMotion.position.y / scale][npcMotion.position.x / scale].type = EMPTY;
+
+                    // remove npc and its hat
+                    if (ECS::registry<Equipped>.has(encountered_npc))
+                    {
+                        ECS::Entity hatEntity = ECS::registry<Equipped>.get(encountered_npc).collectible;
+                        ECS::ContainerInterface::remove_all_components_of(hatEntity);
+                    }
+                    ECS::ContainerInterface::remove_all_components_of(encountered_npc);
+                }
                 break;
             }
         }

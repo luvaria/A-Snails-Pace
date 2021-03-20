@@ -50,7 +50,7 @@ void DialogueSystem::displayCurrent(float elapsed_ms)
 
 	const auto FANTASQUE_SANS_MONO_REGULAR = Font::load(FANTASQUE_SANS_MONO_REGULAR_PATH);
 
-	int chars_to_display = dialogue_displayed_ms / MS_PER_CHAR;
+	int chars_to_display = static_cast<int>(dialogue_displayed_ms / MS_PER_CHAR);
 	int chars_displayed = 0;
 	for (int i = 0; i < dialogueQueue.front().size(); i++)
 	{
@@ -244,7 +244,7 @@ void DialogueSystem::createTextBox()
 	}
 
 	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
-	ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::FOREGROUND);
+	ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::OVERLAY);
 	ECS::registry<Dialogue>.emplace(entity);
 	ECS::registry<Overlay>.emplace(entity);
 
