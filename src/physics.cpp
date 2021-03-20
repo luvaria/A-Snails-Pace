@@ -214,11 +214,11 @@ bool collides(ECS::Entity& entity1, ECS::Entity& entity2, Motion& motion1, Motio
 				bounceProjectileOffWall(motion1, vertices1, vertices2);
 			}
 			else if (ECS::registry<SlugProjectile>.has(entity1)) {
-				std::cout << "in penetration free #3" << std::endl;
+				//std::cout << "in penetration free #3" << std::endl;
 				bounceProjectileOffWall(motion1, vertices1, vertices2);
 			}
 			else if (ECS::registry<SlugProjectile>.has(entity2)) {
-				std::cout << "in penetration free #4" << std::endl;
+				//std::cout << "in penetration free #4" << std::endl;
 				bounceProjectileOffWall(motion2, vertices2, vertices1);
 			}
 			else
@@ -246,11 +246,11 @@ bool collides(ECS::Entity& entity1, ECS::Entity& entity2, Motion& motion1, Motio
 						bounceProjectileOffWall(motion1, vertices1, vertices2);
 					}
 					else if (ECS::registry<SlugProjectile>.has(entity1)) {
-						std::cout << "in penetration free #1" << std::endl;
+						//std::cout << "in penetration free #1" << std::endl;
 						bounceProjectileOffWall(motion1, vertices1, vertices2);
 					}
 					else if (ECS::registry<SlugProjectile>.has(entity2)) {
-						std::cout << "in penetration free #2" << std::endl;
+						//std::cout << "in penetration free #2" << std::endl;
 						bounceProjectileOffWall(motion2, vertices2, vertices1);
 					}
 					else

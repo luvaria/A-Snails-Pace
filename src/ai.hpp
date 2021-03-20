@@ -92,6 +92,8 @@ private:
                 return BTState::Running;
             }
         }
+        // maybe have a situation for BT::Running?
+
         else {
             return state;
         }
@@ -101,73 +103,8 @@ private:
     std::vector<std::shared_ptr<BTNode>> m_children;
 };
 
-class BTSequenceForN : public BTNode {
-public:
-    BTSequenceForN(std::vector<std::shared_ptr<BTNode>> children)
-        : m_children(std::move(children)), m_index(0), m_iterations(5) {
 
-    }
-
-private:
-    void init(ECS::Entity e) override
-    {
-        m_index = 0;
-        assert(m_index < m_children.size());
-        // initialize the first child
-        const auto& child = m_children[m_index];
-        m_iterations = 5;
-        assert(child);
-        child->init(e);
-    }
-
-    BTState process(ECS::Entity e) override {
-        if (m_index >= m_children.size()) {
-            std::cout << "went through all options" << std::endl;
-            return BTState::Failure;
-        }
-        // process current child
-        const auto& child = m_children[m_index];
-        assert(child);
-        std::cout << "processing child" << std::endl;
-        BTState state = child->process(e);
-
-        // select a new active child and initialize its internal state
-        if (state == BTState::Success) {
-            std::cout << "in success for some reason" << std::endl;
-            ++m_index;
-            if (m_index >= m_children.size()) {
-                return BTState::Success;
-            }
-            else {
-                const auto& nextChild = m_children[m_index];
-                std::cout << "there should be no other children" << std::endl;
-                //std::cout << m_index << std::endl;
-                assert(nextChild);
-                nextChild->init(e);
-                return BTState::Running;
-            }
-        }
-        else if (state != BTState::Success && m_iterations == 0) {
-            std::cout << "where it should be" << std::endl;
-            m_index = m_children.size();
-            return BTState::Failure;
-        }
-        else {
-            std::cout << "one iteration done" << std::endl;
-            std::cout << m_iterations << std::endl;
-            m_iterations = m_iterations--;
-            return state;
-        }
-    }
-
-    int m_index;
-    std::vector<std::shared_ptr<BTNode>> m_children;
-    int m_iterations;
-};
-
-
-// Made to be used in M3/M4, will probably end up making more nodes depending on what different
-// entities we will be doing in M3/M4
+// Made to be used in M3/M4, 
 class BTSelector : public BTNode {
 public:
     BTSelector(std::vector<std::shared_ptr<BTNode>> children)
@@ -233,22 +170,22 @@ public:
     }
 
     virtual BTState process(ECS::Entity e) override {
-        std::cout << m_iterationsRemaining << std::endl;
+        //std::cout << m_iterationsRemaining << std::endl;
         BTState state = m_child->process(e);
-        // unsure whether to set these to Failure or Running
-        if (m_iterationsRemaining != 0 && state != BTState::Success) {
-            std::cout << m_iterationsRemaining << std::endl;
+        if (m_iterationsRemaining > 0 && state == BTState::Running) {
+            //std::cout << m_iterationsRemaining << std::endl;
             m_iterationsRemaining = m_iterationsRemaining - 1;
             return BTState::Running;
         }
-        /*
-        if (m_iterationsRemaining != 0 && state == BTState::Failure) {
-            m_iterationsRemaining = 0;
-            return BTState::Failure;
+        
+        if (m_iterationsRemaining > 0 && state == BTState::Failure) {
+            //std::cout << m_iterationsRemaining << std::endl;
+            m_iterationsRemaining = m_iterationsRemaining - 10;
+            return BTState::Running;
         }
-        */
-        else if (m_iterationsRemaining == 0 && state != BTState::Success) {
-            std::cout << "repeat for N should be failing now" << std::endl;
+        
+        else if (m_iterationsRemaining <= 0 && state != BTState::Success) {
+            //std::cout << "repeat for N should be failing now" << std::endl;
             return BTState::Failure;
         }
         else {
@@ -284,21 +221,6 @@ private:
     BTState process(ECS::Entity e) override;
 };
 
-class GetWithinTwoTiles : public BTNode {
-public:
-    GetWithinTwoTiles(int iterations) :  m_iterations(iterations){
-
-    }
-private:
-    void init(ECS::Entity e) override {
-        m_iterations = 5;
-    }
-
-    BTState process(ECS::Entity e) override;
-private:
-    int m_iterations;
-};
-
 class FireXShots : public BTNode {
 public:
     FireXShots() {
@@ -314,13 +236,14 @@ private:
 class RandomSelector : public BTNode {
 public:
     // chance is % chance of option #1 happening
-    RandomSelector(float chance, std::shared_ptr<BTNode> option1, std::shared_ptr<BTNode> option2):
-    m_chance(chance), m_child1(option1), m_child2(option2){
+    RandomSelector(float chance, std::shared_ptr<BTNode> option1, std::shared_ptr<BTNode> option2, int skip):
+    m_chance(chance), m_child1(option1), m_child2(option2), m_skip(skip){
         
     }
 private:
     void init(ECS::Entity e) override {
         m_chance = 1 + rand() % 100;
+        m_skip = 1;
         if (m_chance <= 75) {
             const auto& child = m_child1;
             m_chosen = child;
@@ -333,18 +256,27 @@ private:
         }
     }
     BTState process(ECS::Entity e) override {
-        BTState state = m_chosen->process(e);
-        if (state == BTState::Success) {
-            return BTState::Success;
+        if (m_skip > 0) {
+            std::cout << "skip turn" << std::endl;
+            m_skip = m_skip - 1;
+            return BTState::Failure;
         }
         else {
-            return BTState::Failure;
+            std::cout << "process" << std::endl;
+            BTState state = m_chosen->process(e);
+            if (state == BTState::Success) {
+                return BTState::Success;
+            }
+            else {
+                return BTState::Failure;
+            }
         }
     }
 private:
     std::shared_ptr<BTNode> m_child1;
     std::shared_ptr<BTNode> m_child2;
     std::shared_ptr<BTNode> m_chosen;
+    int m_skip;
     int m_chance;
 };
 

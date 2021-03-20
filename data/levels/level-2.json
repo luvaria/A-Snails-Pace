@@ -6,46 +6,20 @@
   "turnsPerCamera": 3,
   "AI-PathFinding-Algorithm": "Astar",
   "tiles": [
-    "                      ",
-    "                      ",
-    "        XXX   XXXXXV  ",
-    "       V     V     V  ",
-    "       V     V     V  ",
-    "     XXX    XXX  XXX  ",
-    "      V    V   V      ",
-    "XXXXXXXWWWWXWWXXWWWXXX"
+    "                             ",
+    "                             ",
+    "        XXX   XXXXXX  XXXXXX ",
+    "       V     V     V   V  W  ",
+    "       V     V     V  XXXX   ",
+    "     XXX    XXX  XXX   V  W  ",
+    "      V    V   V       V     ",
+    "XXXXXXXWWWWXWWXXWWWXXXXXWWWXX"
   ],
   "characters": {
     "snail": [
       {
         "x": 1,
         "y": 6
-      }
-    ],
-    "spider": [
-      {
-        "x": 6,
-        "y": 6
-      },
-      {
-        "x": 6,
-        "y": 3
-      },
-      {
-        "x": 9,
-        "y": 0
-      },
-      {
-        "x": 10,
-        "y": 0
-      },
-      {
-        "x": 12,
-        "y": 4
-      },
-      {
-        "x": 16,
-        "y": 1
       }
     ],
     "slug": [

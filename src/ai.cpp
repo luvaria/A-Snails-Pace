@@ -37,9 +37,9 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             auto state = tree->process(entity);
             //std::cout << state << std::endl;
 
-            if (state != BTState::Running) {
-                aiMovedThisStep = true;
-            }
+           
+            aiMovedThisStep = true;
+           
 
         }
 
@@ -403,7 +403,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
 }
 
 BTState LookForSnail::process(ECS::Entity e) {
-    std::cout << "in look for snail" << std::endl;
+    //std::cout << "in look for snail" << std::endl;
     // before for loop
     auto& snailEntity = ECS::registry<Snail>.entities[0];
     float scale = TileSystem::getScale();
@@ -485,7 +485,7 @@ BTState LookForSnail::process(ECS::Entity e) {
 }
 
 BTState IsSnailInRange::process(ECS::Entity e) {
-    std::cout << "checking if snail is in range" << std::endl;
+    //std::cout << "checking if snail is in range" << std::endl;
     int range = 7;
     // snail coordinates
     auto& snailEntity = ECS::registry<Snail>.entities[0];
@@ -521,13 +521,6 @@ BTState IsSnailInRange::process(ECS::Entity e) {
             return BTState::Failure;
         }
     }
-
-    /*
-    else if (yMax <= snailCoord.y && yMin >= snailCoord.y) {
-        std::cout << "success2" << std::endl;
-        return BTState::Success;
-    }
-    */
     else {
         //std::cout << "failure" << std::endl;
         return BTState::Failure;
@@ -547,7 +540,6 @@ BTState FireXShots::process(ECS::Entity e) {
 
 
     auto& snailEntity = ECS::registry<Snail>.entities[0];
-    vec2 snailPos = ECS::registry<Motion>.get(snailEntity).position;
 
     // now you want to go in the direction of the (mouse_pos - snail_pos), but make it a unit vector
     vec2 snailPosition = ECS::registry<Motion>.get(snailEntity).position;
@@ -569,6 +561,7 @@ BTState FireXShots::process(ECS::Entity e) {
 }
 
 BTState PredictShot::process(ECS::Entity e) {
+    std::cout << "in predict shot" << std::endl;
     return BTState::Success;
 }
 
