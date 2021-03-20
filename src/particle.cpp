@@ -48,6 +48,7 @@ void Particle::setP3Motion(Motion& mot) {
 }
 
 // Snowflake credits: https://pngio.com/PNG/a44119-png-snowflake.html
+// Direct link: https://img.pngio.com/snowflakes-png-images-free-download-snowflake-png-png-snowflake-2500_2500.png
 ECS::Entity Particle::createWeatherParticle(std::string particleName, ECS::Entity entity, vec2 window_size_in_game_units)
 {
     // Create rendering primitives

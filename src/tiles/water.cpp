@@ -7,7 +7,7 @@ ECS::Entity WaterTile::createWaterTile(Tile& tile, ECS::Entity entity)
 	ECS::registry<Tile>.insert(entity, std::move(tile));
 	return createWaterTile(vec2(tile.x, tile.y), entity);
 }
-
+// Credits: https://bayat.itch.io/platform-game-assets/download/eyJleHBpcmVzIjoxNjE2MjQ3MDM1LCJpZCI6MTI4MTM0fQ%3d%3d.wjjmusmz54NOyqViZXG64sZOg%2bc%3d
 ECS::Entity WaterTile::createWaterTile(vec2 position, ECS::Entity entity)
 {
     std::string key = "water";
@@ -15,7 +15,7 @@ ECS::Entity WaterTile::createWaterTile(vec2 position, ECS::Entity entity)
     if (resource.effect.program.resource == 0)
     {
         resource = ShadedMesh();
-        float numFrames = 2.0f;
+        float numFrames = 14.0f;
         float numAnimations = 1.0f;
         resource.texture.frameSize = { 1.0f / numFrames, 1.0f / numAnimations }; // FRAME SIZE HERE!!! this is the percentage of the whole thing...
         RenderSystem::createSprite(resource, textures_path("water.png"), "spriteSheet", true);
@@ -42,8 +42,8 @@ ECS::Entity WaterTile::createWaterTile(vec2 position, ECS::Entity entity)
 
     //setting the animation information
     SpriteSheet& spriteSheet = ECS::registry<SpriteSheet>.emplace(entity);
-    spriteSheet.animationSpeed = 160;
-    spriteSheet.numAnimationFrames = 2;
+    spriteSheet.animationSpeed = 100;
+    spriteSheet.numAnimationFrames = 14;
     spriteSheet.currentAnimationNumber = 0; //leaves move when the level starts.
 
 
@@ -53,7 +53,7 @@ ECS::Entity WaterTile::createWaterTile(vec2 position, ECS::Entity entity)
     return entity;
 }
 
-// Credits (WaterSplash): https://opengameart.org/content/water-splash
+// Credits (WaterSplash): https://pimen.itch.io/magical-water-effect
 ECS::Entity WaterTile::createWaterSplashTile(Tile& tile, ECS::Entity entity)
 {
     ECS::registry<Tile>.insert(entity, std::move(tile));
@@ -62,27 +62,28 @@ ECS::Entity WaterTile::createWaterSplashTile(Tile& tile, ECS::Entity entity)
 
 ECS::Entity WaterTile::createWaterSplashTile(vec2 position, ECS::Entity entity)
 {
-    std::string key = "waterSplash";
+    std::string key = "watersplash";
     ShadedMesh& resource = cache_resource(key);
     if (resource.effect.program.resource == 0)
     {
         resource = ShadedMesh();
-        float numFrames = 7.0f;
+        float numFrames = 19.0f;
         float numAnimations = 1.0f;
         resource.texture.frameSize = { 1.0f / numFrames, 1.0f / numAnimations }; // FRAME SIZE HERE!!! this is the percentage of the whole thing...
-        RenderSystem::createSprite(resource, textures_path("waterSplash.png"), "spriteSheet", true);
+        RenderSystem::createSprite(resource, textures_path("watersplash.png"), "spriteSheet", true);
     }
     
     
-    std::string key_min = "minWaterSplash";
+    std::string key_min = "minWatersplash";
     ShadedMesh& resource_min = cache_resource(key_min);
     if (resource_min.mesh.vertices.size() == 0)
     {
-        resource_min.mesh.loadFromMinOBJFile(mesh_path("waterSplash-min.obj"));
+        resource_min.mesh.loadFromMinOBJFile(mesh_path("watersplash-min.obj"));
     }
 
     // Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
     //we use the same entity for min and regular meshes, so you can access either one.
+    
     ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::TILE);
     ECS::registry<MinShadedMeshRef>.emplace(entity, resource_min, RenderBucket::TILE);
 
@@ -95,8 +96,8 @@ ECS::Entity WaterTile::createWaterSplashTile(vec2 position, ECS::Entity entity)
 
     //setting the animation information
     SpriteSheet& spriteSheet = ECS::registry<SpriteSheet>.emplace(entity);
-    spriteSheet.animationSpeed = 200;
-    spriteSheet.numAnimationFrames = 7;
+    spriteSheet.animationSpeed = 100;
+    spriteSheet.numAnimationFrames = 19;
     spriteSheet.currentAnimationNumber = 0;
     auto& waterTile = ECS::registry<WaterTile>.emplace(entity);
     waterTile.entity = entity;
@@ -118,7 +119,7 @@ void WaterTile::onNotify(Event env, ECS::Entity& e)
             auto entity = ECS::Entity();
             Tile& tile = tiles[yPos][xPos];
             tile.x = (float)(xPos * scale + 0.5 * scale);
-            tile.y = (float)(yPos * scale + 0.5 * scale);
+            tile.y = (float)(yPos * scale + 0.65 * scale);
             tile.type = SPLASH;
             WaterTile::createWaterSplashTile(tile, entity);
             WaterTile::splashEntityID = entity.id;
