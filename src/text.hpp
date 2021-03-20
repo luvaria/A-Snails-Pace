@@ -191,7 +191,7 @@ const float SUB_OPTION_SCALE = 0.35f;
 const vec2 DIALOGUE_POS = { 0.09, 0.71 };
 
 // vertical line spacing (as a proportion of window size)
-const float LINE_SPACING = 0.002;
+const float LINE_SPACING = 0.002f;
 
 // text width (as a proportion of vertical text size)
 const float FANTASQUE_SANS_MONO_REGULAR_WIDTH = 0.5f;

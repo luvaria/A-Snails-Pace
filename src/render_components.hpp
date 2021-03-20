@@ -132,13 +132,16 @@ ShadedMesh& cache_resource(std::string key);
 //	lower value = render at front
 enum RenderBucket
 {
-	DEBUG = -2,
-	FOREGROUND = -1,
-	CHARACTER = 0,
-	PROJECTILE = 1,
-	TILE = 2,
-	BACKGROUND = 3,
-	BACKGROUND_2 = 4
+	DEBUG = -3,
+	OVERLAY = -2,
+	COLLECTIBLE = -1,
+	PLAYER = 0,
+	CHARACTER_COLLECTIBLE = 1,
+	CHARACTER = 2,
+	PROJECTILE = 3,
+	TILE = 4,
+	BACKGROUND = 5,
+	BACKGROUND_2 = 6
 };
 
 // A wrapper that points to the ShadedMesh in the resource_cache

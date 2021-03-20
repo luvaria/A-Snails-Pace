@@ -121,6 +121,10 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 				tile.type = INACCESSIBLE;
 				tile.addOccupyingEntity();
 				NPC::createNPC(tile, levelName, entity);
+				if (!preview)
+				{
+					Collectible::equip(entity, 1); // bbcap
+				}
 				break;
 			default:
 				tile.type = EMPTY;
@@ -150,7 +154,8 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 				Tile& tile = tiles[snail["y"]][snail["x"]];
 				// may not want this for snail location depending on enemy type and AI
 				tile.addOccupyingEntity();
-				Snail::createSnail({ tile.x, tile.y }, createTaggedEntity(preview));
+				ECS::Entity snailEntity = Snail::createSnail({ tile.x, tile.y }, createTaggedEntity(preview));
+				ECS::registry<Player>.emplace(snailEntity);
 			}
 			break;
 		case eSpider:
