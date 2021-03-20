@@ -64,7 +64,7 @@ void LevelCompleteMenu::loadEntities()
 	auto nextLevelEntity = ECS::Entity();
 	ECS::registry<Text>.insert(
 		nextLevelEntity,
-		Text("Next Level", ABEEZEE_REGULAR, { 500.f, 325.0f })
+		Text("Continue", ABEEZEE_REGULAR, { 500.f, 325.0f })
 	);
 	Text& nextLevelText = ECS::registry<Text>.get(nextLevelEntity);
 	nextLevelText.colour = DEFAULT_COLOUR;

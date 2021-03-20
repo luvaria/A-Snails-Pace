@@ -412,6 +412,9 @@ void WorldSystem::onNotify(Event event) {
         running = true;
         DebugSystem::in_debug_mode = false;
         attempts = -1;
+        projectiles_fired = 0;
+        enemies_killed = 0;
+
         ControlsOverlay::toggleControlsOverlayOff();
 
         // level index exists
