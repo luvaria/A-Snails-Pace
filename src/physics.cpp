@@ -313,8 +313,6 @@ void stepToDestination(ECS::Entity entity, float step_seconds)
         {
             vec2 velocity = motion.position - oldPosition;
             auto& motion2 = ECS::registry<Motion>.get(entity);
-            float gravityEffect = 1.6;
-//            motion.velocity += gravityEffect * velocity;
             motion2.position += (velocity + motion2.velocity);
             float scaleFactor = 0.99;
             motion2.scale *= scaleFactor;
