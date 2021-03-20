@@ -61,7 +61,7 @@ ECS::Entity Slug::createSlug(vec2 position, ECS::Entity entity)
 
 	//std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ iSr, selector, lfs }));
 	//std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ iSr, lfs }));
-	std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ iSr, selector, lfs }));
+	std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ iSr, selector, rs, lfs }));
 
 
 	tree->init(entity);
