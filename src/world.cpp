@@ -468,12 +468,12 @@ void WorldSystem::doX(Motion& motion, Tile& currTile, Tile& nextTile, int defaul
         case DIRECTION_SOUTH:
         case DIRECTION_NORTH:
             if (motion.lastDirection != defaultDirection) {
-                motion.scale.y = -motion.scale.y;
+//                motion.scale.y = -motion.scale.y;
             }
             break;
         default:
             if (motion.lastDirection != defaultDirection) {
-                motion.scale.x = -motion.scale.x;
+//                motion.scale.x = -motion.scale.x;
             }
             break;
         }
@@ -498,13 +498,13 @@ void WorldSystem::doY(Motion& motion, Tile& currTile, Tile& nextTile) {
     }
     else if (currTile.y > nextTile.y) {
         if (motion.lastDirection != DIRECTION_NORTH) {
-            motion.scale.y = -motion.scale.y;
+            motion.scale.x = -motion.scale.x;
             motion.lastDirection = DIRECTION_NORTH;
         }
     }
     else {
         if (motion.lastDirection != DIRECTION_SOUTH) {
-            motion.scale.y = -motion.scale.y;
+            motion.scale.x = -motion.scale.x;
             motion.lastDirection = DIRECTION_SOUTH;
         }
     }
@@ -512,7 +512,7 @@ void WorldSystem::doY(Motion& motion, Tile& currTile, Tile& nextTile) {
 
 void WorldSystem::rotate(Tile& currTile, Motion& motion, Tile& nextTile) {
     if (abs(currTile.x - nextTile.x) > 0 && abs(currTile.y - nextTile.y) > 0) {
-        motion.scale = { motion.scale.y, motion.scale.x };
+//        motion.scale = { motion.scale.y, motion.scale.x };
         if (abs(motion.angle) == PI / 2) {
             motion.angle = motion.lastDirection == DIRECTION_NORTH ? 0 : 2 * motion.angle;
         }
@@ -567,7 +567,8 @@ void WorldSystem::goLeft(ECS::Entity &entity, int &moves) {
         nextTile = tiles[yCoord][xCoord];
         changeDirection(motion, currTile, nextTile, DIRECTION_WEST, entity);
         if (abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
-            motion.scale = { motion.scale.y, motion.scale.x };
+            if(motion.lastDirection != DIRECTION_WEST)
+                motion.scale.x = -motion.scale.x;
             motion.lastDirection = motion.angle == 0 ? DIRECTION_NORTH : DIRECTION_SOUTH;
             motion.angle = PI / 2;
         }
@@ -600,24 +601,24 @@ void WorldSystem::goLeft(ECS::Entity &entity, int &moves) {
         changeDirection(motion, currTile, nextTile, DIRECTION_WEST, entity);
     }
     else if (abs(motion.angle) == PI / 2 && leftTile.type == VINE && currTile.type == VINE) {
-        motion.scale = { motion.scale.y, motion.scale.x };
+//        motion.scale = { motion.scale.y, motion.scale.x };
         motion.scale.x = motion.angle == -PI / 2 ? motion.lastDirection == DIRECTION_NORTH ? -motion.scale.x : motion.scale.x
             : motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : -motion.scale.x;
         motion.lastDirection = DIRECTION_WEST;
         motion.angle = 0;
     } else if (motion.angle == -PI/2 && tiles[motion.lastDirection == DIRECTION_NORTH ? (yCoord - 1) : (yCoord + 1)][xCoord - 1].type == WALL) {
-        motion.scale = { motion.scale.y, motion.scale.x };
-        motion.scale.x = motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : motion.scale.x;
+//        motion.scale = { motion.scale.y, motion.scale.x };
+//        motion.scale.x = motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : motion.scale.x;
         motion.angle = motion.lastDirection == DIRECTION_NORTH ? PI : 0;
         motion.lastDirection = DIRECTION_WEST;
     }
     else if (motion.angle == PI/2 && tiles[motion.lastDirection == DIRECTION_NORTH ? (yCoord + 1) : (yCoord - 1)][xCoord - 1].type == WALL) {
-        motion.scale = { motion.scale.y, motion.scale.x };
-        motion.scale.x = motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : motion.scale.x;
+//        motion.scale = { motion.scale.y, motion.scale.x };
+//        motion.scale.x = motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : motion.scale.x;
         motion.angle = motion.lastDirection == DIRECTION_SOUTH ? PI : 0;
         motion.lastDirection = DIRECTION_WEST;
     }else if (abs(motion.angle) == PI / 2 && currTile.type == VINE) {
-        motion.scale = { motion.scale.y, motion.scale.x };
+//        motion.scale = { motion.scale.y, motion.scale.x };
         motion.scale.x = motion.angle == -PI / 2 ? motion.lastDirection == DIRECTION_NORTH ? -motion.scale.x : motion.scale.x
             : motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : -motion.scale.x;
         motion.lastDirection = DIRECTION_WEST;
@@ -647,7 +648,7 @@ void WorldSystem::goRight(ECS::Entity& entity, int& moves) {
         nextTile = tiles[yCoord][xCoord];
         changeDirection(motion, currTile, nextTile, DIRECTION_EAST, entity);
         if (abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
-            motion.scale = { motion.scale.y, motion.scale.x };
+//            motion.scale = { motion.scale.y, motion.scale.x };
             motion.lastDirection = motion.angle == 0 ? DIRECTION_NORTH : DIRECTION_SOUTH;
             motion.angle = -PI / 2;
         }
@@ -683,24 +684,24 @@ void WorldSystem::goRight(ECS::Entity& entity, int& moves) {
         changeDirection(motion, currTile, nextTile, DIRECTION_EAST, entity);
     }
     else if (abs(motion.angle) == PI / 2 && rightTile.type == VINE && currTile.type == VINE) {
-        motion.scale = { motion.scale.y, motion.scale.x };
+//        motion.scale = { motion.scale.y, motion.scale.x };
         motion.scale.x = motion.angle == -PI / 2 ? motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : -motion.scale.x
             : motion.lastDirection == DIRECTION_NORTH ? -motion.scale.x : motion.scale.x;
         motion.lastDirection = DIRECTION_EAST;
         motion.angle = 0;
     } else if (motion.angle == -PI/2 && tiles[motion.lastDirection == DIRECTION_NORTH ? (yCoord + 1) : (yCoord - 1)][xCoord + 1].type == WALL) {
-        motion.scale = { motion.scale.y, motion.scale.x };
+//        motion.scale = { motion.scale.y, motion.scale.x };
         motion.scale.x = motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : motion.scale.x;
         motion.angle = motion.lastDirection == DIRECTION_NORTH ? 0 : PI;
         motion.lastDirection = DIRECTION_EAST;
     }
     else if (motion.angle == PI/2 && tiles[motion.lastDirection == DIRECTION_NORTH ? (yCoord - 1) : (yCoord + 1)][xCoord + 1].type == WALL) {
-        motion.scale = { motion.scale.y, motion.scale.x };
+//        motion.scale = { motion.scale.y, motion.scale.x };
         motion.scale.x = motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : motion.scale.x;
         motion.angle = motion.lastDirection == DIRECTION_NORTH ? PI : 0;
         motion.lastDirection = DIRECTION_EAST;
     } else if (abs(motion.angle) == PI / 2 && currTile.type == VINE) {
-        motion.scale = { motion.scale.y, motion.scale.x };
+//        motion.scale = { motion.scale.y, motion.scale.x };
         motion.scale.x = motion.angle == -PI / 2 ? motion.lastDirection == DIRECTION_NORTH ? motion.scale.x : -motion.scale.x
             : motion.lastDirection == DIRECTION_NORTH ? -motion.scale.x : motion.scale.x;
         motion.lastDirection = DIRECTION_EAST;
@@ -730,19 +731,19 @@ void WorldSystem::goUp(ECS::Entity& entity, int& moves) {
         nextTile = tiles[yCoord][xCoord];
         changeDirection(motion, currTile, nextTile, motion.lastDirection, entity);
         if(abs(currTile.x - nextTile.x) == 0 && abs(currTile.y - nextTile.y) == 0) {
-            motion.scale = { motion.scale.y, motion.scale.x };
+//            motion.scale = { motion.scale.y, motion.scale.x };
             motion.angle = motion.lastDirection == DIRECTION_WEST ? PI / 2 : -PI / 2;
             motion.lastDirection = DIRECTION_NORTH;
         }
     } else if (currTile.type == VINE && abs(motion.angle) == PI) {
-        motion.scale = { motion.scale.y, motion.scale.x };
+//        motion.scale = { motion.scale.y, motion.scale.x };
         motion.angle = motion.lastDirection == DIRECTION_EAST ? PI/2 : -PI/2;
         motion.lastDirection = DIRECTION_NORTH;
     } else if (abs(motion.angle) == PI/2 && upTile.type == WALL) {
         nextTile = tiles[yCoord][xCoord];
         changeDirection(motion, currTile, nextTile, DIRECTION_NORTH, entity);
         if (abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
-            motion.scale = { motion.scale.y, motion.scale.x };
+//            motion.scale = { motion.scale.y, motion.scale.x };
             motion.lastDirection = motion.angle == PI / 2 ? DIRECTION_EAST : DIRECTION_WEST;
             motion.angle = -PI;
         }
@@ -757,18 +758,18 @@ void WorldSystem::goUp(ECS::Entity& entity, int& moves) {
         Tile sideTile = tiles[(yCoord)][xCord];
         if(!(nextTile.type == WALL || upTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
             motion.angle = -1*motion.angle;
-            motion.scale.y = -1*motion.scale.y;
+            motion.scale.x = -1*motion.scale.x;
             xCord = (motion.angle == -PI / 2 ? xCoord + 1 : xCoord - 1);
             if (xCord > tiles[(yCoord - 1)].size() - 1) {
                 motion.angle = -1*motion.angle;
-                motion.scale.y = -1*motion.scale.y;
+                motion.scale.x = -1*motion.scale.x;
                 return;
             }
             nextTile = tiles[(yCoord-1)][xCord];
             Tile sideTile = tiles[(yCoord)][xCord];
             if (!(nextTile.type == WALL || upTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
                 motion.angle = -1*motion.angle;
-                motion.scale.y = -1*motion.scale.y;
+                motion.scale.x = -1*motion.scale.x;
                 return;
             }
         }
@@ -802,7 +803,7 @@ void WorldSystem::goDown(ECS::Entity& entity, int& moves) {
         nextTile = tiles[yCoord][xCoord];
         changeDirection(motion, currTile, nextTile, motion.lastDirection, entity);
         if (abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
-            motion.scale = { motion.scale.y, motion.scale.x };
+//            motion.scale = { motion.scale.y, motion.scale.x };
             motion.angle = motion.lastDirection == DIRECTION_WEST ? PI / 2 : -PI / 2;
             motion.lastDirection = DIRECTION_SOUTH;
         }
@@ -810,8 +811,18 @@ void WorldSystem::goDown(ECS::Entity& entity, int& moves) {
         nextTile = tiles[yCoord][xCoord];
         if (motion.angle != 0 && abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
             changeDirection(motion, currTile, nextTile, DIRECTION_SOUTH, entity);
-            motion.scale = { motion.scale.y, motion.scale.x };
-            motion.lastDirection = motion.angle == -PI / 2 ? DIRECTION_WEST : DIRECTION_EAST;
+//            motion.scale = { motion.scale.y, motion.scale.x };
+            if(motion.angle == -PI / 2) {
+                motion.lastDirection = motion.lastDirection == DIRECTION_NORTH ? DIRECTION_EAST : DIRECTION_WEST;
+            } else if(motion.angle == PI / 2) {
+                motion.lastDirection = motion.lastDirection == DIRECTION_SOUTH ? DIRECTION_EAST : DIRECTION_WEST;
+            }
+            
+            if(motion.angle == -PI)
+            {
+                motion.scale.x = -motion.scale.x;
+            }
+//            motion.lastDirection = motion.angle == -PI / 2 && motion.lastDirection == DIRECTION_NORTH ? DIRECTION_EAST : DIRECTION_WEST;
             motion.angle = 0;
         }
     }
@@ -819,7 +830,7 @@ void WorldSystem::goDown(ECS::Entity& entity, int& moves) {
         nextTile = tiles[yCoord][xCoord];
         changeDirection(motion, currTile, nextTile, motion.lastDirection, entity);
         if (abs(currTile.x - nextTile.x) == 0 && abs(currTile.y - nextTile.y) == 0) {
-            motion.scale = { motion.scale.y, motion.scale.x };
+//            motion.scale = { motion.scale.y, motion.scale.x };
             motion.angle = motion.lastDirection == DIRECTION_WEST ? -PI / 2 : PI / 2;
             motion.lastDirection = DIRECTION_SOUTH;
         }
@@ -834,18 +845,18 @@ void WorldSystem::goDown(ECS::Entity& entity, int& moves) {
          Tile sideTile = tiles[(yCoord)][xCord];
          if (!(nextTile.type == WALL || downTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
              motion.angle = -1*motion.angle;
-             motion.scale.y = -1*motion.scale.y;
+             motion.scale.x = -1*motion.scale.x;
              xCord = (motion.angle == -PI / 2 ? xCoord + 1 : xCoord - 1);
              if (xCord > tiles[(yCoord + 1)].size() - 1) {
                  motion.angle = -1*motion.angle;
-                 motion.scale.y = -1*motion.scale.y;
+                 motion.scale.x = -1*motion.scale.x;
                  return;
              }
              nextTile = tiles[(yCoord + 1)][xCord];
              Tile sideTile = tiles[(yCoord)][xCord];
              if (!(nextTile.type == WALL || downTile.type == VINE) && (sideTile.type == EMPTY || sideTile.type == VINE)) {
                  motion.angle = -1*motion.angle;
-                 motion.scale.y = -1*motion.scale.y;
+                 motion.scale.x = -1*motion.scale.x;
                  return;
              }
         }
@@ -902,25 +913,29 @@ void WorldSystem::fallDown(ECS::Entity& entity, int& moves) {
             else if (motion.angle == -PI) {
                 if (motion.lastDirection == DIRECTION_EAST) {
                     if(tiles[i-1][xCoord].type != VINE)
-                        motion.scale = { motion.scale.y, motion.scale.x };
+                        motion.scale = { -motion.scale.x, motion.scale.y };
                     goDown(entity, tempMove);
+                    motion.lastDirection = DIRECTION_EAST;
                 }
                 else {
                     if(tiles[i-1][xCoord].type != VINE)
-                        motion.scale = { motion.scale.y, -motion.scale.x };
+                        motion.scale = { -motion.scale.x, motion.scale.y };
                     goDown(entity, tempMove);
+                    motion.lastDirection = DIRECTION_WEST;
                 }
             }
             else if (motion.angle == PI) {
                 if (motion.lastDirection == DIRECTION_WEST) {
                     if(tiles[i-1][xCoord].type != VINE)
-                        motion.scale = { motion.scale.y, -motion.scale.x };
+                        motion.scale = { -motion.scale.x, motion.scale.y };
                     goDown(entity, tempMove);
+                    motion.lastDirection = DIRECTION_WEST;
                 }
                 else {
                     if(tiles[i-1][xCoord].type != VINE)
-                        motion.scale = { motion.scale.y, motion.scale.x };
+                        motion.scale = { -motion.scale.x, motion.scale.y };
                     goDown(entity, tempMove);
+                    motion.lastDirection = DIRECTION_EAST;
                 }
             }
             i = tiles.size();
