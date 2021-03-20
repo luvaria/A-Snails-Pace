@@ -99,6 +99,8 @@ WorldSystem::~WorldSystem() {
 
     // Close the window
     glfwDestroyWindow(window);
+    
+    glfwTerminate();
 }
 
 void WorldSystem::init_audio()
