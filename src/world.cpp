@@ -357,8 +357,6 @@ void WorldSystem::restart(int newLevel)
     {
         Collectible::equip(player_snail, ECS::registry<Inventory>.components[0].equipped);
     }
-
-    auto& texmesh = *ECS::registry<ShadedMeshRef>.get(player_snail).reference_to_cache;
     texmesh.texture.color = {1, 1, 1};
     
     // Reset Camera
@@ -784,7 +782,7 @@ void WorldSystem::goUp(ECS::Entity& entity, int& moves) {
         if (abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
 //            motion.scale = { motion.scale.y, motion.scale.x };
             motion.lastDirection = motion.angle == PI / 2 ? DIRECTION_EAST : DIRECTION_WEST;
-            motion.angle = -PI;
+            motion.angle = PI;
         }
     }
     else if (abs(motion.angle) == PI / 2) {
@@ -857,7 +855,7 @@ void WorldSystem::goDown(ECS::Entity& entity, int& moves) {
                 motion.lastDirection = motion.lastDirection == DIRECTION_SOUTH ? DIRECTION_EAST : DIRECTION_WEST;
             }
             
-            if(motion.angle == -PI)
+            if(motion.angle == PI)
             {
                 motion.scale.x = -motion.scale.x;
             }
@@ -949,30 +947,12 @@ void WorldSystem::fallDown(ECS::Entity& entity, int& moves) {
             if (abs(motion.angle) == PI / 2) {
                 goDown(entity, tempMove);
             }
-            else if (motion.angle == -PI) {
-                if (motion.lastDirection == DIRECTION_EAST) {
-                    if(tiles[i-1][xCoord].type != VINE)
-                        motion.scale = { -motion.scale.x, motion.scale.y };
-                    goDown(entity, tempMove);
-                    motion.lastDirection = DIRECTION_EAST;
-                }
-                else {
-                    if(tiles[i-1][xCoord].type != VINE)
-                        motion.scale = { -motion.scale.x, motion.scale.y };
-                    goDown(entity, tempMove);
-                    motion.lastDirection = DIRECTION_WEST;
-                }
-            }
             else if (motion.angle == PI) {
                 if (motion.lastDirection == DIRECTION_WEST) {
-                    if(tiles[i-1][xCoord].type != VINE)
-                        motion.scale = { -motion.scale.x, motion.scale.y };
                     goDown(entity, tempMove);
                     motion.lastDirection = DIRECTION_WEST;
                 }
                 else {
-                    if(tiles[i-1][xCoord].type != VINE)
-                        motion.scale = { -motion.scale.x, motion.scale.y };
                     goDown(entity, tempMove);
                     motion.lastDirection = DIRECTION_EAST;
                 }
