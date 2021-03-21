@@ -5,7 +5,7 @@
 	</summary>
 	<npcs>
 		<npc name="OtherSnail">
-			<encounter level_name="Demo"> <!--TODO: actually for level 1, change later-->
+			<encounter level_name="Level 1">
 				<dialogue dID="0">
 					<lines>
 						<line>...</line>
@@ -61,7 +61,7 @@
 					</lines>
 				</dialogue>
 			</encounter>
-			<encounter level_name="Demo 2"> <!--TODO: actually for level 2, change later-->
+			<encounter level_name="Level 2">
 				<dialogue dID="0">
 					<lines>
 						<line>C'mon, time waits for no one!</line>

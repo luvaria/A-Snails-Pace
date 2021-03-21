@@ -14,7 +14,7 @@
     "                              ",
     "        XXX   XXXXXX  XXXXXX  ",
     "       V     V     V   V      ",
-    "       V     V     V   XXXX   ",
+    "       V     VN    V   XXXX   ",
     "     XXX    XXX  XXX   V  W   ",
     "      V    V   V       V      ",
     "XXXXXXXWWWWXWWXXWWWXXXXWWWXXX "
@@ -69,7 +69,7 @@
   },
   "collectibles": [
     {
-      "id": 0,
+      "id": 1,
       "x": 17,
       "y": 1
     }
