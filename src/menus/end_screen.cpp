@@ -83,7 +83,7 @@ void EndScreen::loadEntities()
 	auto titleTextEntity = ECS::Entity();
 	ECS::registry<Text>.insert(
 		titleTextEntity,
-		Text("Congratulations, You have completed \"A Snail's Pace\"!", VIGA_REGULAR, { 90.0f, 50.0f }, 0.7f, TITLE_COLOUR)
+		Text("Congratulations, you have completed \"A Snail's Pace\"!", VIGA_REGULAR, { 90.0f, 50.0f }, 0.7f, TITLE_COLOUR)
 	);
 	ECS::registry<EndScreenTag>.emplace(titleTextEntity);
 
@@ -91,7 +91,7 @@ void EndScreen::loadEntities()
 	auto startGameEntity = ECS::Entity();
 	ECS::registry<Text>.insert(
 		startGameEntity,
-		Text("Restart", ABEEZEE_REGULAR, { 650.0f, 350.0f })
+		Text("Play again", ABEEZEE_REGULAR, { 650.0f, 350.0f })
 	);
 	Text& startText = ECS::registry<Text>.get(startGameEntity);
 	startText.colour = DEFAULT_COLOUR;
@@ -100,18 +100,18 @@ void EndScreen::loadEntities()
 	ECS::registry<EndScreenTag>.emplace(startGameEntity);
 	buttonEntities.push_back(startGameEntity);
 
-	// level select button
-	auto selectLevelEntity = ECS::Entity();
+	// start menu button
+	auto returnEntity = ECS::Entity();
 	ECS::registry<Text>.insert(
-		selectLevelEntity,
-		Text("Select level", ABEEZEE_REGULAR, { 650.0f, 400.0f })
+		returnEntity,
+		Text("Return to start", ABEEZEE_REGULAR, { 650.0f, 400.0f })
 	);
-	Text& selectText = ECS::registry<Text>.get(selectLevelEntity);
-	selectText.colour = DEFAULT_COLOUR;
-	selectText.scale *= OPTION_SCALE;
-	ECS::registry<MenuButton>.emplace(selectLevelEntity, ButtonEventType::SELECT_LEVEL);
-	ECS::registry<EndScreenTag>.emplace(selectLevelEntity);
-	buttonEntities.push_back(selectLevelEntity);
+	Text& returnText = ECS::registry<Text>.get(returnEntity);
+	returnText.colour = DEFAULT_COLOUR;
+	returnText.scale *= OPTION_SCALE;
+	ECS::registry<MenuButton>.emplace(returnEntity, ButtonEventType::QUIT_GAME);
+	ECS::registry<EndScreenTag>.emplace(returnEntity);
+	buttonEntities.push_back(returnEntity);
 }
 
 void EndScreen::removeEntities()
@@ -199,14 +199,11 @@ void EndScreen::selectedKeyEvent()
 			switch (button.event)
 			{
 			case ButtonEventType::START_GAME:
-				// exit menu and start game
+				// exit menu and restart game
 				exit();
 				break;
-			case ButtonEventType::SELECT_LEVEL:
-				// don't overlay level select on top (text render order issues; always on top)
-				removeEntities();
-				resetButtons();
-				notify(Event(Event::MENU_OPEN, Event::LEVEL_SELECT));
+			case ButtonEventType::QUIT_GAME:
+				notify(Event(Event::MENU_START));
 				break;
 			default:
 				break;

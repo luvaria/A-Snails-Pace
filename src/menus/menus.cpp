@@ -101,13 +101,13 @@ void MenuSystem::onNotify(Event event)
 			const auto ABEEZEE_REGULAR = Font::load("data/fonts/abeezee/ABeeZee-Regular.otf");
 			const auto VIGA_REGULAR = Font::load("data/fonts/viga/Viga-Regular.otf");
 			auto subtitleTextEntity = ECS::Entity();
-			std::string stats = "Here are some stats for nerds: You had " 
-				+ std::to_string(event.attempts) + " attempts, shot " 
+			std::string stats = "Stats for nerds: You died " 
+				+ std::to_string(event.attempts) + " times, shot " 
 				+ std::to_string(event.projectiles_fired) 
 				+ " projectiles and killed " + std::to_string(event.enemies_killed) + " enemies";
 			ECS::registry<Text>.insert(
 			subtitleTextEntity,
-			Text(stats, ABEEZEE_REGULAR, { 70.0f, 90.0f }, 0.4f, DEFAULT_COLOUR)
+			Text(stats, ABEEZEE_REGULAR, { 100.f, 90.f }, 0.4f, DEFAULT_COLOUR)
 		);
 			ECS::registry<EndScreenTag>.emplace(subtitleTextEntity);
 		}
@@ -124,7 +124,7 @@ void MenuSystem::onNotify(Event event)
 		setup();
 		openMenu(Event::START_MENU);
 		break;
-	case Event::STATS: 
+	case Event::STATS:
 		notify(event);
 		break;
 	case Event::NEXT_LEVEL:
