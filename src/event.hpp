@@ -17,10 +17,10 @@ public:
 	MenuType menu = INVALID_MENU;
 	std::string dialogue;
 
-	//stats
-	int attempts;
-	int enemies_killed;
-	int projectiles_fired;
+	// Stats
+	int attempts = -1;
+	int enemies_killed = -1;
+	int projectiles_fired = -1;
 
 	// typed event with no additional arguments
 	Event(EventType t) : type(t) {}
