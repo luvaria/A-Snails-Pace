@@ -358,6 +358,9 @@ void WorldSystem::restart(int newLevel)
         Collectible::equip(player_snail, ECS::registry<Inventory>.components[0].equipped);
     }
 
+    auto& texmesh = *ECS::registry<ShadedMeshRef>.get(player_snail).reference_to_cache;
+    texmesh.texture.color = {1, 1, 1};
+    
     // Reset Camera
     Camera::reset();
     turns_per_camera_move = TileSystem::getTurnsForCameraUpdate();
@@ -843,10 +846,6 @@ void WorldSystem::goDown(ECS::Entity& entity, int& moves) {
             motion.angle = motion.lastDirection == DIRECTION_WEST ? PI / 2 : -PI / 2;
             motion.lastDirection = DIRECTION_SOUTH;
         }
-    } else if (currTile.type == VINE && abs(motion.angle) == PI) {
-        motion.scale = { motion.scale.y, motion.scale.x };
-        motion.angle = motion.lastDirection == DIRECTION_EAST ? PI/2 : -PI/2;
-        motion.lastDirection = DIRECTION_NORTH;
     } else if (downTile.type == WALL) {
         nextTile = tiles[yCoord][xCoord];
         if (motion.angle != 0 && abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
