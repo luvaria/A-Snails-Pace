@@ -124,9 +124,6 @@ void MenuSystem::onNotify(Event event)
 		setup();
 		openMenu(Event::START_MENU);
 		break;
-	case Event::STATS:
-		notify(event);
-		break;
 	case Event::NEXT_LEVEL:
 	case Event::LOAD_LEVEL:
 		// move all current menus to delete queue
