@@ -85,8 +85,12 @@ private:
 	// Game state
 	float current_speed;
 	ECS::Entity player_snail;
-	int attempts;
 	ECS::Entity encountered_npc;
+
+	// Stats (for end screen)
+	int deaths;
+	int enemies_killed;
+	int projectiles_fired;
 
 	std::chrono::time_point<std::chrono::high_resolution_clock> can_show_projectile_preview_time;
 	bool left_mouse_pressed;

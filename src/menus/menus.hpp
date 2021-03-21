@@ -13,8 +13,8 @@ class MenuSystem : public Observer, public Subject
 public:
 	MenuSystem(GLFWwindow& window);
 
-	// starts menu system, beginning at start menu
-	void start();
+	// sets up menu system
+	void setup();
 
 	// returns true if at least one menu is open, false otherwise
 	bool hasOpenMenu();

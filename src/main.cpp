@@ -46,7 +46,8 @@ int main()
 
 	// Set all states to default
 	TileSystem::setScale(100.f);
-	menus.start();
+	menus.setup();
+	menus.openMenu(Event::START_MENU);
 	auto t = Clock::now();
 	// Variable timestep loop
 

@@ -117,8 +117,11 @@ void DialogueSystem::onNotify(Event event)
 		break;
 	// game unpaused
 	case Event::RESUME_DIALOGUE:
-		createTextLines();
-		createTextBox();
+		if (isActive)
+		{
+			createTextLines();
+			createTextBox();
+		}
 		break;
 	case Event::END_DIALOGUE:
 		clearDialogue();
