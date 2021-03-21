@@ -549,7 +549,7 @@ void WorldSystem::rotate(Tile& currTile, Motion& motion, Tile& nextTile) {
     if (abs(currTile.x - nextTile.x) > 0 && abs(currTile.y - nextTile.y) > 0) {
 //        motion.scale = { motion.scale.y, motion.scale.x };
         if (abs(motion.angle) == PI / 2) {
-            motion.angle = motion.lastDirection == DIRECTION_NORTH ? 0 : 2 * motion.angle;
+            motion.angle = motion.lastDirection == DIRECTION_NORTH ? 0 : abs(2 * motion.angle);
         }
         else if (motion.angle == 0) {
             motion.angle = (currTile.x < nextTile.x) ? PI / 2 : -PI / 2;
@@ -770,7 +770,7 @@ void WorldSystem::goUp(ECS::Entity& entity, int& moves) {
             motion.angle = motion.lastDirection == DIRECTION_WEST ? PI / 2 : -PI / 2;
             motion.lastDirection = DIRECTION_NORTH;
         }
-    } else if (currTile.type == VINE && abs(motion.angle) == PI) {
+    } else if (currTile.type == VINE && upTile.type != WALL && abs(motion.angle) == PI) {
 //        motion.scale = { motion.scale.y, motion.scale.x };
         motion.angle = motion.lastDirection == DIRECTION_EAST ? PI/2 : -PI/2;
         motion.lastDirection = DIRECTION_NORTH;
@@ -779,7 +779,12 @@ void WorldSystem::goUp(ECS::Entity& entity, int& moves) {
         changeDirection(motion, currTile, nextTile, DIRECTION_NORTH, entity);
         if (abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
 //            motion.scale = { motion.scale.y, motion.scale.x };
-            motion.lastDirection = motion.angle == PI / 2 ? DIRECTION_EAST : DIRECTION_WEST;
+            if(motion.lastDirection == DIRECTION_NORTH) {
+                motion.lastDirection = motion.angle == PI / 2 ? DIRECTION_EAST : DIRECTION_WEST;
+            } else {
+                motion.lastDirection = motion.angle == PI / 2 ? DIRECTION_WEST : DIRECTION_EAST;
+
+            }
             motion.angle = PI;
         }
     }
@@ -853,10 +858,10 @@ void WorldSystem::goDown(ECS::Entity& entity, int& moves) {
                 motion.lastDirection = motion.lastDirection == DIRECTION_SOUTH ? DIRECTION_EAST : DIRECTION_WEST;
             }
             
-            if(motion.angle == PI)
-            {
-                motion.scale.x = -motion.scale.x;
-            }
+//            if(motion.angle == PI)
+//            {
+//                motion.scale.x = -motion.scale.x;
+//            }
 //            motion.lastDirection = motion.angle == -PI / 2 && motion.lastDirection == DIRECTION_NORTH ? DIRECTION_EAST : DIRECTION_WEST;
             motion.angle = 0;
         }
@@ -947,12 +952,16 @@ void WorldSystem::fallDown(ECS::Entity& entity, int& moves) {
             }
             else if (motion.angle == PI) {
                 if (motion.lastDirection == DIRECTION_WEST) {
+                    if(tiles[i-1][xCoord].type != VINE)
+                        motion.scale.x = -motion.scale.x;
                     goDown(entity, tempMove);
-                    motion.lastDirection = DIRECTION_WEST;
+                    motion.lastDirection = tiles[i-1][xCoord].type == VINE ? DIRECTION_SOUTH : DIRECTION_WEST;
                 }
                 else {
+                    if(tiles[i-1][xCoord].type != VINE)
+                        motion.scale.x = -motion.scale.x;
                     goDown(entity, tempMove);
-                    motion.lastDirection = DIRECTION_EAST;
+                    motion.lastDirection = tiles[i-1][xCoord].type == VINE ? DIRECTION_SOUTH : DIRECTION_EAST;
                 }
             }
             i = tiles.size();
