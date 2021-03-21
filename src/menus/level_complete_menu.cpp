@@ -2,7 +2,7 @@
 #include "text.hpp"
 #include <world.hpp>
 
-// pause menu button size (since you can't tell based on the Text component)
+// button size (since you can't tell based on the Text component)
 const vec2 buttonScale = { 250.f, 33.3f };
 
 LevelCompleteMenu::LevelCompleteMenu(GLFWwindow& window) : Menu(window)
@@ -49,7 +49,6 @@ void LevelCompleteMenu::loadEntities()
 
 	const auto ABEEZEE_REGULAR = Font::load("data/fonts/abeezee/ABeeZee-Regular.otf");
 
-	// paused
 	auto titleTextEntity = ECS::Entity();
 	ECS::registry<Text>.insert(
 		titleTextEntity,
@@ -60,7 +59,7 @@ void LevelCompleteMenu::loadEntities()
 	titleText.colour = TITLE_COLOUR;
 	ECS::registry<LevelCompleteMenuTag>.emplace(titleTextEntity);
 
-	//next level button
+	// next level button
 	auto nextLevelEntity = ECS::Entity();
 	ECS::registry<Text>.insert(
 		nextLevelEntity,
@@ -99,7 +98,7 @@ void LevelCompleteMenu::exit()
 {
 	ECS::registry<ScreenState>.components[0].darken_screen_factor = 0.f;
 	removeEntities();
-	notify(Event(Event::MENU_CLOSE, Event::MenuType::PAUSE_MENU));
+	notify(Event(Event::MENU_CLOSE, Event::MenuType::LEVEL_COMPLETE_MENU));
 }
 
 void LevelCompleteMenu::on_key(int key, int, int action, int /*mod*/)
@@ -108,10 +107,6 @@ void LevelCompleteMenu::on_key(int key, int, int action, int /*mod*/)
 	{
 		switch (key)
 		{
-		case GLFW_KEY_ESCAPE:
-			// exit menu and unpause game
-			exit();
-			break;
 		case GLFW_KEY_DOWN:
 			selectNextButton();
 			break;
