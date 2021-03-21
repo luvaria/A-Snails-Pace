@@ -54,6 +54,12 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
     unsigned turnsPerCameraMove = level["turnsPerCamera"];
     TileSystem::setTurnsForCameraUpdate(turnsPerCameraMove);
 
+	//load level end coordinates
+	ivec2 endCoordinates;
+	endCoordinates.x = level["endCoordinates"]["x"];
+	endCoordinates.y = level["endCoordinates"]["y"];
+	TileSystem::setEndCoordinates(endCoordinates);
+
 	// adjust preview area according to snail spawn location
 	// assuming one/first snail
 	ivec2 previewOrigin = vec2(level["characters"]["snail"][0]["x"], level["characters"]["snail"][0]["y"]);

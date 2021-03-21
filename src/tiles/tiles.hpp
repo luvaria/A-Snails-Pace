@@ -69,6 +69,10 @@ public:
 	static unsigned getTurnsForCameraUpdate();
     static void setTurnsForCameraUpdate(unsigned turns);
 
+    // level end
+    static ivec2 getEndCoordinates();
+    static void setEndCoordinates(ivec2 coordinates);
+
 	// reset tile grid (for level loading)
 	static void resetGrid();
     struct KeyFuncs
