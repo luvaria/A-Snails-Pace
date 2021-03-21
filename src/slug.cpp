@@ -45,7 +45,8 @@ ECS::Entity Slug::createSlug(vec2 position, ECS::Entity entity)
 
 	
 	// testing to see if there is some issue with ai.step
-	std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>();
+	std::shared_ptr <BTNode> lfs2 = std::make_unique<LookForSnail>(false);
+	std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>(true);
 	std::shared_ptr <BTNode> iSr = std::make_unique<IsSnailInRange>();
 	std::shared_ptr <BTNode> rfn = std::make_unique<RepeatForN>(lfs, 50);
 	std::shared_ptr <BTNode> fxs = std::make_unique<FireXShots>(0);
@@ -61,7 +62,7 @@ ECS::Entity Slug::createSlug(vec2 position, ECS::Entity entity)
 
 	//std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ iSr, selector, lfs }));
 	//std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ iSr, lfs }));
-	std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ iSr, selector, lfs }));
+	std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ iSr, selector, lfs2 }));
 
 
 	tree->init(entity);

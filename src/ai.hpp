@@ -214,11 +214,17 @@ public:
     LookForSnail() noexcept {
 
     }
+    LookForSnail(bool inRange) : m_inRange(inRange) {
+
+    }
 private:
     void init(ECS::Entity e) override {
 
     }
     BTState process(ECS::Entity e) override;
+
+private:
+    bool m_inRange;
 };
 
 class FireXShots : public BTNode {

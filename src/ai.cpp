@@ -481,6 +481,22 @@ BTState LookForSnail::process(ECS::Entity e) {
         return BTState::Failure;
     }
     //std::cout << "returning Running" << std::endl;
+    if (ECS::registry<Slug>.has(e) == true && m_inRange == true) {
+        auto& slugMot = ECS::registry<Motion>.get(e);
+        vec2 slugPos = slugMot.position;
+        int xAiPos = (aiPos.x - (0.5 * scale)) / scale;
+        int yAiPos = (aiPos.y - (0.5 * scale)) / scale;
+        vec2 snailLoc = ECS::registry<Motion>.get(snailEntity).position;
+        int xLoc = (snailLoc[0] - (0.5 * scale)) / scale;
+        int yLoc = (snailLoc[1] - (0.5 * scale)) / scale;
+        if (xAiPos - 1 == xLoc && yAiPos == yLoc) {
+            return BTState::Success;
+        }
+        else if (xAiPos + 1 == xPos && yAiPos == yPos) {
+            return BTState::Success;
+        }
+    }
+
     return BTState::Running;
 }
 
