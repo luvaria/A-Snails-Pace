@@ -85,7 +85,7 @@ private:
 	// Game state
 	float current_speed;
 	ECS::Entity player_snail;
-	int attempts;
+	int deaths;
 	ECS::Entity encountered_npc;
 
 	//stats (for end screen)

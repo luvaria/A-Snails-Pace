@@ -36,7 +36,7 @@ int level = 0;
 // Note, this has a lot of OpenGL specific things, could be moved to the renderer; but it also defines the callbacks to the mouse and keyboard. That is why it is called here.
 WorldSystem::WorldSystem(ivec2 window_size_px) :
     running(false),
-    attempts(-1),
+    deaths(0),
     enemies_killed(0), 
     projectiles_fired(0),
     left_mouse_pressed(false),
@@ -134,13 +134,13 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
         return;
 
     int points = ECS::registry<Inventory>.components[0].points;
-    // Updating window title with moves remaining and attempts
+    // Updating window title with moves remaining and deaths
     std::stringstream title_ss;
     title_ss << "Moves taken: " << turn_number;
     title_ss << ", ";
 	title_ss << "Camera will move in " << turns_per_camera_move - (turn_number % turns_per_camera_move) << " turn(s)";
     title_ss << ", ";
-    title_ss << "Attempts: " << attempts;
+    title_ss << "Deaths: " << deaths;
     title_ss << ", ";
     title_ss << "Points: " << points;
     glfwSetWindowTitle(window, title_ss.str().c_str());
@@ -207,6 +207,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 		if (counter.counter_ms < 0)
 		{
 			ECS::registry<DeathTimer>.remove(entity);
+            deaths++;
 			restart(level);
 			return;
 		}
@@ -280,9 +281,6 @@ void WorldSystem::restart(int newLevel)
     // Reset the game speed
     current_speed = 1.f;
 
-    // Increment attempts
-    attempts++;
-
     // Reset screen darken factor (manual restart can remove DeathTimer without resetting)
     auto& screen = ECS::registry<ScreenState>.components[0];
     screen.darken_screen_factor = 0;
@@ -325,7 +323,7 @@ void WorldSystem::restart(int newLevel)
     ECS::registry<Turn>.components[0].type = PLAYER_WAITING;
 
     // for the first level, prompt controls overlay
-    if (level == 0 && attempts == 0)
+    if (level == 0 && deaths == 0)
         ControlsOverlay::addControlsPrompt();
 
 	snail_move = 1;
@@ -359,7 +357,7 @@ void WorldSystem::onNotify(Event event) {
             //game end screen
             running = false;
             ControlsOverlay::removeControlsOverlay();
-            notify(Event(Event::GAME_OVER, attempts, enemies_killed, projectiles_fired));
+            notify(Event(Event::GAME_OVER, deaths, enemies_killed, projectiles_fired));
         }
     }
     
@@ -418,7 +416,7 @@ void WorldSystem::onNotify(Event event) {
     {
         running = true;
         DebugSystem::in_debug_mode = false;
-        attempts = -1;
+        deaths = 0;
         projectiles_fired = 0;
         enemies_killed = 0;
 
