@@ -5,6 +5,10 @@
   "direction": "right",
   "turnsPerCamera": 2,
   "AI-PathFinding-Algorithm": "Astar",
+  "endCoordinates": {
+    "x": 28,
+    "y": 6
+  },
   "tiles": [
     "                              ",
     "                              ",
