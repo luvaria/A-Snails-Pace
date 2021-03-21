@@ -48,11 +48,11 @@ ECS::Entity Slug::createSlug(vec2 position, ECS::Entity entity)
 	std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>();
 	std::shared_ptr <BTNode> iSr = std::make_unique<IsSnailInRange>();
 	std::shared_ptr <BTNode> rfn = std::make_unique<RepeatForN>(lfs, 50);
-	std::shared_ptr <BTNode> fxs = std::make_unique<FireXShots>();
+	std::shared_ptr <BTNode> fxs = std::make_unique<FireXShots>(0);
 	std::shared_ptr <BTNode> ps = std::make_unique<PredictShot>();
-	std::shared_ptr <BTNode> fxs2 = std::make_unique<FireXShots>();
+	std::shared_ptr <BTNode> fxs2 = std::make_unique<FireXShots>(1);
 	std::shared_ptr <BTNode> selector = std::make_unique<BTSelector>(std::vector<std::shared_ptr <BTNode>>({ rfn, fxs }));
-	std::shared_ptr <BTNode> rs = std::make_unique<RandomSelector>(75, fxs2, ps, 1);
+	std::shared_ptr <BTNode> rs = std::make_unique<RandomSelector>(75, fxs2, ps);
 	//std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ iSr, selector }));
 
 	//std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ isr, selector, randomSelector, gts }));
@@ -61,7 +61,7 @@ ECS::Entity Slug::createSlug(vec2 position, ECS::Entity entity)
 
 	//std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ iSr, selector, lfs }));
 	//std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ iSr, lfs }));
-	std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ iSr, selector, rs, lfs }));
+	std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ iSr, selector, lfs }));
 
 
 	tree->init(entity);

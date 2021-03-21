@@ -93,7 +93,7 @@ private:
             }
         }
         // maybe have a situation for BT::Running?
-
+        
         else {
             return state;
         }
@@ -122,7 +122,7 @@ public:
     
 
     virtual BTState process(ECS::Entity e) override {
-        std::cout << "in selector" << std::endl;
+        //std::cout << "in selector" << std::endl;
         if (m_index >= m_children.size())
             return BTState::Success;
 
@@ -133,11 +133,11 @@ public:
 
         // select a new active child and initialize its internal state
         if (state == BTState::Success) {
-            std::cout << "Selector Node has succeeded" << std::endl;
+            //std::cout << "Selector Node has succeeded" << std::endl;
             return BTState::Success;
         }
         else if (state == BTState::Failure) {
-            std::cout << "leaf node has failed, move on to next leaf node" << std::endl;
+            //std::cout << "leaf node has failed, move on to next leaf node" << std::endl;
             m_index++;
             const auto& nextChild = m_children[m_index];
             assert(nextChild);
@@ -145,7 +145,7 @@ public:
             return BTState::Running;
         }
         else {
-            std::cout << "run the same node" << std::endl;
+            //std::cout << "run the same node" << std::endl;
             return BTState::Running;
         }
         
@@ -223,7 +223,9 @@ private:
 
 class FireXShots : public BTNode {
 public:
-    FireXShots() {
+    FireXShots() noexcept {
+    }
+    FireXShots(int skip) : m_Skip(skip) {
 
     }
     void init(ECS::Entity e) override {
@@ -231,19 +233,19 @@ public:
     }
     BTState process(ECS::Entity e) override;
 private:
+    int m_Skip;
 };
 
 class RandomSelector : public BTNode {
 public:
     // chance is % chance of option #1 happening
-    RandomSelector(float chance, std::shared_ptr<BTNode> option1, std::shared_ptr<BTNode> option2, int skip):
-    m_chance(chance), m_child1(option1), m_child2(option2), m_skip(skip){
+    RandomSelector(float chance, std::shared_ptr<BTNode> option1, std::shared_ptr<BTNode> option2):
+    m_chance(chance), m_child1(option1), m_child2(option2){
         
     }
 private:
     void init(ECS::Entity e) override {
         m_chance = 1 + rand() % 100;
-        m_skip = 1;
         if (m_chance <= 75) {
             const auto& child = m_child1;
             m_chosen = child;
@@ -256,21 +258,15 @@ private:
         }
     }
     BTState process(ECS::Entity e) override {
-        if (m_skip > 0) {
-            std::cout << "skip turn" << std::endl;
-            m_skip = m_skip - 1;
-            return BTState::Failure;
+        
+        BTState state = m_chosen->process(e);
+        if (state == BTState::Success) {
+             return BTState::Success;
         }
         else {
-            std::cout << "process" << std::endl;
-            BTState state = m_chosen->process(e);
-            if (state == BTState::Success) {
-                return BTState::Success;
-            }
-            else {
-                return BTState::Failure;
-            }
+            return BTState::Running;
         }
+        
     }
 private:
     std::shared_ptr<BTNode> m_child1;

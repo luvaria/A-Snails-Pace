@@ -529,6 +529,11 @@ BTState IsSnailInRange::process(ECS::Entity e) {
 
 
 BTState FireXShots::process(ECS::Entity e) {
+    
+    if (m_Skip > 0) {
+        m_Skip = m_Skip - 1;
+        return BTState::Failure;
+    }
     std::cout << "in FireXShots" << std::endl;
     //first we get the position of the mouse_pos relative to the start of the level.
     auto& cameraEntity = ECS::registry<Camera>.entities[0];
