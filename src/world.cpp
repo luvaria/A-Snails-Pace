@@ -457,7 +457,9 @@ void WorldSystem::onNotify(Event event) {
 
                     enemies_killed++;
                     ECS::Entity expoldingSpider;
-                    Spider::createExplodingSpider(motion, expoldingSpider);
+                    if (ECS::registry<Spider>.has(event.other_entity)) {
+                        Spider::createExplodingSpider(motion, expoldingSpider);
+                    }
                     // Remove the spider but not the projectile
                     ECS::ContainerInterface::remove_all_components_of(event.other_entity);
                 }
