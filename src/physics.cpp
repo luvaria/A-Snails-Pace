@@ -205,10 +205,17 @@ bool collides(ECS::Entity& entity1, ECS::Entity& entity2, Motion& motion1, Motio
 	{
 		if (doPenetrationFree)
 		{
+			// edited this to fit SlugProjectile...
 			if (ECS::registry<Projectile>.has(entity1))
 			{
 				//projectile is entity1, wall is entity2
 				bounceProjectileOffWall(motion1, vertices1, vertices2);
+			}
+			else if (ECS::registry<SlugProjectile>.has(entity1)) {
+				bounceProjectileOffWall(motion1, vertices1, vertices2);
+			}
+			else if (ECS::registry<SlugProjectile>.has(entity2)) {
+				bounceProjectileOffWall(motion2, vertices2, vertices1);
 			}
 			else
 			{
@@ -233,9 +240,14 @@ bool collides(ECS::Entity& entity1, ECS::Entity& entity2, Motion& motion1, Motio
 						//projectile is entity1, wall is entity2
 						bounceProjectileOffWall(motion1, vertices1, vertices2);
 					}
+					else if (ECS::registry<SlugProjectile>.has(entity1)) {
+						bounceProjectileOffWall(motion1, vertices1, vertices2);
+					}
+					else if (ECS::registry<SlugProjectile>.has(entity2)) {
+						bounceProjectileOffWall(motion2, vertices2, vertices1);
+					}
 					else
 					{
-						//projectile is entity2, wall is entity1
 						bounceProjectileOffWall(motion2, vertices2, vertices1);
 					}
 				}
@@ -251,7 +263,9 @@ bool collides(ECS::Entity& entity1, ECS::Entity& entity2, Motion& motion1, Motio
 bool isProjectileAndWall(ECS::Entity entity_i, ECS::Entity entity_j)
 {
 	return (ECS::registry<Projectile>.has(entity_i) && ECS::registry<WallTile>.has(entity_j)) ||
-		(ECS::registry<WallTile>.has(entity_i) && ECS::registry<Projectile>.has(entity_j));
+		(ECS::registry<WallTile>.has(entity_i) && ECS::registry<Projectile>.has(entity_j)) ||
+		(ECS::registry<SlugProjectile>.has(entity_i) && ECS::registry<WallTile>.has(entity_j)) ||
+		(ECS::registry<WallTile>.has(entity_i) && ECS::registry<SlugProjectile>.has(entity_j));
 }
 
 //returns true if we have a possibility of caring if entity_i and entity_j collide
