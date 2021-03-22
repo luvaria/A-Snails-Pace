@@ -141,4 +141,4 @@ bool BlurParticle::canCreateNew = true;
 float BlurParticle::timer = Particle::timer;
 float WeatherParticle::timer = Particle::timer*50;
 float WeatherParticle::nextSpawn = 2000;
-float WeatherParticle::count = 500;
+float WeatherParticle::count = 50;
