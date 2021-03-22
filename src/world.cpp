@@ -241,9 +241,13 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             }
         } else if (ECS::registry<Particle>.has(entity) || ECS::registry<Spider>.has(entity)){
             auto& motion = ECS::registry<Motion>.get(entity);
+            bool isParticle = ECS::registry<Particle>.has(entity);
             bool isWeatherParticle = ECS::registry<WeatherParticle>.has(entity);
-            motion.scale *= (isWeatherParticle) ? (1-(step_seconds/8)) : (1+(step_seconds/3));
-            motion.angle *= (isWeatherParticle) ? (1+(step_seconds)) : 1;
+            if(isParticle) {
+                motion.scale *= (isWeatherParticle) ? (1-(step_seconds/8)) : (1+(step_seconds/3));
+                motion.angle *= (isWeatherParticle) ? (1+(step_seconds)) : 1;
+            }
+            
 
             auto& counter = ECS::registry<DeathTimer>.get(entity);
             counter.counter_ms -= elapsed_ms;
@@ -454,14 +458,18 @@ void WorldSystem::onNotify(Event event) {
                     int yCoord = static_cast<int>(motion.position.y / scale);
                     Tile& t = TileSystem::getTiles()[yCoord][xCoord];
                     t.removeOccupyingEntity();
-
+                    bool wasSpider = ECS::registry<Spider>.has(event.other_entity);
                     enemies_killed++;
+                    Motion mot;
+                    mot.position = motion.position;
+                    mot.angle = motion.angle;
+                    mot.scale = motion.scale;
+                    ECS::ContainerInterface::remove_all_components_of(event.other_entity);
                     ECS::Entity expoldingSpider;
-                    if (ECS::registry<Spider>.has(event.other_entity)) {
-                        Spider::createExplodingSpider(motion, expoldingSpider);
+                    if (wasSpider) {
+                        Spider::createExplodingSpider(mot, expoldingSpider);
                     }
                     // Remove the spider but not the projectile
-                    ECS::ContainerInterface::remove_all_components_of(event.other_entity);
                 }
             }
         }

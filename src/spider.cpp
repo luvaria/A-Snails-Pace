@@ -34,8 +34,9 @@ ECS::Entity Spider::createExplodingSpider(Motion givenMotion, ECS::Entity entity
 
     // Initialize the motion
     auto& motion = ECS::registry<Motion>.emplace(entity);
-    motion = givenMotion;
-
+    motion.position = givenMotion.position;
+    motion.angle = givenMotion.angle;
+    motion.scale = givenMotion.scale;
     ECS::registry<AI>.emplace(entity);
     ECS::registry<Spider>.emplace(entity);
     DeathTimer& dt = ECS::registry<DeathTimer>.emplace(entity);
