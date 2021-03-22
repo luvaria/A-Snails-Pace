@@ -40,7 +40,7 @@ public:
     {
         if (numOccupyingEntities == 0) 
         {
-          return
+            return;
         }
         numOccupyingEntities--;
         if (numOccupyingEntities == 0)
