@@ -13,7 +13,7 @@ ECS::Entity SnailProjectile::createProjectile(vec2 position, vec2 velocity, bool
 	if (resource.mesh.vertices.size() == 0)
 	{
 		resource.mesh.loadFromOBJFile(mesh_path("shell.obj"));
-		RenderSystem::createColoredMesh(resource, "projectile");
+		RenderSystem::createColoredMesh(resource, "snail_projectile");
 	}
 
 	std::string key_min = "projectile-min";
