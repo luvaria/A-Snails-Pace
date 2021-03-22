@@ -66,7 +66,7 @@ ECS::Entity Spider::createSpider(vec2 position, ECS::Entity entity)
 		RenderSystem::createColoredMesh(resource, "spider");
 	}
 
-	std::string key_min = "minSpider";
+	std::string key_min = "min-spider";
 	ShadedMesh& resource_min = cache_resource(key_min);
 	if (resource_min.mesh.vertices.size() == 0)
 	{
@@ -89,15 +89,18 @@ ECS::Entity Spider::createSpider(vec2 position, ECS::Entity entity)
 	motion.lastDirection = DIRECTION_WEST;
 
 	ECS::registry<AI>.emplace(entity);
+	ECS::registry<Enemy>.emplace(entity);
 	ECS::registry<Spider>.emplace(entity);
+
 	
 	// Adding Behaviour Tree to Spider
 	// Maybe add some registry that keeps track of trees??
-	std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>();
+	std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>(false);
 	std::shared_ptr <BTNode> isr = std::make_unique<IsSnailInRange>();
 	std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ isr, lfs }));
 	//auto& ai = ECS::registry<AI>.get(entity);
 	//ai.tree = tree;
+
 	tree->init(entity);
 	auto& ai = ECS::registry<AI>.get(entity);
 	ai.tree = tree;
