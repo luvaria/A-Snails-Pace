@@ -80,7 +80,7 @@
 					</lines>
 					<collectibles>
 						<collectible cID="0" points="0">2</collectible>
-						<collectible cID="1" points="1">3</collectible>
+						<collectible cID="1" points="100">3</collectible>
 					</collectibles>
 					<next>4</next>
 				</dialogue>
