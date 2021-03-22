@@ -94,9 +94,15 @@ struct Effect
 {
 	GLResource<SHADER> vertex;
 	GLResource<SHADER> fragment;
+    GLResource<SHADER> geometry;
 	GLResource<PROGRAM> program;
+    
+    void load_from_file(std::string vs_path, std::string fs_path); // load shaders from files and link into program
 
-	void load_from_file(std::string vs_path, std::string fs_path); // load shaders from files and link into program
+	void load_from_file(std::string vs_path, std::string fs_path, std::string gs_path); // load shaders from files and link into program
+    
+    void load_from_file(std::string vs_path, std::string fs_path, std::string gs_path, bool withGeo);
+
 };
 
 // Mesh datastructure for storing vertex and index buffers
@@ -174,7 +180,7 @@ struct DebugComponent
 // A timer that will be associated to dying snail
 struct DeathTimer
 {
-	float counter_ms = 1000;
+	float counter_ms = 1500;
 };
 
 struct Parallax

@@ -4,10 +4,27 @@
 #include "tiny_ecs.hpp"
 #include "subject.hpp"
 
+#include <random>
+#include <functional>
+
+#define SDL_MAIN_HANDLED
+#include <SDL.h>
+#include <SDL_mixer.h>
+
 // A simple physics system that moves rigid bodies and checks for collision
 class PhysicsSystem : public Subject
 {
 public:
+    
+    std::default_random_engine rng;
+    std::uniform_real_distribution<float> uniform_dist;
+    
+    bool randomBool() {
+        static auto gen = std::bind(std::uniform_int_distribution<>(0,1),std::default_random_engine());
+        bool b = gen();
+        return b;
+    }
+    
 	void step(float elapsed_ms, vec2 window_size_in_game_units);
 
 	// Stucture to store collision information

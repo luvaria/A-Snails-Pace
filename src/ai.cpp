@@ -1,13 +1,19 @@
 // internal
 #include "ai.hpp"
 #include "tiny_ecs.hpp"
-#include <iostream>
 #include "tiles/tiles.hpp"
 #include "snail.hpp"
 #include "spider.hpp"
+#include "slug.hpp"
+#include "bird.hpp"
 #include "common.hpp"
 #include "world.hpp"
+#include "render_components.hpp"
 #include "debug.hpp"
+#include "projectile.hpp"
+
+// stlib
+#include <iostream>
 #include <algorithm>
 #include <chrono>
 #include <iostream>
@@ -24,33 +30,31 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 
     bool aiMovedThisStep = false;
     auto& aiRegistry = ECS::registry<AI>;
-    for (unsigned int i=0; i< aiRegistry.components.size(); i++)
-    {
-        //std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>();
-        //std::shared_ptr <BTNode> npp = std::make_unique<NoPathsPossible>();
-        //std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ lfs }));
+    if (ECS::registry<Turn>.components[0].type == ENEMY) {
+        for (unsigned int i = 0; i < aiRegistry.components.size(); i++)
+        {
 
-        auto entity = aiRegistry.entities[i];
-        auto& tree = aiRegistry.components[i].tree;
-        auto state = tree->process(entity);
-        //std::cout << state << std::endl;
-        
-        if (state != BTState::Running) {
+            auto entity = aiRegistry.entities[i];
+            auto& tree = aiRegistry.components[i].tree;
+            auto state = tree->process(entity);
+            //std::cout << state << std::endl;
+
+           
             aiMovedThisStep = true;
+           
+
         }
-        
+
+        if (aiMovedThisStep) {
+            aiMoved = true;
+        }
     }
-    
-    if (aiMovedThisStep) {
-        aiMoved = true;
-    }
-    
     
 	(void)elapsed_ms; // placeholder to silence unused warning until implemented
 	(void)window_size_in_game_units; // placeholder to silence unused warning until implemented
 }
 
-std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
+std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal, std::string animal) {
     auto tileMovesMap = TileSystem::getAllTileMovesMap();
     std::vector<vec2> startFrontier;
     startFrontier.push_back(start);
@@ -61,14 +65,15 @@ std::vector<vec2> AISystem::shortestPathBFS(vec2 start, vec2 goal) {
   while (!frontier.empty()) {
     current = frontier.front();
     frontier.pop_front();
-    if(checkIfReachedDestinationOrAddNeighboringNodesToFrontier(frontier, current, tileMovesMap, goal)) {
-        return current;
-    }
+        if (checkIfReachedDestinationOrAddNeighboringNodesToFrontier(frontier, current, tileMovesMap, goal)) {
+            return current;
+        }
+    
   }
     return startFrontier;
 }
 
-std::vector<vec2> AISystem::shortestPathAStar(vec2 start, vec2 goal) {
+std::vector<vec2> AISystem::shortestPathAStar(vec2 start, vec2 goal, std::string animal) {
     auto tileMovesMap = TileSystem::getAllTileMovesMap();
     std::vector<vec2> startFrontier;
     startFrontier.push_back(start);
@@ -79,9 +84,11 @@ std::vector<vec2> AISystem::shortestPathAStar(vec2 start, vec2 goal) {
   while (!frontier.empty()) {
     current = frontier.front();
     frontier.pop_front();
-    if(checkIfReachedDestinationOrAddNeighboringNodesToFrontier(frontier, current, tileMovesMap, goal)) {
-        return current;
-    }
+        //std::cout << "call to SPIDER" << std::endl;
+        if (checkIfReachedDestinationOrAddNeighboringNodesToFrontier(frontier, current, tileMovesMap, goal)) {
+            //std::cout << "about to return path" << std::endl;
+            return current;
+        }
     sortQueue(frontier, goal);
   }
   return startFrontier;
@@ -353,7 +360,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
         
         // left vine tile
         if (tileMovesMap.find({endNode.x, endNode.y-1}) != tileMovesMap.end()) {
-            if(tiles[endNode.x][endNode.y].type == VINE && (tiles[endNode.x+1][endNode.y-1].type == WALL || tiles[endNode.x-1][endNode.y].type == WALL)) {
+            if(tiles[endNode.x][endNode.y].type == VINE && (tiles[endNode.x+1][endNode.y-1].type == WALL || tiles[endNode.x-1][endNode.y-1].type == WALL)) {
                 next.push_back({endNode.x, endNode.y-1});
                 frontier.push_back(next);
                 next = current;
@@ -398,6 +405,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
 }
 
 BTState LookForSnail::process(ECS::Entity e) {
+    //std::cout << "in look for snail" << std::endl;
     // before for loop
     auto& snailEntity = ECS::registry<Snail>.entities[0];
     float scale = TileSystem::getScale();
@@ -420,13 +428,13 @@ BTState LookForSnail::process(ECS::Entity e) {
 
     auto start = std::chrono::high_resolution_clock::now();
 
+
     if (AISystem::aiPathFindingAlgorithm == AI_PF_ALGO_A_STAR) {
-        current = AISystem::shortestPathAStar(aiCoord, snailCoord);
+        current = AISystem::shortestPathAStar(aiCoord, snailCoord, "spider");
     }
     else {
-        current = AISystem::shortestPathBFS(aiCoord, snailCoord);
+        current = AISystem::shortestPathBFS(aiCoord, snailCoord, "spider");
     }
-
     // Get ending timepoint
     auto stop = std::chrono::high_resolution_clock::now();
 
@@ -471,9 +479,26 @@ BTState LookForSnail::process(ECS::Entity e) {
                 WorldSystem::goLeft(entity, aiMove);
             }
         }
+        //std::cout << "returning Failure" << std::endl;
         return BTState::Failure;
     }
-    
+    //std::cout << "returning Running" << std::endl;
+    if (ECS::registry<Slug>.has(e) == true && m_inRange == true) {
+        auto& slugMot = ECS::registry<Motion>.get(e);
+        vec2 slugPos = slugMot.position;
+        int xAiPos = (aiPos.x - (0.5 * scale)) / scale;
+        int yAiPos = (aiPos.y - (0.5 * scale)) / scale;
+        vec2 snailLoc = ECS::registry<Motion>.get(snailEntity).position;
+        int xLoc = (snailLoc[0] - (0.5 * scale)) / scale;
+        int yLoc = (snailLoc[1] - (0.5 * scale)) / scale;
+        if (xAiPos - 1 == xLoc && yAiPos == yLoc) {
+            return BTState::Success;
+        }
+        else if (xAiPos + 1 == xPos && yAiPos == yPos) {
+            return BTState::Success;
+        }
+    }
+
     return BTState::Running;
 }
 
@@ -501,16 +526,18 @@ BTState IsSnailInRange::process(ECS::Entity e) {
     int xMax = aiCoord.x + range;
     int xMin = aiCoord.x - range;
     int yMax = aiCoord.y + range;
-    int yMin = aiCoord.x - range;
+    int yMin = aiCoord.y - range;
 
 
     if (xMax >= snailCoord.x && xMin <= snailCoord.x) {
         //std::cout << "success1" << std::endl;
-        return BTState::Success;
-    }
-    else if (yMax <= snailCoord.y && yMin >= snailCoord.y) {
-        //std::cout << "success2" << std::endl;
-        return BTState::Success;
+        if (yMax >= snailCoord.y && yMin <= snailCoord.y) {
+            //std::cout << "success2" << std::endl;
+            return BTState::Success;
+        }
+        else {
+            return BTState::Failure;
+        }
     }
     else {
         //std::cout << "failure" << std::endl;
@@ -518,5 +545,53 @@ BTState IsSnailInRange::process(ECS::Entity e) {
     }
 }
 
+
+BTState FireXShots::process(ECS::Entity e) {
+    
+    if (m_Skip > 0) {
+        m_Skip = m_Skip - 1;
+        return BTState::Failure;
+    }
+    //std::cout << "in FireXShots" << std::endl;
+    //first we get the position of the mouse_pos relative to the start of the level.
+    auto& cameraEntity = ECS::registry<Camera>.entities[0];
+    vec2& cameraOffset = ECS::registry<Motion>.get(cameraEntity).position;
+    // get snail position
+    auto& slugEntity = e;
+    vec2 slugPosition = ECS::registry<Motion>.get(e).position;
+    vec2 slugOffset = slugPosition + cameraOffset;
+
+
+    auto& snailEntity = ECS::registry<Snail>.entities[0];
+
+    // now you want to go in the direction of the (mouse_pos - snail_pos), but make it a unit vector
+    vec2 snailPosition = ECS::registry<Motion>.get(snailEntity).position;
+
+    vec2 projectilePosition = slugPosition + glm::normalize(snailPosition - slugPosition) * TileSystem::getScale() / 2.f;
+    vec2 projectileVelocity = (snailPosition - projectilePosition);
+    float length = glm::length(projectileVelocity);
+    projectileVelocity.x = (projectileVelocity.x / length) * TileSystem::getScale() * 2;
+    projectileVelocity.y = (projectileVelocity.y / length) * TileSystem::getScale() * 2;
+    if (projectileVelocity != vec2(0, 0))
+    {
+        // implement a version of this for the slug
+        SlugProjectile::createProjectile(projectilePosition, projectileVelocity);
+    }
+   
+    return BTState::Success;
+    
+
+}
+
+BTState PredictShot::process(ECS::Entity e) {
+    //std::cout << "in predict shot" << std::endl;
+    return BTState::Success;
+}
+
+BTState GetToSnail::process(ECS::Entity e) {
+    return BTState::Success;
+}
+
 bool AISystem::aiMoved = false;
 std::string AISystem::aiPathFindingAlgorithm = "BFS";
+//std::vector<vec2> birdPath = AISystem::getBirdPath();
