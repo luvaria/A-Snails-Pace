@@ -25,11 +25,9 @@ struct WeatherParticle
     static float count;
     static float timer;
 };
-struct RejectedStage2
+struct RejectedStages
 {
     ECS::Entity entity;
-};
-struct RejectedStage3
-{
-    ECS::Entity entity;
+    bool rejectedState2 = false;
+    bool rejectedState3 = false;
 };

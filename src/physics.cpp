@@ -344,24 +344,25 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     if (ECS::registry<WeatherParticle>.components.size() <= WeatherParticle::count && WeatherParticle::nextSpawn < 0.f)
     {
         Particle::createWeatherParticle("snowflake", newSnowflakeParticle, window_size_in_game_units);
-        WeatherParticle::nextSpawn = uniform_dist(rng);
+        WeatherParticle::nextSpawn = (Particle::timer/2) * uniform_dist(rng);
     }
     for (auto entity : ECS::registry<WeatherParticle>.entities)
     {
         auto& motion = ECS::registry<Motion>.get(entity);
         DeathTimer dt = ECS::registry<DeathTimer>.get(entity);
         int phaseTime = WeatherParticle::timer/3;
-        if(!(ECS::registry<RejectedStage3>.has(entity)) && (dt.counter_ms <= WeatherParticle::timer-(2*phaseTime)) ) {
+        RejectedStages& rs = ECS::registry<RejectedStages>.get(entity);
+        if(!rs.rejectedState3 && (dt.counter_ms <= WeatherParticle::timer-(2*phaseTime)) ) {
             if(randomBool()){
                 Particle::setP3Motion(motion);
             } else {
-                ECS::registry<RejectedStage3>.emplace(entity);
+                rs.rejectedState3 = true;
             }
-        } else if(!(ECS::registry<RejectedStage2>.has(entity)) && (dt.counter_ms <= WeatherParticle::timer-(phaseTime))) {
+        } else if(!rs.rejectedState2 && (dt.counter_ms <= WeatherParticle::timer-(phaseTime))) {
             if(randomBool()){
                 Particle::setP2Motion(motion);
             } else {
-                ECS::registry<RejectedStage2>.emplace(entity);
+                rs.rejectedState2 = true;
             }
         }
         float gravity_acceleration = 0.004;

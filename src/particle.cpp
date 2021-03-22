@@ -84,6 +84,7 @@ ECS::Entity Particle::createWeatherParticle(std::string particleName, ECS::Entit
     // Create an (empty) Snail component
     ECS::registry<Particle>.emplace(entity);
     ECS::registry<WeatherParticle>.emplace(entity);
+    ECS::registry<RejectedStages>.emplace(entity);
 
     return entity;
 }
