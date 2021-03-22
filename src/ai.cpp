@@ -360,7 +360,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
         
         // left vine tile
         if (tileMovesMap.find({endNode.x, endNode.y-1}) != tileMovesMap.end()) {
-            if(tiles[endNode.x][endNode.y].type == VINE && (tiles[endNode.x+1][endNode.y-1].type == WALL || tiles[endNode.x-1][endNode.y].type == WALL)) {
+            if(tiles[endNode.x][endNode.y].type == VINE && (tiles[endNode.x+1][endNode.y-1].type == WALL || tiles[endNode.x-1][endNode.y-1].type == WALL)) {
                 next.push_back({endNode.x, endNode.y-1});
                 frontier.push_back(next);
                 next = current;

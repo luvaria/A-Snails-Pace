@@ -12,7 +12,7 @@
 // Defining what tile types are possible, used to render correct tile types
 // and to check if can be moved to. EMPTY = nothing is on the tile and you
 // can move to it if it is unoccupied
-typedef enum { EMPTY, WALL, WATER, VINE, INACCESSIBLE } TYPE;
+typedef enum { EMPTY, WALL, WATER, VINE, INACCESSIBLE, SPLASH } TYPE;
 
 // Defines the tile component
 class Tile: public Subject {
@@ -40,8 +40,7 @@ public:
     {
         if (numOccupyingEntities == 0) 
         {
-            // suppressing this error until a solution is found
-            //throw std::runtime_error("tried to remove an occupying entity when there were none");
+            return;
         }
         numOccupyingEntities--;
         if (numOccupyingEntities == 0)
