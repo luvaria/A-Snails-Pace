@@ -258,6 +258,9 @@ bool isProjectileAndWall(ECS::Entity entity_i, ECS::Entity entity_j)
 //returns true if we have a possibility of caring if entity_i and entity_j collide
 bool shouldCheckCollision(ECS::Entity entity_i, ECS::Entity entity_j)
 {
+	if (ECS::registry<DeathTimer>.has(entity_i) || ECS::registry<DeathTimer>.has(entity_j))
+		return false;
+
 	bool isValidSnailCollision_i = ECS::registry<Snail>.has(entity_i) &&
 		(ECS::registry<Spider>.has(entity_j) || ECS::registry<WaterTile>.has(entity_j) || ECS::registry<SlugProjectile>.has(entity_j) ||
 			ECS::registry<Slug>.has(entity_j) ||
