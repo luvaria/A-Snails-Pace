@@ -245,19 +245,16 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 	    // this works out so that the projectiles move a set amount of time per enemy turn
 	    if (ECS::registry<Projectile>.size() != 0)
         {
-            //std::cout << "in the first if statement" << std::endl;
 	        projectile_turn_over_time -= elapsed_ms;
         }
 
         
         // projectile done moving or no projectiles AND AI path calculated or AI all dead
-        // updated 
         if (((ECS::registry<Projectile>.size() != 0 && projectile_turn_over_time <= 0) 
             || (ECS::registry<Projectile>.size() == 0))
             && (AISystem::aiMoved || (ECS::registry<AI>.size() == 0)))
         {
             // In the following two cases, if true, all the enemies will have moved
-            //std::cout << "in the second if statement" << std::endl;
             // Camera has to move
             if ((ECS::registry<Destination>.size() == 1) && ECS::registry<Destination>.has(cameraEntity))
             {

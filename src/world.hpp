@@ -54,11 +54,6 @@ public:
     static void goUp(ECS::Entity &entity, int &moves);
     static void goDown(ECS::Entity &entity, int &moves);
     static void fallDown(ECS::Entity& entity, int& moves);
-
-	static void birdUp(ECS::Entity& entity, int& moves);
-	static void birdDown(ECS::Entity& entity, int& moves);
-	static void birdLeft(ECS::Entity& entity, int& moves);
-	static void birdRight(ECS::Entity& entity, int& moves);
     
     static void doX(Motion &motion, Tile &currTile, Tile &nextTile, int defaultDirection );
     
