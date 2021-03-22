@@ -247,8 +247,6 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
                 motion.scale *= (isWeatherParticle) ? (1-(step_seconds/8)) : (1+(step_seconds/3));
                 motion.angle *= (isWeatherParticle) ? (1+(step_seconds)) : 1;
             }
-            
-
             auto& counter = ECS::registry<DeathTimer>.get(entity);
             counter.counter_ms -= elapsed_ms;
             if (counter.counter_ms < 0)
@@ -460,15 +458,11 @@ void WorldSystem::onNotify(Event event) {
                     t.removeOccupyingEntity();
                     bool wasSpider = ECS::registry<Spider>.has(event.other_entity);
                     enemies_killed++;
-                    Motion mot;
-                    mot.position = motion.position;
-                    mot.angle = motion.angle;
-                    mot.scale = motion.scale;
-                    ECS::ContainerInterface::remove_all_components_of(event.other_entity);
                     ECS::Entity expoldingSpider;
                     if (wasSpider) {
-                        Spider::createExplodingSpider(mot, expoldingSpider);
+                        Spider::createExplodingSpider(motion, expoldingSpider);
                     }
+                    ECS::ContainerInterface::remove_all_components_of(event.other_entity);
                     // Remove the spider but not the projectile
                 }
             }
