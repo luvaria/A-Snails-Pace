@@ -15,7 +15,7 @@ ECS::Entity Spider::createSpider(vec2 position, ECS::Entity entity)
 		RenderSystem::createColoredMesh(resource, "spider");
 	}
 
-	std::string key_min = "minSpider";
+	std::string key_min = "min-spider";
 	ShadedMesh& resource_min = cache_resource(key_min);
 	if (resource_min.mesh.vertices.size() == 0)
 	{
@@ -38,6 +38,7 @@ ECS::Entity Spider::createSpider(vec2 position, ECS::Entity entity)
 	motion.lastDirection = DIRECTION_WEST;
 
 	ECS::registry<AI>.emplace(entity);
+	ECS::registry<Enemy>.emplace(entity);
 	ECS::registry<Spider>.emplace(entity);
 
 	

@@ -3,8 +3,12 @@
 #include "common.hpp"
 #include "tiny_ecs.hpp"
 
-// snail projectile
 struct Projectile
+{
+	// tags all projectile types
+};
+
+struct SnailProjectile
 {
 	// Creates all the associated render resources and default transform
 	static ECS::Entity createProjectile(vec2 position, vec2 velocity, bool preview = false);

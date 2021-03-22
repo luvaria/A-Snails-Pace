@@ -173,7 +173,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
         notify(Event(Event::LEVEL_COMPLETE));
     }
 
-	//remove any offscreen projectiles
+	// remove any offscreen projectiles
 	for (auto entity : ECS::registry<Projectile>.entities)
 	{
 		auto projectilePosition = ECS::registry<Motion>.get(entity).position;
@@ -182,16 +182,6 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 			ECS::ContainerInterface::remove_all_components_of(entity);
 		}
 	}
-
-    // remove any offscreen slug projectiles
-    for (auto entity : ECS::registry<SlugProjectile>.entities) {
-        auto projectilePosition = ECS::registry<Motion>.get(entity).position;
-        auto snailPos = ECS::registry<Motion>.get(player_snail).position;
-        if (offScreen(projectilePosition, window_size_in_game_units, cameraOffset) && snailPos.x > projectilePosition.x)
-        {
-            ECS::ContainerInterface::remove_all_components_of(entity);
-        }
-    }
 
     if (left_mouse_pressed && (std::chrono::high_resolution_clock::now() > can_show_projectile_preview_time))
     {
@@ -236,7 +226,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     }
 	else if (turnType == PLAYER_UPDATE)
     {
-	    Projectile::Preview::removeCurrent();
+	    SnailProjectile::Preview::removeCurrent();
 	    if ((snail_move <= 0) && !ECS::registry<Destination>.has(player_snail))
         {
             turnType = ENEMY;
@@ -253,7 +243,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 	else if (turnType == ENEMY)
     {
 	    // this works out so that the projectiles move a set amount of time per enemy turn
-	    if ((ECS::registry<Projectile>.size() + ECS::registry<SlugProjectile>.size()) != 0)
+	    if (ECS::registry<Projectile>.size() != 0)
         {
             //std::cout << "in the first if statement" << std::endl;
 	        projectile_turn_over_time -= elapsed_ms;
@@ -262,8 +252,8 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
         
         // projectile done moving or no projectiles AND AI path calculated or AI all dead
         // updated 
-        if ((((ECS::registry<Projectile>.size() + ECS::registry<SlugProjectile>.size()) != 0 && projectile_turn_over_time <= 0) 
-            || (ECS::registry<Projectile>.size() + ECS::registry<SlugProjectile>.size() == 0))
+        if (((ECS::registry<Projectile>.size() != 0 && projectile_turn_over_time <= 0) 
+            || (ECS::registry<Projectile>.size() == 0))
             && (AISystem::aiMoved || (ECS::registry<AI>.size() == 0)))
         {
             // In the following two cases, if true, all the enemies will have moved
@@ -383,7 +373,7 @@ void WorldSystem::onNotify(Event event) {
         // Collisions involving snail
         if (ECS::registry<Snail>.has(event.entity))
         {
-            // Checking Snail - Spider collisions
+            // Check collisions that result in death
             if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<WaterTile>.has(event.other_entity)
                 || ECS::registry<Slug>.has(event.other_entity) || ECS::registry<SlugProjectile>.has(event.other_entity))
             {
@@ -406,11 +396,11 @@ void WorldSystem::onNotify(Event event) {
             }
         }
 
-        // Collisions involving the projectiles
-        if (ECS::registry<Projectile>.has(event.entity))
+        // Collisions involving the snail projectiles
+        if (ECS::registry<SnailProjectile>.has(event.entity))
         {
             // Don't collide with a preview projectile (ie. all enemies should fall under here)
-            if (!ECS::registry<Projectile::Preview>.has(event.entity))
+            if (!ECS::registry<SnailProjectile::Preview>.has(event.entity))
             {
                 // Checking Projectile - Spider collisions
                 if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<Slug>.has(event.other_entity) 
@@ -1019,7 +1009,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 void WorldSystem::on_mouse_move(vec2 mouse_pos)
 {
     // Remove current previews if mouse moves
-    Projectile::Preview::removeCurrent();
+    SnailProjectile::Preview::removeCurrent();
 }
 
 void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
@@ -1058,7 +1048,7 @@ void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
                 projectiles_fired++;
                 shootProjectile(mouse_pos);
                 left_mouse_pressed = false;
-                Projectile::Preview::removeCurrent();
+                SnailProjectile::Preview::removeCurrent();
 
             }
             else if (action == GLFW_PRESS)
@@ -1075,7 +1065,7 @@ void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
 void WorldSystem::shootProjectile(vec2 mousePos, bool preview /* = false */)
 {
 
-	//first we get the position of the mouse_pos relative to the start of the level.
+	// first we get the position of the mouse_pos relative to the start of the level.
     auto& cameraEntity = ECS::registry<Camera>.entities[0];
     vec2& cameraOffset = ECS::registry<Motion>.get(cameraEntity).position;
 	mousePos = mousePos + cameraOffset;
@@ -1090,14 +1080,13 @@ void WorldSystem::shootProjectile(vec2 mousePos, bool preview /* = false */)
 	projectileVelocity.y = (projectileVelocity.y / length) * TileSystem::getScale() * 2;
 	if (projectileVelocity != vec2(0, 0))
 	{
-		Projectile::createProjectile(projectilePosition, projectileVelocity, preview);
+        SnailProjectile::createProjectile(projectilePosition, projectileVelocity, preview);
 	}
 	
-	//shooting a projectile takes your turn.
+	// shooting a projectile takes your turn.
     if (!preview)
     {
         snail_move--;
-        //ECS::registry<Turn>.components[0].type = PLAYER_UPDATE;
         projectile_turn_over_time = k_projectile_turn_ms;
     }
 }

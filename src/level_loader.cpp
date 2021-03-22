@@ -3,7 +3,6 @@
 #include "snail.hpp"
 #include "npc.hpp"
 #include "spider.hpp"
-#include "bird.hpp"
 #include "slug.hpp"
 #include "ai.hpp"
 #include "collectible.hpp"
@@ -175,7 +174,6 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 				Spider::createSpider({ tile.x, tile.y }, createTaggedEntity(preview));
 			}
 			break;
-			// added this for slug
 		case eSlug:
 			for (auto& slug : it.value())
 			{

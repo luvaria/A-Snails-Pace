@@ -16,7 +16,7 @@ ECS::Entity Slug::createSlug(vec2 position, ECS::Entity entity)
 	}
 
 
-	std::string key_min = "minSlug";
+	std::string key_min = "slug-min";
 	ShadedMesh& resource_min = cache_resource(key_min);
 	if (resource_min.mesh.vertices.size() == 0)
 	{
@@ -39,6 +39,7 @@ ECS::Entity Slug::createSlug(vec2 position, ECS::Entity entity)
 	motion.lastDirection = DIRECTION_EAST;
 
 	ECS::registry<AI>.emplace(entity);
+	ECS::registry<Enemy>.emplace(entity);
 	ECS::registry<Slug>.emplace(entity);
 
 	// Adding Behaviour Tree to Slug

@@ -1,7 +1,6 @@
 // internal
 #include "ai.hpp"
 #include "tiny_ecs.hpp"
-#include <iostream>
 #include "tiles/tiles.hpp"
 #include "snail.hpp"
 #include "spider.hpp"
@@ -11,10 +10,13 @@
 #include "world.hpp"
 #include "render_components.hpp"
 #include "debug.hpp"
+#include "projectile.hpp"
+
+// stlib
+#include <iostream>
 #include <algorithm>
 #include <chrono>
 #include <iostream>
-#include "projectile.hpp"
 
 void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 {

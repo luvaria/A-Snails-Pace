@@ -98,6 +98,11 @@ struct Turn
     TurnType type;
 };
 
+struct Enemy
+{
+	// tag component for all enemies
+};
+
 typedef int CollectId;
 struct Inventory
 {

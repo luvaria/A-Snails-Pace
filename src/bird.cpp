@@ -16,11 +16,11 @@ ECS::Entity Bird::createBird(vec2 position, ECS::Entity entity)
 	}
 
 	
-	std::string key_min = "minBird";
+	std::string key_min = "bird-min";
 	ShadedMesh& resource_min = cache_resource(key_min);
 	if (resource_min.mesh.vertices.size() == 0)
 	{
-		resource_min.mesh.loadFromMinOBJFile(mesh_path("minbird.obj"));
+		resource_min.mesh.loadFromMinOBJFile(mesh_path("bird-min.obj"));
 	}
 	
 	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
