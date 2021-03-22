@@ -3,6 +3,7 @@
 #include "snail.hpp"
 #include "npc.hpp"
 #include "spider.hpp"
+#include "slug.hpp"
 #include "ai.hpp"
 #include "collectible.hpp"
 #include "tiles/vine.hpp"
@@ -173,6 +174,17 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 				Spider::createSpider({ tile.x, tile.y }, createTaggedEntity(preview));
 			}
 			break;
+		case eSlug:
+			for (auto& slug : it.value())
+			{
+				ivec2 slugPos = { slug["x"], slug["y"] };
+				if (preview && (xNotInPreviewArea(slugPos.x, previewOrigin) || yNotInPreviewArea(slugPos.y, previewOrigin)))
+					continue;
+				Tile& tile = tiles[slug["y"]][slug["x"]];
+				tile.addOccupyingEntity();
+				Slug::createSlug({ tile.x, tile.y }, createTaggedEntity(preview));
+			}
+			break;
 		default:
 			throw std::runtime_error("Failed to spawn character " + it.key());
 			break;
@@ -236,6 +248,7 @@ void LevelLoader::previewLevel(int levelIndex, vec2 offset)
 LevelLoader::string_code LevelLoader::hashit(std::string const& inString) {
 	if (inString == "snail") return eSnail;
 	if (inString == "spider") return eSpider;
+	if (inString == "slug") return eSlug;
 	throw std::runtime_error("No hash found for " + inString);
 }
 

@@ -14,7 +14,7 @@ ECS::Entity Snail::createSnail(vec2 position, ECS::Entity entity)
 		RenderSystem::createColoredMesh(resource, "snail");
 	}
 
-	std::string key_min = "minSnail";
+	std::string key_min = "snail-min";
 	ShadedMesh& resource_min = cache_resource(key_min);
 	if (resource_min.mesh.vertices.size() == 0)
 	{

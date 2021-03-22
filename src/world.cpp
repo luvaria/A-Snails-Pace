@@ -3,9 +3,11 @@
 #include "physics.hpp"
 #include "debug.hpp"
 #include "spider.hpp"
+#include "slug.hpp"
 #include "projectile.hpp"
 #include "fish.hpp"
 #include "ai.hpp"
+#include "bird.hpp"
 #include "tiles/wall.hpp"
 #include "tiles/water.hpp"
 #include "tiles/vine.hpp"
@@ -42,7 +44,8 @@ WorldSystem::WorldSystem(ivec2 window_size_px) :
     left_mouse_pressed(false),
     snail_move(1), // this might be something we want to load in
     turns_per_camera_move(1),
-    projectile_turn_over_time(0.f)
+    projectile_turn_over_time(0.f),
+    slug_projectile_turn_over_time(0.f)
 {
     // Seeding rng with random device
     rng = std::default_random_engine(std::random_device()());
@@ -170,7 +173,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
         notify(Event(Event::LEVEL_COMPLETE));
     }
 
-	//remove any offscreen projectiles
+	// remove any offscreen projectiles
 	for (auto entity : ECS::registry<Projectile>.entities)
 	{
 		auto projectilePosition = ECS::registry<Motion>.get(entity).position;
@@ -223,7 +226,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     }
 	else if (turnType == PLAYER_UPDATE)
     {
-	    Projectile::Preview::removeCurrent();
+	    SnailProjectile::Preview::removeCurrent();
 	    if ((snail_move <= 0) && !ECS::registry<Destination>.has(player_snail))
         {
             turnType = ENEMY;
@@ -240,17 +243,18 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 	else if (turnType == ENEMY)
     {
 	    // this works out so that the projectiles move a set amount of time per enemy turn
-	    if (ECS::registry<Projectile>.size())
+	    if (ECS::registry<Projectile>.size() != 0)
         {
 	        projectile_turn_over_time -= elapsed_ms;
         }
 
+        
         // projectile done moving or no projectiles AND AI path calculated or AI all dead
-	    if (((ECS::registry<Projectile>.size() && projectile_turn_over_time <= 0) || (ECS::registry<Projectile>.size() == 0))
+        if (((ECS::registry<Projectile>.size() != 0 && projectile_turn_over_time <= 0) 
+            || (ECS::registry<Projectile>.size() == 0))
             && (AISystem::aiMoved || (ECS::registry<AI>.size() == 0)))
         {
             // In the following two cases, if true, all the enemies will have moved
-
             // Camera has to move
             if ((ECS::registry<Destination>.size() == 1) && ECS::registry<Destination>.has(cameraEntity))
             {
@@ -366,8 +370,9 @@ void WorldSystem::onNotify(Event event) {
         // Collisions involving snail
         if (ECS::registry<Snail>.has(event.entity))
         {
-            // Checking Snail - Spider collisions
-            if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<WaterTile>.has(event.other_entity))
+            // Check collisions that result in death
+            if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<WaterTile>.has(event.other_entity)
+                || ECS::registry<Slug>.has(event.other_entity) || ECS::registry<SlugProjectile>.has(event.other_entity))
             {
                 // Initiate death unless already dying
                 if (!ECS::registry<DeathTimer>.has(event.entity))
@@ -388,14 +393,15 @@ void WorldSystem::onNotify(Event event) {
             }
         }
 
-        // Collisions involving the projectiles
-        if (ECS::registry<Projectile>.has(event.entity))
+        // Collisions involving the snail projectiles
+        if (ECS::registry<SnailProjectile>.has(event.entity))
         {
             // Don't collide with a preview projectile (ie. all enemies should fall under here)
-            if (!ECS::registry<Projectile::Preview>.has(event.entity))
+            if (!ECS::registry<SnailProjectile::Preview>.has(event.entity))
             {
                 // Checking Projectile - Spider collisions
-                if (ECS::registry<Spider>.has(event.other_entity))
+                if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<Slug>.has(event.other_entity) 
+                    || ECS::registry<SlugProjectile>.has(event.other_entity))
                 {
                     // tile no longer occupied by spider
                     float scale = TileSystem::getScale();
@@ -858,6 +864,7 @@ void WorldSystem::fallDown(ECS::Entity& entity, int& moves) {
     return;
 }
 
+
 // On key callback
 // Check out https://www.glfw.org/docs/3.3/input_guide.html
 void WorldSystem::on_key(int key, int, int action, int mod)
@@ -999,7 +1006,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 void WorldSystem::on_mouse_move(vec2 mouse_pos)
 {
     // Remove current previews if mouse moves
-    Projectile::Preview::removeCurrent();
+    SnailProjectile::Preview::removeCurrent();
 }
 
 void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
@@ -1038,7 +1045,7 @@ void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
                 projectiles_fired++;
                 shootProjectile(mouse_pos);
                 left_mouse_pressed = false;
-                Projectile::Preview::removeCurrent();
+                SnailProjectile::Preview::removeCurrent();
 
             }
             else if (action == GLFW_PRESS)
@@ -1055,7 +1062,7 @@ void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
 void WorldSystem::shootProjectile(vec2 mousePos, bool preview /* = false */)
 {
 
-	//first we get the position of the mouse_pos relative to the start of the level.
+	// first we get the position of the mouse_pos relative to the start of the level.
     auto& cameraEntity = ECS::registry<Camera>.entities[0];
     vec2& cameraOffset = ECS::registry<Motion>.get(cameraEntity).position;
 	mousePos = mousePos + cameraOffset;
@@ -1070,14 +1077,13 @@ void WorldSystem::shootProjectile(vec2 mousePos, bool preview /* = false */)
 	projectileVelocity.y = (projectileVelocity.y / length) * TileSystem::getScale() * 2;
 	if (projectileVelocity != vec2(0, 0))
 	{
-		Projectile::createProjectile(projectilePosition, projectileVelocity, preview);
+        SnailProjectile::createProjectile(projectilePosition, projectileVelocity, preview);
 	}
 	
-	//shooting a projectile takes your turn.
+	// shooting a projectile takes your turn.
     if (!preview)
     {
         snail_move--;
-        //ECS::registry<Turn>.components[0].type = PLAYER_UPDATE;
         projectile_turn_over_time = k_projectile_turn_ms;
     }
 }

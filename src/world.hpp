@@ -103,6 +103,7 @@ private:
 	int snail_move;
 	unsigned turns_per_camera_move;
     float projectile_turn_over_time;
+	float slug_projectile_turn_over_time;
 	
 	// music references
 	Mix_Music* background_music;
