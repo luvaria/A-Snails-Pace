@@ -38,6 +38,7 @@ ECS::Entity Snail::createSnail(vec2 position, ECS::Entity entity)
 
 	// Create an (empty) Snail component
 	ECS::registry<Snail>.emplace(entity);
+	ECS::registry<DirectionInput>.emplace(entity);
 
 	return entity;
 }
