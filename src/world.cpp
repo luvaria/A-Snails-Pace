@@ -99,6 +99,8 @@ WorldSystem::~WorldSystem() {
         Mix_FreeChunk(salmon_eat_sound);
     Mix_CloseAudio();
 
+    SDL_Quit();
+
     // Destroy all created components
     ECS::ContainerInterface::clear_all_components();
 
