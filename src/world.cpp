@@ -573,6 +573,7 @@ void WorldSystem::rotate(Tile& currTile, Motion& motion, Tile& nextTile) {
     }
 }
 
+//only entities that can round the corner should be calling this function
 void WorldSystem::changeDirection(Motion& motion, Tile& currTile, Tile& nextTile, int defaultDirection, ECS::Entity& entity) 
 {
     Destination& dest = ECS::registry<Destination>.has(entity) ? ECS::registry<Destination>.get(entity) : ECS::registry<Destination>.emplace(entity);
@@ -581,18 +582,11 @@ void WorldSystem::changeDirection(Motion& motion, Tile& currTile, Tile& nextTile
     // this velocity will be set to 0 once destination is reached in physics.cpp
     motion.velocity = (dest.position - motion.position)/k_move_seconds;
 
-    //check if we are a snail and we are rounding the corner
-    bool isSnailRoundingCorner = false;
-    bool isSnail = ECS::registry<Snail>.has(entity);
-    if (isSnail) 
-    {
-        auto& snailMotion = ECS::registry<Motion>.get(entity);
-        isSnailRoundingCorner = snailMotion.velocity.x != 0 && snailMotion.velocity.y != 0;
-    }
+    bool areRoundingCorner = motion.velocity.x != 0 && motion.velocity.y != 0;
 
     if (defaultDirection == DIRECTION_SOUTH || defaultDirection == DIRECTION_NORTH)
     {
-        if (!isSnailRoundingCorner) 
+        if (!areRoundingCorner)
         {
             doY(motion, currTile, nextTile);
             rotate(currTile, motion, nextTile);
@@ -612,7 +606,7 @@ void WorldSystem::changeDirection(Motion& motion, Tile& currTile, Tile& nextTile
     }
     else
     {
-        if (!isSnailRoundingCorner)
+        if (!areRoundingCorner)
         {
             doX(motion, currTile, nextTile, defaultDirection);
             rotate(currTile, motion, nextTile);
@@ -1048,24 +1042,24 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 			{
             // These logs are pretty useful to see what scale, angle and direction the snail should have
 			case GLFW_KEY_W:
-                ECS::registry<DirectionInput>.get(player_snail).direction = DIRECTION_NORTH;
+                    ECS::registry<DirectionInput>.get(player_snail).direction = DIRECTION_NORTH;
                     goUp(player_snail, snail_move);
-				break;
+				    break;
 			case GLFW_KEY_S:
-                ECS::registry<DirectionInput>.get(player_snail).direction = DIRECTION_SOUTH;
+                    ECS::registry<DirectionInput>.get(player_snail).direction = DIRECTION_SOUTH;
                     goDown(player_snail, snail_move);
-                break;
+                    break;
 			case GLFW_KEY_D:
-                ECS::registry<DirectionInput>.get(player_snail).direction = DIRECTION_EAST;
+                    ECS::registry<DirectionInput>.get(player_snail).direction = DIRECTION_EAST;
                     goRight(player_snail, snail_move);
-                break;
+                    break;
 			case GLFW_KEY_A:
-                ECS::registry<DirectionInput>.get(player_snail).direction = DIRECTION_WEST;
+                    ECS::registry<DirectionInput>.get(player_snail).direction = DIRECTION_WEST;
                     goLeft(player_snail, snail_move);
-				break;
+				    break;
             case GLFW_KEY_SPACE:
                     fallDown(player_snail, snail_move);
-                break;
+                    break;
             case GLFW_KEY_E:
                 Motion& playerMotion = ECS::registry<Motion>.get(player_snail);
                 for (ECS::Entity npcEntity : ECS::registry<NPC>.entities)

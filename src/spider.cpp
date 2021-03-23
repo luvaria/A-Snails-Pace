@@ -39,6 +39,7 @@ ECS::Entity Spider::createExplodingSpider(Motion givenMotion, ECS::Entity entity
     motion.scale = givenMotion.scale;
     ECS::registry<AI>.emplace(entity);
     ECS::registry<Spider>.emplace(entity);
+	ECS::registry<DirectionInput>.emplace(entity);
     DeathTimer& dt = ECS::registry<DeathTimer>.emplace(entity);
     dt.counter_ms = Particle::timer*10;
     // Adding Behaviour Tree to Spider
@@ -92,6 +93,7 @@ ECS::Entity Spider::createSpider(vec2 position, ECS::Entity entity)
 	ECS::registry<AI>.emplace(entity);
 	ECS::registry<Enemy>.emplace(entity);
 	ECS::registry<Spider>.emplace(entity);
+	ECS::registry<DirectionInput>.emplace(entity);
 
 	
 	// Adding Behaviour Tree to Spider

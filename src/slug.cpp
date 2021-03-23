@@ -41,6 +41,7 @@ ECS::Entity Slug::createSlug(vec2 position, ECS::Entity entity)
 	ECS::registry<AI>.emplace(entity);
 	ECS::registry<Enemy>.emplace(entity);
 	ECS::registry<Slug>.emplace(entity);
+	ECS::registry<DirectionInput>.emplace(entity);
 
 	// Adding Behaviour Tree to Slug
 

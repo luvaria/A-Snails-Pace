@@ -64,56 +64,59 @@ float ComputeFinalAngle(float initial_angle, bool isAngleIncreasing)
 	return 0;
 }
 
+//when this function is called, we will create the CornerMovement struct, and intialize it
 void PhysicsSystem::SetupCornerMovement(ECS::Entity entity, Destination& dest)
 {
-	AreRoundingCorner = true;
-	numSegmentsCompleted = 0;
+	ECS::registry<CornerMotion>.emplace(entity);
+	auto& cornerMotion = ECS::registry<CornerMotion>.get(entity);
+	cornerMotion.numSegmentsCompleted = 0;
 	auto& direction = ECS::registry<DirectionInput>.get(entity).direction;
 	auto& motion = ECS::registry<Motion>.get(entity);
 	switch (direction) 
 	{
 	case DIRECTION_NORTH: 
 		{
-			segment_angle = PI / 2;
-			isSegmentAngleIncreasing = dest.position.x < motion.position.x;
-			motion.lastDirection = isSegmentAngleIncreasing ? DIRECTION_WEST : DIRECTION_EAST;
+			cornerMotion.segment_angle = PI / 2;
+			cornerMotion.isSegmentAngleIncreasing = dest.position.x < motion.position.x;
+			motion.lastDirection = cornerMotion.isSegmentAngleIncreasing ? DIRECTION_WEST : DIRECTION_EAST;
 			break;
 		}
 	case DIRECTION_SOUTH:
 		{
-			segment_angle = 3 * PI / 2;
-			isSegmentAngleIncreasing = dest.position.x > motion.position.x;
-			motion.lastDirection = isSegmentAngleIncreasing ? DIRECTION_EAST : DIRECTION_WEST;
+			cornerMotion.segment_angle = 3 * PI / 2;
+			cornerMotion.isSegmentAngleIncreasing = dest.position.x > motion.position.x;
+			motion.lastDirection = cornerMotion.isSegmentAngleIncreasing ? DIRECTION_EAST : DIRECTION_WEST;
 			break;
 		}
 	case DIRECTION_EAST:
 		{
-			segment_angle = 0;
-			isSegmentAngleIncreasing = dest.position.y < motion.position.y;
-			motion.lastDirection = isSegmentAngleIncreasing ? DIRECTION_NORTH : DIRECTION_SOUTH;
+			cornerMotion.segment_angle = 0;
+			cornerMotion.isSegmentAngleIncreasing = dest.position.y < motion.position.y;
+			motion.lastDirection = cornerMotion.isSegmentAngleIncreasing ? DIRECTION_NORTH : DIRECTION_SOUTH;
 			break;
 		}
 	case DIRECTION_WEST:
 		{
-			segment_angle = PI;
-			isSegmentAngleIncreasing = dest.position.y > motion.position.y;
-			motion.lastDirection = isSegmentAngleIncreasing ? DIRECTION_SOUTH : DIRECTION_NORTH;
+			cornerMotion.segment_angle = PI;
+			cornerMotion.isSegmentAngleIncreasing = dest.position.y > motion.position.y;
+			motion.lastDirection = cornerMotion.isSegmentAngleIncreasing ? DIRECTION_SOUTH : DIRECTION_NORTH;
 			break;
 		}
 	}
-	dest_angle = ComputeFinalAngle(motion.angle, !isSegmentAngleIncreasing); //we subtract angles from snail angle, so feed in the opposite here.
-	theta_old = segment_angle;
+	cornerMotion.dest_angle = ComputeFinalAngle(motion.angle, !cornerMotion.isSegmentAngleIncreasing); //we subtract angles from snail angle, so feed in the opposite here.
+	cornerMotion.theta_old = cornerMotion.segment_angle;
 }
 
 //requires there to be a next segment
-void PhysicsSystem::SetupNextCornerSegment(Motion& snailMotion)
+void PhysicsSystem::SetupNextCornerSegment(ECS::Entity entity, Motion& motion)
 {
-	float segmentAngleFactor = isSegmentAngleIncreasing ? 1.0f : -1.0f;
-	numSegments = 9;
+	auto& cornerMotion = ECS::registry<CornerMotion>.get(entity);
+	float segmentAngleFactor = cornerMotion.isSegmentAngleIncreasing ? 1.0f : -1.0f;
+	cornerMotion.numSegments = 9;
 	//we change the angle if we have completed 3,4,5, or 6 segments.
-	if (3 <= numSegmentsCompleted && numSegmentsCompleted <= 6) 
+	if (3 <= cornerMotion.numSegmentsCompleted && cornerMotion.numSegmentsCompleted <= 6)
 	{
-		segment_angle += (PI / 8) * segmentAngleFactor; //if the angle stays the same, then you will have a straight segment!
+		cornerMotion.segment_angle += (PI / 8) * segmentAngleFactor; //if the angle stays the same, then you will have a straight segment!
 	}
 
 	//then we use this angle to determine P0,P1,T0,T1
@@ -122,61 +125,63 @@ void PhysicsSystem::SetupNextCornerSegment(Motion& snailMotion)
 
 	//compute the next point that we want to go to
 	auto magnitude = scale / 5;
-	auto delta_position = vec2(magnitude * cos(segment_angle), -magnitude * sin(segment_angle));
-	auto temp_dest = snailMotion.position + delta_position;
+	auto delta_position = vec2(magnitude * cos(cornerMotion.segment_angle), -magnitude * sin(cornerMotion.segment_angle));
+	auto temp_dest = motion.position + delta_position;
 
 	//now get the tangents
-	if (numSegmentsCompleted == 0)
+	if (cornerMotion.numSegmentsCompleted == 0)
 	{
 		//first segment, so T0 goes in direction of segment_angle
-		T0 = vec2(magnitude * cos(segment_angle), -magnitude * sin(segment_angle));
+		cornerMotion.T0 = vec2(magnitude * cos(cornerMotion.segment_angle), -magnitude * sin(cornerMotion.segment_angle));
 	}
 	else 
 	{
 		//T0 is always equal to the previous T1, unless we are the first segmnet, which is already handled
-		T0 = T1; //previous T1
+		cornerMotion.T0 = cornerMotion.T1; //previous T1
 	}
 
-	if (numSegmentsCompleted == 8)
+	if (cornerMotion.numSegmentsCompleted == 8)
 	{
 		//last segment, so T1 is the same as before.
 	}
 	else 
 	{
 		// get the next next point
-		auto temp_angle = segment_angle;
-		if (2 <= numSegmentsCompleted && numSegmentsCompleted <= 5)
+		auto temp_angle = cornerMotion.segment_angle;
+		if (2 <= cornerMotion.numSegmentsCompleted && cornerMotion.numSegmentsCompleted <= 5)
 		{
 			temp_angle += (PI / 8) * segmentAngleFactor;
 		}
 		auto delta_position_2 = vec2(magnitude * cos(temp_angle), -magnitude * sin(temp_angle));
 		auto next_next_point = temp_dest + delta_position_2;
 		//compute the line between position and next_next_point.
-		T1 = next_next_point - snailMotion.position;
+		cornerMotion.T1 = next_next_point - motion.position;
 		//now need to make it's magnitude equal to 'magnitude'
-		auto length = glm::length(T1);
-		T1.x *= (magnitude / length); //gotta keep this small or it gets wavy
-		T1.y *= (magnitude / length);
+		auto length = glm::length(cornerMotion.T1);
+		cornerMotion.T1.x *= (magnitude / length); //gotta keep this small or it gets wavy
+		cornerMotion.T1.y *= (magnitude / length);
 	}
 
-	total_time = magnitude * 2.0f / glm::length(snailMotion.velocity);
-	t = 0.0f;
-	P0 = snailMotion.position;
-	P1 = temp_dest;
+	cornerMotion.total_time = magnitude * 2.0f / glm::length(motion.velocity);
+	cornerMotion.t = 0.0f;
+	cornerMotion.P0 = motion.position;
+	cornerMotion.P1 = temp_dest;
 }
 
 //returns the position of the snail going around the corner.
 //and adjust the angle.
-vec2 PhysicsSystem::StepSnailAroundCorner(float step_seconds, Motion& snailMotion)
+vec2 PhysicsSystem::StepAroundCorner(ECS::Entity entity, float step_seconds, Motion& motion)
 {
-	t += step_seconds / total_time;
-	t = min(t, 1.0f); // don't let t > 1
+	auto& cornerMotion = ECS::registry<CornerMotion>.get(entity);
+	cornerMotion.t += step_seconds / cornerMotion.total_time;
+	cornerMotion.t = min(cornerMotion.t, 1.0f); // don't let t > 1
+	auto t = cornerMotion.t;
 	//compute C(t) and set the position to it
 	float h_00 = t * t * (2 * t - 3) + 1;
 	float h_01 = -t * t * (2 * t - 3);
 	float h_10 = t * (t - 1) * (t - 1);
 	float h_11 = t * t * (t - 1);
-	vec2 C_t= h_00 * P0 + h_01 * P1 + h_10 * T0 + h_11 * T1;
+	vec2 C_t= h_00 * cornerMotion.P0 + h_01 * cornerMotion.P1 + h_10 * cornerMotion.T0 + h_11 * cornerMotion.T1;
 
 	//compute C'(t) and use this to change the angle based on the difference in velocity.
 	float hprime_00 = 6 * (t - 1) * t;
@@ -184,12 +189,12 @@ vec2 PhysicsSystem::StepSnailAroundCorner(float step_seconds, Motion& snailMotio
 	float hprime_10 = 3*t*t - 4*t + 1;
 	float hprime_11 = t*(3*t-2);
 
-	vec2 Cprime_t = hprime_00 * P0 + hprime_01 * P1 + hprime_10 * T0 + hprime_11 * T1; //velocity at time t
+	vec2 Cprime_t = hprime_00 * cornerMotion.P0 + hprime_01 * cornerMotion.P1 + hprime_10 * cornerMotion.T0 + hprime_11 * cornerMotion.T1; //velocity at time t
 
 	auto theta = atan2(-Cprime_t.y,Cprime_t.x); //works in all 4 quadrants
-	auto angle_diff = theta - theta_old;
-	snailMotion.angle -= angle_diff;
-	theta_old = theta;
+	auto angle_diff = theta - cornerMotion.theta_old;
+	motion.angle -= angle_diff;
+	cornerMotion.theta_old = theta;
 
 	return C_t;
 }
@@ -455,34 +460,35 @@ bool shouldCheckCollision(ECS::Entity entity_i, ECS::Entity entity_j)
 		isValidSlugProjectileCollision_i || isValidSlugProjectileCollision_j;
 }
 
-void PhysicsSystem::stepToDestinationAroundCorner(ECS::Entity snailEntity, float step_seconds) 
+void PhysicsSystem::stepToDestinationAroundCorner(ECS::Entity entity, float step_seconds) 
 {
-	if (!ECS::registry<Destination>.has(snailEntity)) 
+	auto& cornerMotion = ECS::registry<CornerMotion>.get(entity);
+	if (!ECS::registry<Destination>.has(entity)) 
 	{
-		return; //don't move the snail if it doesn't have a destination
+		return; //don't move if it doesn't have a destination
 	}
-	auto& motion = ECS::registry<Motion>.get(snailEntity);
+	auto& motion = ECS::registry<Motion>.get(entity);
 	auto oldPosition = motion.position;
-	auto& dest = ECS::registry<Destination>.get(snailEntity);
-	auto newPos = StepSnailAroundCorner(step_seconds, motion);
-	if (t >= 1)
+	auto& dest = ECS::registry<Destination>.get(entity);
+	auto newPos = StepAroundCorner(entity, step_seconds, motion);
+	if (cornerMotion.t >= 1)
 	{
 		//completed a segment
-		numSegmentsCompleted++;
-		if (numSegmentsCompleted == numSegments)
+		cornerMotion.numSegmentsCompleted++;
+		if (cornerMotion.numSegmentsCompleted == cornerMotion.numSegments)
 		{
 			// reached final destination
-			motion.angle = dest_angle;
-			AreRoundingCorner = false;
+			motion.angle = cornerMotion.dest_angle;
 			UpdateTileOccupancy(motion.position, dest.position);
 			motion.position = dest.position;
-			ECS::registry<Destination>.remove(snailEntity);
+			ECS::registry<Destination>.remove(entity);
+			ECS::registry<CornerMotion>.remove(entity); //no longer rounding the corner
 		}
 		else 
 		{
 			UpdateTileOccupancy(motion.position, newPos);
 			motion.position = newPos;
-			SetupNextCornerSegment(motion);
+			SetupNextCornerSegment(entity, motion);
 		}
 	}
 	else
@@ -551,9 +557,9 @@ void PhysicsSystem::stepToDestination(ECS::Entity entity, float step_seconds)
     }
 }
 
-bool areRoundingCorner(Motion& snailMotion)
+bool areRoundingCorner(Motion& motion)
 {
-	return snailMotion.velocity.x != 0 && snailMotion.velocity.y != 0;
+	return motion.velocity.x != 0 && motion.velocity.y != 0;
 	// if it has non-zero x and y for velocity, then it's not vertical or horizontal, so we are rounding the corner
 }
 
@@ -592,7 +598,18 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
         motion.position += motion.velocity * step_seconds;
     }
 
-    
+    //now we update the state of the entities with regards to which entites are rounding the corner
+	for (auto entity : ECS::registry<Destination>.entities) 
+	{
+		auto& motion = ECS::registry<Motion>.get(entity);
+		if (!ECS::registry<CornerMotion>.has(entity) && areRoundingCorner(motion)) 
+		{
+			//then initialize rounding the corner
+			auto& dest = ECS::registry<Destination>.get(entity);
+			SetupCornerMovement(entity, dest);
+			SetupNextCornerSegment(entity, motion);
+		}
+	}
     // Move entities based on how much time has passed, this is to (partially) avoid
 	// having entities move at different speed based on the machine.
 
@@ -614,14 +631,7 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 		auto& snailMotion = ECS::registry<Motion>.get(snailEntity);
 		if (ECS::registry<Destination>.has(snailEntity)) //don't want to do any stepping if we don't have a destination
 		{
-			if (!AreRoundingCorner && areRoundingCorner(snailMotion))
-			{
-				//don't initialize rounding corner if we are already rounding the corner.
-				auto& dest = ECS::registry<Destination>.get(snailEntity);
-				SetupCornerMovement(snailEntity, dest);
-				SetupNextCornerSegment(snailMotion);
-			}
-			if (AreRoundingCorner)
+			if (ECS::registry<CornerMotion>.has(snailEntity))
 			{
 				stepToDestinationAroundCorner(snailEntity, step_seconds);
 			}
@@ -656,7 +666,14 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
         // move enemies
         for (auto entity : ECS::registry<Enemy>.entities)
         {
-            stepToDestination(entity, step_seconds);
+			if (ECS::registry<CornerMotion>.has(entity))
+			{
+				stepToDestinationAroundCorner(entity, step_seconds);
+			}
+			else
+			{
+				stepToDestination(entity, step_seconds);
+			}
         }
     }
 	else if (turnType == CAMERA)
