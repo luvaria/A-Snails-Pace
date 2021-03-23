@@ -363,7 +363,6 @@ void WorldSystem::restart(int newLevel)
     {
         Collectible::equip(player_snail, ECS::registry<Inventory>.components[0].equipped);
     }
-    texmesh.texture.color = {1, 1, 1};
     
     // Reset Camera
     Camera::reset();
