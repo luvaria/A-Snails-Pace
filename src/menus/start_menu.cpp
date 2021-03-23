@@ -60,6 +60,10 @@ void StartMenu::loadEntities()
 	motion.scale *= 6;
 	ECS::registry<StartMenuTag>.emplace(snail);
 
+	// ensure snail is not red from quitting during DeathTimer
+	auto& texmesh = *ECS::registry<ShadedMeshRef>.get(snail).reference_to_cache;
+	texmesh.texture.color = { 1, 1, 1 };
+
 	// decorative tiles
 	// assuming 1200 x 800
 	float scale = TileSystem::getScale();
