@@ -120,6 +120,23 @@ struct DirectionInput
 	int direction; //using same direction values as motion.last_direction
 };
 
+struct CornerMotion 
+{
+	float t = 0; // t between 0 and 1 for rounding the corner.
+	float total_time; //total elapsed_time that it should take to round the corner
+	float theta_old = 0; //represents the angle that the previous time step had
+	float segment_angle = 0; //angle for the previous segment
+	float dest_angle;
+	int numSegmentsCompleted = 0;
+	int numSegments = 0;
+	bool isSegmentAngleIncreasing = true;
+	//coefficients of the basis functions for stepping around the corner
+	vec2 P0;
+	vec2 P1;
+	vec2 T0;
+	vec2 T1;
+};
+
 // direction a level scrolls in
 enum ScrollDirection
 {

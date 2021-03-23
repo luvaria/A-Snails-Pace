@@ -453,29 +453,37 @@ BTState LookForSnail::process(ECS::Entity e) {
         vec2 currPos = current.size() > 1 ? current[1] : current[0];
         if (aiMove == 0) {
             if (currPos.x - yAiPos > 0) {
+                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_SOUTH;
                 WorldSystem::goDown(entity, aiMove);
             }
             else if (currPos.x - yAiPos < 0) {
+                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_NORTH;
                 WorldSystem::goUp(entity, aiMove);
             }
             else if (currPos.y - xAiPos > 0) {
+                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_EAST;
                 WorldSystem::goRight(entity, aiMove);
             }
             else {
+                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_WEST;
                 WorldSystem::goLeft(entity, aiMove);
             }
         }
         if (aiMove == 0) {
             if (motion.lastDirection == DIRECTION_NORTH) {
+                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_NORTH;
                 WorldSystem::goUp(entity, aiMove);
             }
             else if (motion.lastDirection == DIRECTION_SOUTH) {
+                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_SOUTH;
                 WorldSystem::goDown(entity, aiMove);
             }
             else if (motion.lastDirection == DIRECTION_EAST) {
+                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_EAST;
                 WorldSystem::goRight(entity, aiMove);
             }
             else {
+                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_WEST;
                 WorldSystem::goLeft(entity, aiMove);
             }
         }

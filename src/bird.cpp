@@ -40,6 +40,7 @@ ECS::Entity Bird::createBird(vec2 position, ECS::Entity entity)
 
 	ECS::registry<AI>.emplace(entity);
 	ECS::registry<Bird>.emplace(entity);
+	ECS::registry<DirectionInput>.emplace(entity);
 
 	// Adding Behaviour Tree to Bird
 
