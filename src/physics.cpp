@@ -17,6 +17,7 @@
 #include <memory>
 #include <iostream>
 #include <cstdio>
+#include <math.h>
 
 // Returns the local bounding coordinates scaled by the current size of the entity 
 vec2 get_bounding_box(const Motion& motion)
@@ -42,6 +43,155 @@ void UpdateTileOccupancy(vec2 oldPos, vec2 newPos)
 		oldTile.removeOccupyingEntity();
 		newTile.addOccupyingEntity();
 	}
+}
+
+float ComputeFinalAngle(float initial_angle, bool isAngleIncreasing) 
+{
+	if (isAngleIncreasing) 
+	{
+		if (initial_angle == 0) { return PI / 2; }
+		else if (initial_angle == PI / 2) { return PI; }
+		else if (initial_angle == PI) { return - PI / 2; }
+		else if (initial_angle == - PI/2) { return 0; }
+	}
+	else 
+	{
+		if (initial_angle == 0) { return -PI / 2; }
+		else if (initial_angle == PI / 2) { return 0; }
+		else if (initial_angle == PI) { return PI / 2; }
+		else if (initial_angle == -PI / 2) { return PI; }
+	}
+	return 0;
+}
+
+void PhysicsSystem::SetupCornerMovement(ECS::Entity entity, Destination& dest)
+{
+	AreRoundingCorner = true;
+	numSegmentsCompleted = 0;
+	auto& direction = ECS::registry<DirectionInput>.get(entity).direction;
+	auto& motion = ECS::registry<Motion>.get(entity);
+	switch (direction) 
+	{
+	case DIRECTION_NORTH: 
+		{
+			segment_angle = PI / 2;
+			isSegmentAngleIncreasing = dest.position.x < motion.position.x;
+			motion.lastDirection = isSegmentAngleIncreasing ? DIRECTION_WEST : DIRECTION_EAST;
+			break;
+		}
+	case DIRECTION_SOUTH:
+		{
+			segment_angle = 3 * PI / 2;
+			isSegmentAngleIncreasing = dest.position.x > motion.position.x;
+			motion.lastDirection = isSegmentAngleIncreasing ? DIRECTION_EAST : DIRECTION_WEST;
+			break;
+		}
+	case DIRECTION_EAST:
+		{
+			segment_angle = 0;
+			isSegmentAngleIncreasing = dest.position.y < motion.position.y;
+			motion.lastDirection = isSegmentAngleIncreasing ? DIRECTION_NORTH : DIRECTION_SOUTH;
+			break;
+		}
+	case DIRECTION_WEST:
+		{
+			segment_angle = PI;
+			isSegmentAngleIncreasing = dest.position.y > motion.position.y;
+			motion.lastDirection = isSegmentAngleIncreasing ? DIRECTION_SOUTH : DIRECTION_NORTH;
+			break;
+		}
+	}
+	dest_angle = ComputeFinalAngle(motion.angle, !isSegmentAngleIncreasing); //we subtract angles from snail angle, so feed in the opposite here.
+	theta_old = segment_angle;
+}
+
+//requires there to be a next segment
+void PhysicsSystem::SetupNextCornerSegment(Motion& snailMotion)
+{
+	float segmentAngleFactor = isSegmentAngleIncreasing ? 1.0f : -1.0f;
+	numSegments = 9;
+	//we change the angle if we have completed 3,4,5, or 6 segments.
+	if (3 <= numSegmentsCompleted && numSegmentsCompleted <= 6) 
+	{
+		segment_angle += (PI / 8) * segmentAngleFactor; //if the angle stays the same, then you will have a straight segment!
+	}
+
+	//then we use this angle to determine P0,P1,T0,T1
+
+	auto scale = TileSystem::getScale();
+
+	//compute the next point that we want to go to
+	auto magnitude = scale / 5;
+	auto delta_position = vec2(magnitude * cos(segment_angle), -magnitude * sin(segment_angle));
+	auto temp_dest = snailMotion.position + delta_position;
+
+	//now get the tangents
+	if (numSegmentsCompleted == 0)
+	{
+		//first segment, so T0 goes in direction of segment_angle
+		T0 = vec2(magnitude * cos(segment_angle), -magnitude * sin(segment_angle));
+	}
+	else 
+	{
+		//T0 is always equal to the previous T1, unless we are the first segmnet, which is already handled
+		T0 = T1; //previous T1
+	}
+
+	if (numSegmentsCompleted == 8)
+	{
+		//last segment, so T1 is the same as before.
+	}
+	else 
+	{
+		// get the next next point
+		auto temp_angle = segment_angle;
+		if (2 <= numSegmentsCompleted && numSegmentsCompleted <= 5)
+		{
+			temp_angle += (PI / 8) * segmentAngleFactor;
+		}
+		auto delta_position_2 = vec2(magnitude * cos(temp_angle), -magnitude * sin(temp_angle));
+		auto next_next_point = temp_dest + delta_position_2;
+		//compute the line between position and next_next_point.
+		T1 = next_next_point - snailMotion.position;
+		//now need to make it's magnitude equal to 'magnitude'
+		auto length = glm::length(T1);
+		T1.x *= (magnitude / length); //gotta keep this small or it gets wavy
+		T1.y *= (magnitude / length);
+	}
+
+	total_time = magnitude * 2.0f / glm::length(snailMotion.velocity);
+	t = 0.0f;
+	P0 = snailMotion.position;
+	P1 = temp_dest;
+}
+
+//returns the position of the snail going around the corner.
+//and adjust the angle.
+vec2 PhysicsSystem::StepSnailAroundCorner(float step_seconds, Motion& snailMotion)
+{
+	t += step_seconds / total_time;
+	t = min(t, 1.0f); // don't let t > 1
+	//compute C(t) and set the position to it
+	float h_00 = t * t * (2 * t - 3) + 1;
+	float h_01 = -t * t * (2 * t - 3);
+	float h_10 = t * (t - 1) * (t - 1);
+	float h_11 = t * t * (t - 1);
+	vec2 C_t= h_00 * P0 + h_01 * P1 + h_10 * T0 + h_11 * T1;
+
+	//compute C'(t) and use this to change the angle based on the difference in velocity.
+	float hprime_00 = 6 * (t - 1) * t;
+	float hprime_01 = -6 * (t - 1) * t;
+	float hprime_10 = 3*t*t - 4*t + 1;
+	float hprime_11 = t*(3*t-2);
+
+	vec2 Cprime_t = hprime_00 * P0 + hprime_01 * P1 + hprime_10 * T0 + hprime_11 * T1; //velocity at time t
+
+	auto theta = atan2(-Cprime_t.y,Cprime_t.x); //works in all 4 quadrants
+	auto angle_diff = theta - theta_old;
+	snailMotion.angle -= angle_diff;
+	theta_old = theta;
+
+	return C_t;
 }
 
 void bounceProjectileOffWall(Motion& projectileMotion, std::vector<ColoredVertex> projectileVertices, std::vector<ColoredVertex> wallVertices)
@@ -83,7 +233,7 @@ void bounceProjectileOffWall(Motion& projectileMotion, std::vector<ColoredVertex
 	{
 		if (Geometry::pointInsideConvexHull(vec2(point.position.x, point.position.y), wallLines))
 		{
-			auto backwardVelocity = vec2(projectileMotion.velocity.x * (-200), projectileMotion.velocity.y * (-200));
+			auto backwardVelocity = vec2(projectileMotion.velocity.x * (-2*TileSystem::getScale()), projectileMotion.velocity.y * (-2 * TileSystem::getScale()));
 			auto point2 = vec2(point.position.x, point.position.y) + backwardVelocity;
 			Geometry::Line projectileLine = { point.position.x, point.position.y, point2.x, point2.y };
 			//go through every wall line and find the one which intersects, then calculate the distance to that point.
@@ -154,8 +304,8 @@ bool collides(ECS::Entity& entity1, ECS::Entity& entity2, Motion& motion1, Motio
 	//we need to adjust the vertices for the position and scale and angle.
 	Transform transform1;
 	transform1.translate(motion1.position);
-	transform1.scale(motion1.scale);
 	transform1.rotate(motion1.angle);
+	transform1.scale(motion1.scale);
 	for (int i = 0; i < vertices1.size(); i++)
 	{
 		vec3 position = vec3(vertices1[i].position.x, vertices1[i].position.y, 1.0);
@@ -163,8 +313,8 @@ bool collides(ECS::Entity& entity1, ECS::Entity& entity2, Motion& motion1, Motio
 	}
 	Transform transform2;
 	transform2.translate(motion2.position);
-	transform2.scale(motion2.scale);
 	transform2.rotate(motion2.angle);
+	transform2.scale(motion2.scale);
 	for (int i = 0; i < vertices2.size(); i++)
 	{
 		vec3 position = vec3(vertices2[i].position.x, vertices2[i].position.y, 1.0);
@@ -305,7 +455,55 @@ bool shouldCheckCollision(ECS::Entity entity_i, ECS::Entity entity_j)
 		isValidSlugProjectileCollision_i || isValidSlugProjectileCollision_j;
 }
 
-void stepToDestination(ECS::Entity entity, float step_seconds)
+void PhysicsSystem::stepToDestinationAroundCorner(ECS::Entity snailEntity, float step_seconds) 
+{
+	if (!ECS::registry<Destination>.has(snailEntity)) 
+	{
+		return; //don't move the snail if it doesn't have a destination
+	}
+	auto& motion = ECS::registry<Motion>.get(snailEntity);
+	auto oldPosition = motion.position;
+	auto& dest = ECS::registry<Destination>.get(snailEntity);
+	auto newPos = StepSnailAroundCorner(step_seconds, motion);
+	if (t >= 1)
+	{
+		//completed a segment
+		numSegmentsCompleted++;
+		if (numSegmentsCompleted == numSegments)
+		{
+			// reached final destination
+			motion.angle = dest_angle;
+			AreRoundingCorner = false;
+			UpdateTileOccupancy(motion.position, dest.position);
+			motion.position = dest.position;
+			ECS::registry<Destination>.remove(snailEntity);
+		}
+		else 
+		{
+			UpdateTileOccupancy(motion.position, newPos);
+			motion.position = newPos;
+			SetupNextCornerSegment(motion);
+		}
+	}
+	else
+	{
+		UpdateTileOccupancy(motion.position, newPos);
+		motion.position = newPos;
+	}
+
+	for (auto entity : ECS::registry<BlurParticle>.entities)
+	{
+		vec2 velocity = motion.position - oldPosition;
+		auto& motion2 = ECS::registry<Motion>.get(entity);
+		motion2.position += (velocity + motion2.velocity);
+		float scaleFactor = 0.99;
+		motion2.scale *= scaleFactor;
+		motion2.angle = motion.angle;
+		motion2.lastDirection = motion.lastDirection;
+	}
+}
+
+void PhysicsSystem::stepToDestination(ECS::Entity entity, float step_seconds)
 {
     
     auto& motion = ECS::registry<Motion>.get(entity);
@@ -313,29 +511,30 @@ void stepToDestination(ECS::Entity entity, float step_seconds)
     auto& destReg = ECS::registry<Destination>;
     if (destReg.has(entity))
     {
+		bool isSnailOrSpider = (ECS::registry<Snail>.has(entity) || ECS::registry<Spider>.has(entity));
         auto& dest = destReg.get(entity);
         auto& motion = ECS::registry<Motion>.get(entity);
-        vec2 newPos = motion.position + (motion.velocity * step_seconds);
-        if ((dot(motion.position - newPos, dest.position - newPos) > 0) || (dest.position == newPos))
-        {
-			if (ECS::registry<Snail>.has(entity) || ECS::registry<Spider>.has(entity))
+		vec2 newPos = motion.position + (motion.velocity * step_seconds);
+		if ((dot(motion.position - newPos, dest.position - newPos) > 0) || (dest.position == newPos)) 
+		{
+			if (isSnailOrSpider)
 			{
 				UpdateTileOccupancy(motion.position, dest.position);
 			}
-            // overshot or perfectly hit destination
-            // set velocity back to 0 stop moving
-            motion.position = dest.position;
-            //motion.velocity = { 0.f, 0.f };
-            destReg.remove(entity);
-        }
-        else
-        {
-			if (ECS::registry<Snail>.has(entity) || ECS::registry<Spider>.has(entity)) 
+			// overshot or perfectly hit destination
+			// set velocity back to 0 stop moving
+			motion.position = dest.position;
+			//motion.velocity = { 0.f, 0.f };
+			destReg.remove(entity);
+		}
+		else 
+		{
+			if (isSnailOrSpider)
 			{
 				UpdateTileOccupancy(motion.position, newPos);
 			}
-            motion.position = newPos;
-        }
+			motion.position = newPos;
+		}
     }
     if(ECS::registry<Snail>.has(entity)) {
         motion = ECS::registry<Motion>.get(entity);
@@ -350,6 +549,12 @@ void stepToDestination(ECS::Entity entity, float step_seconds)
             motion2.lastDirection = motion.lastDirection;
         }
     }
+}
+
+bool areRoundingCorner(Motion& snailMotion)
+{
+	return snailMotion.velocity.x != 0 && snailMotion.velocity.y != 0;
+	// if it has non-zero x and y for velocity, then it's not vertical or horizontal, so we are rounding the corner
 }
 
 void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
@@ -406,10 +611,28 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 	else if (turnType == PLAYER_UPDATE)
     {
         auto& snailEntity = ECS::registry<Snail>.entities[0];
-	    stepToDestination(snailEntity, step_seconds);
-        ECS::Entity entity;
-        auto& snailMotion = ECS::registry<Motion>.get(snailEntity);
-        Particle::createParticle(snailMotion, entity);
+		auto& snailMotion = ECS::registry<Motion>.get(snailEntity);
+		if (ECS::registry<Destination>.has(snailEntity)) //don't want to do any stepping if we don't have a destination
+		{
+			if (!AreRoundingCorner && areRoundingCorner(snailMotion))
+			{
+				//don't initialize rounding corner if we are already rounding the corner.
+				auto& dest = ECS::registry<Destination>.get(snailEntity);
+				SetupCornerMovement(snailEntity, dest);
+				SetupNextCornerSegment(snailMotion);
+			}
+			if (AreRoundingCorner)
+			{
+				stepToDestinationAroundCorner(snailEntity, step_seconds);
+			}
+			else
+			{
+				stepToDestination(snailEntity, step_seconds);
+			}
+		}
+		ECS::Entity entity;
+        auto& motion = ECS::registry<Motion>.get(snailEntity);
+        Particle::createParticle(motion, entity);
     }
 	else if (turnType == ENEMY)
     {

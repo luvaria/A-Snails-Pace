@@ -113,9 +113,11 @@ struct Inventory
 };
 
 // collectible equipped; ignore collisions
-struct NoCollide
-{
+struct NoCollide {};
 
+struct DirectionInput
+{
+	int direction; //using same direction values as motion.last_direction
 };
 
 // direction a level scrolls in

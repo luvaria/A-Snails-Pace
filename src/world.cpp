@@ -572,26 +572,67 @@ void WorldSystem::rotate(Tile& currTile, Motion& motion, Tile& nextTile) {
     }
 }
 
-void WorldSystem::changeDirection(Motion& motion, Tile& currTile, Tile& nextTile, int defaultDirection, ECS::Entity& entity) {
-    if (defaultDirection == DIRECTION_SOUTH || defaultDirection == DIRECTION_NORTH) {
-        doY(motion, currTile, nextTile);
-        rotate(currTile, motion, nextTile);
-        doX(motion, currTile, nextTile, defaultDirection);
-    }
-    else {
-        doX(motion, currTile, nextTile, defaultDirection);
-        rotate(currTile, motion, nextTile);
-        doY(motion, currTile, nextTile);
-    }
-
+void WorldSystem::changeDirection(Motion& motion, Tile& currTile, Tile& nextTile, int defaultDirection, ECS::Entity& entity) 
+{
     Destination& dest = ECS::registry<Destination>.has(entity) ? ECS::registry<Destination>.get(entity) : ECS::registry<Destination>.emplace(entity);
     dest.position = { nextTile.x, nextTile.y };
     // give velocity to reach destination in set time
     // this velocity will be set to 0 once destination is reached in physics.cpp
     motion.velocity = (dest.position - motion.position)/k_move_seconds;
+
+    //check if we are a snail and we are rounding the corner
+    bool isSnailRoundingCorner = false;
+    bool isSnail = ECS::registry<Snail>.has(entity);
+    if (isSnail) 
+    {
+        auto& snailMotion = ECS::registry<Motion>.get(entity);
+        isSnailRoundingCorner = snailMotion.velocity.x != 0 && snailMotion.velocity.y != 0;
+    }
+
+    if (defaultDirection == DIRECTION_SOUTH || defaultDirection == DIRECTION_NORTH)
+    {
+        if (!isSnailRoundingCorner) 
+        {
+            doY(motion, currTile, nextTile);
+            rotate(currTile, motion, nextTile);
+            doX(motion, currTile, nextTile, defaultDirection);
+        }
+        else 
+        {
+            //just face the right way.
+            //compare the lastDirection (currentDirection) to the directionInput. If they don't match, flip it first.
+            auto& direction = ECS::registry<DirectionInput>.get(entity).direction;
+            if (motion.lastDirection != direction) 
+            {
+                //then it's facing the wrong way so flip it.
+                motion.scale.x *= -1;
+            }
+        }
+    }
+    else
+    {
+        if (!isSnailRoundingCorner)
+        {
+            doX(motion, currTile, nextTile, defaultDirection);
+            rotate(currTile, motion, nextTile);
+            doY(motion, currTile, nextTile);
+        }
+        else 
+        {
+            //just face the right way.
+            //compare the lastDirection (currentDirection) to the directionInput. If they don't match, flip it first.
+            auto& direction = ECS::registry<DirectionInput>.get(entity).direction;
+            if (motion.lastDirection != direction)
+            {
+                //then it's facing the wrong way so flip it.
+                motion.scale.x *= -1;
+            }
+        }
+    }
 }
 
-void WorldSystem::goLeft(ECS::Entity &entity, int &moves) {
+void WorldSystem::goLeft(ECS::Entity &entity, int &moves) 
+{
     float scale = TileSystem::getScale();
     auto& tiles = TileSystem::getTiles();
 
@@ -1006,24 +1047,19 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 			{
             // These logs are pretty useful to see what scale, angle and direction the snail should have
 			case GLFW_KEY_W:
+                ECS::registry<DirectionInput>.get(player_snail).direction = DIRECTION_NORTH;
                     goUp(player_snail, snail_move);
-                    //std::cout << mot.angle << std::endl;
-                    //std::cout << mot.scale.x << ", " << mot.scale.y << std::endl;
-                    //std::cout << mot.lastDirection << std::endl;
 				break;
 			case GLFW_KEY_S:
+                ECS::registry<DirectionInput>.get(player_snail).direction = DIRECTION_SOUTH;
                     goDown(player_snail, snail_move);
-                    //std::cout << mot.angle << std::endl;
-                    //std::cout << mot.scale.x << ", " << mot.scale.y << std::endl;
-                    //std::cout << mot.lastDirection << std::endl;
                 break;
 			case GLFW_KEY_D:
+                ECS::registry<DirectionInput>.get(player_snail).direction = DIRECTION_EAST;
                     goRight(player_snail, snail_move);
-                    //std::cout << mot.angle << std::endl;
-                    //std::cout << mot.scale.x << ", " << mot.scale.y << std::endl;
-                    //std::cout << mot.lastDirection << std::endl;
                 break;
 			case GLFW_KEY_A:
+                ECS::registry<DirectionInput>.get(player_snail).direction = DIRECTION_WEST;
                     goLeft(player_snail, snail_move);
 				break;
             case GLFW_KEY_SPACE:

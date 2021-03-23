@@ -8,6 +8,7 @@
 #include "event.hpp"
 #include "subject.hpp"
 #include <unordered_map>
+#include <iostream>
 
 // Defining what tile types are possible, used to render correct tile types
 // and to check if can be moved to. EMPTY = nothing is on the tile and you
@@ -40,6 +41,7 @@ public:
     {
         if (numOccupyingEntities == 0) 
         {
+            std::cout << "tried to remove an occupying entity when there were none" << "\n";
             return;
         }
         numOccupyingEntities--;
