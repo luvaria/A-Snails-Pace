@@ -605,14 +605,7 @@ void WorldSystem::changeDirection(Motion& motion, Tile& currTile, Tile& nextTile
             if (motion.lastDirection != direction) 
             {
                 //then it's facing the wrong way so flip it.
-                if (direction == DIRECTION_EAST || direction == DIRECTION_WEST)
-                {
-                    motion.scale.x *= -1;
-                }
-                else
-                {
-                    motion.scale.y *= -1;
-                }
+                motion.scale.x *= -1;
             }
         }
     }
@@ -632,14 +625,7 @@ void WorldSystem::changeDirection(Motion& motion, Tile& currTile, Tile& nextTile
             if (motion.lastDirection != direction)
             {
                 //then it's facing the wrong way so flip it.
-                if (direction == DIRECTION_EAST || direction == DIRECTION_WEST)
-                {
-                    motion.scale.x *= -1;
-                }
-                else
-                {
-                    motion.scale.y *= -1;
-                }
+                motion.scale.x *= -1;
             }
         }
     }

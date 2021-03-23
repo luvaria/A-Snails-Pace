@@ -178,8 +178,6 @@ vec2 PhysicsSystem::StepSnailAroundCorner(float step_seconds, Motion& snailMotio
 	float h_11 = t * t * (t - 1);
 	vec2 C_t= h_00 * P0 + h_01 * P1 + h_10 * T0 + h_11 * T1;
 
-	std::cout << "t: " + std::to_string(t) << "\n";
-
 	//compute C'(t) and use this to change the angle based on the difference in velocity.
 	float hprime_00 = 6 * (t - 1) * t;
 	float hprime_01 = -6 * (t - 1) * t;
@@ -464,6 +462,7 @@ void PhysicsSystem::stepToDestinationAroundCorner(ECS::Entity snailEntity, float
 		return; //don't move the snail if it doesn't have a destination
 	}
 	auto& motion = ECS::registry<Motion>.get(snailEntity);
+	auto oldPosition = motion.position;
 	auto& dest = ECS::registry<Destination>.get(snailEntity);
 	auto newPos = StepSnailAroundCorner(step_seconds, motion);
 	if (t >= 1)
@@ -490,6 +489,17 @@ void PhysicsSystem::stepToDestinationAroundCorner(ECS::Entity snailEntity, float
 	{
 		UpdateTileOccupancy(motion.position, newPos);
 		motion.position = newPos;
+	}
+
+	for (auto entity : ECS::registry<BlurParticle>.entities)
+	{
+		vec2 velocity = motion.position - oldPosition;
+		auto& motion2 = ECS::registry<Motion>.get(entity);
+		motion2.position += (velocity + motion2.velocity);
+		float scaleFactor = 0.99;
+		motion2.scale *= scaleFactor;
+		motion2.angle = motion.angle;
+		motion2.lastDirection = motion.lastDirection;
 	}
 }
 

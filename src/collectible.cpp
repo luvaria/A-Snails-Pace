@@ -107,25 +107,11 @@ void Equipped::moveEquippedWithHost()
         collectMotion.scale.x = abs(collectMotion.scale.x) * HOST_SCALE_X_SIGN;
         collectMotion.scale.y = abs(collectMotion.scale.y) * HOST_SCALE_Y_SIGN;
 
-        // shift pos above snail based on facing direction
-        collectMotion.lastDirection = hostMotion.lastDirection;
         collectMotion.position = hostMotion.position;
         const float COLLECTIBLE_SHIFT = 0.5f * abs(collectMotion.scale.y);
-        switch (collectMotion.lastDirection)
-        {
-        case DIRECTION_NORTH:
-            collectMotion.position.x += COLLECTIBLE_SHIFT * HOST_SCALE_X_SIGN * HOST_SCALE_Y_SIGN;
-            break;
-        case DIRECTION_SOUTH:
-            collectMotion.position.x -= COLLECTIBLE_SHIFT * HOST_SCALE_X_SIGN * HOST_SCALE_Y_SIGN;
-            break;
-        case DIRECTION_WEST:
-            collectMotion.position.y -= COLLECTIBLE_SHIFT * HOST_SCALE_X_SIGN * HOST_SCALE_Y_SIGN;
-            break;
-        case DIRECTION_EAST:
-            collectMotion.position.y += COLLECTIBLE_SHIFT * HOST_SCALE_X_SIGN * HOST_SCALE_Y_SIGN;
-            break;
-        }
+        //shift pos above snail based on the angle 
+        vec2 unit_shift = vec2(cos(-collectMotion.angle + PI/2), -sin(-collectMotion.angle + PI/2));
+        collectMotion.position += COLLECTIBLE_SHIFT * unit_shift;
 
     }
 }
