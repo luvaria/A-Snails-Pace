@@ -497,15 +497,18 @@ void PhysicsSystem::stepToDestinationAroundCorner(ECS::Entity entity, float step
 		motion.position = newPos;
 	}
 
-	for (auto entity : ECS::registry<BlurParticle>.entities)
+	if (ECS::registry<Snail>.has(entity)) 
 	{
-		vec2 velocity = motion.position - oldPosition;
-		auto& motion2 = ECS::registry<Motion>.get(entity);
-		motion2.position += (velocity + motion2.velocity);
-		float scaleFactor = 0.99;
-		motion2.scale *= scaleFactor;
-		motion2.angle = motion.angle;
-		motion2.lastDirection = motion.lastDirection;
+		for (auto entity : ECS::registry<BlurParticle>.entities)
+		{
+			vec2 velocity = motion.position - oldPosition;
+			auto& motion2 = ECS::registry<Motion>.get(entity);
+			motion2.position += (velocity + motion2.velocity);
+			float scaleFactor = 0.99;
+			motion2.scale *= scaleFactor;
+			motion2.angle = motion.angle;
+			motion2.lastDirection = motion.lastDirection;
+		}
 	}
 }
 
@@ -542,7 +545,8 @@ void PhysicsSystem::stepToDestination(ECS::Entity entity, float step_seconds)
 			motion.position = newPos;
 		}
     }
-    if(ECS::registry<Snail>.has(entity)) {
+    if(ECS::registry<Snail>.has(entity)) 
+	{
         motion = ECS::registry<Motion>.get(entity);
         for (auto entity : ECS::registry<BlurParticle>.entities)
         {
