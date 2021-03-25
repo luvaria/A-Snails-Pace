@@ -632,7 +632,6 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 	else if (turnType == PLAYER_UPDATE)
     {
         auto& snailEntity = ECS::registry<Snail>.entities[0];
-		auto& snailMotion = ECS::registry<Motion>.get(snailEntity);
 		if (ECS::registry<Destination>.has(snailEntity)) //don't want to do any stepping if we don't have a destination
 		{
 			if (ECS::registry<CornerMotion>.has(snailEntity))

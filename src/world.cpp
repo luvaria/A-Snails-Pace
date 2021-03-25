@@ -45,8 +45,7 @@ WorldSystem::WorldSystem(ivec2 window_size_px) :
     left_mouse_pressed(false),
     snail_move(1), // this might be something we want to load in
     turns_per_camera_move(1),
-    projectile_turn_over_time(0.f),
-    slug_projectile_turn_over_time(0.f)
+    projectile_turn_over_time(0.f)
 {
     // Seeding rng with random device
     rng = std::default_random_engine(std::random_device()());
@@ -164,7 +163,6 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     }
 
     float scale = TileSystem::getScale();
-    auto& tiles = TileSystem::getTiles();
     int xCoord = static_cast<int>(snailMotion.position.x / scale);
     int yCoord = static_cast<int>(snailMotion.position.y / scale);
     ivec2 endCoordinates = TileSystem::getEndCoordinates();
