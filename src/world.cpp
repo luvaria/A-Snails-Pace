@@ -1134,6 +1134,8 @@ void WorldSystem::on_key(int key, int, int action, int mod)
     if (action == GLFW_PRESS && key == GLFW_KEY_ESCAPE)
     {
         running = false;
+        left_mouse_pressed = false;
+        SnailProjectile::Preview::removeCurrent();
         ControlsOverlay::removeControlsOverlay();
         notify(Event(Event::PAUSE));
     }
