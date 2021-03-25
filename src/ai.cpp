@@ -33,16 +33,10 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     if (ECS::registry<Turn>.components[0].type == ENEMY) {
         for (unsigned int i = 0; i < aiRegistry.components.size(); i++)
         {
-
             auto entity = aiRegistry.entities[i];
             auto& tree = aiRegistry.components[i].tree;
-            auto state = tree->process(entity);
-            //std::cout << state << std::endl;
-
-           
+            tree->process(entity);
             aiMovedThisStep = true;
-           
-
         }
 
         if (aiMovedThisStep) {
@@ -492,8 +486,6 @@ BTState LookForSnail::process(ECS::Entity e) {
     }
     //std::cout << "returning Running" << std::endl;
     if (ECS::registry<Slug>.has(e) == true && m_inRange == true) {
-        auto& slugMot = ECS::registry<Motion>.get(e);
-        vec2 slugPos = slugMot.position;
         int xAiPos = (aiPos.x - (0.5 * scale)) / scale;
         int yAiPos = (aiPos.y - (0.5 * scale)) / scale;
         vec2 snailLoc = ECS::registry<Motion>.get(snailEntity).position;
@@ -562,13 +554,8 @@ BTState FireXShots::process(ECS::Entity e) {
     }
     //std::cout << "in FireXShots" << std::endl;
     //first we get the position of the mouse_pos relative to the start of the level.
-    auto& cameraEntity = ECS::registry<Camera>.entities[0];
-    vec2& cameraOffset = ECS::registry<Motion>.get(cameraEntity).position;
     // get snail position
-    auto& slugEntity = e;
     vec2 slugPosition = ECS::registry<Motion>.get(e).position;
-    vec2 slugOffset = slugPosition + cameraOffset;
-
 
     auto& snailEntity = ECS::registry<Snail>.entities[0];
 

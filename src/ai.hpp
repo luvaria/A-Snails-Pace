@@ -108,7 +108,7 @@ private:
 class BTSelector : public BTNode {
 public:
     BTSelector(std::vector<std::shared_ptr<BTNode>> children)
-        : m_children(std::move(children)), m_index(0) {
+        : m_index(0), m_children(std::move(children)) {
 
     }
     virtual void init(ECS::Entity e) override {
@@ -246,8 +246,9 @@ class RandomSelector : public BTNode {
 public:
     // chance is % chance of option #1 happening
     RandomSelector(float chance, std::shared_ptr<BTNode> option1, std::shared_ptr<BTNode> option2):
-    m_chance(chance), m_child1(option1), m_child2(option2){
-        
+    m_child1(option1),
+    m_child2(option2),
+    m_chance(chance) {
     }
 private:
     void init(ECS::Entity e) override {
@@ -278,7 +279,6 @@ private:
     std::shared_ptr<BTNode> m_child1;
     std::shared_ptr<BTNode> m_child2;
     std::shared_ptr<BTNode> m_chosen;
-    int m_skip;
     int m_chance;
 };
 
