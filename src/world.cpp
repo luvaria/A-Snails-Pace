@@ -5,7 +5,6 @@
 #include "spider.hpp"
 #include "slug.hpp"
 #include "projectile.hpp"
-#include "fish.hpp"
 #include "ai.hpp"
 #include "bird.hpp"
 #include "tiles/wall.hpp"
@@ -43,6 +42,7 @@ WorldSystem::WorldSystem(ivec2 window_size_px) :
     enemies_killed(0), 
     projectiles_fired(0),
     left_mouse_pressed(false),
+    release_projectile(false),
     snail_move(1), // this might be something we want to load in
     turns_per_camera_move(1),
     projectile_turn_over_time(0.f)
@@ -184,8 +184,11 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 		}
 	}
 
-    if (left_mouse_pressed && (std::chrono::high_resolution_clock::now() > can_show_projectile_preview_time))
+    if (left_mouse_pressed && (std::chrono::high_resolution_clock::now() >= can_show_projectile_preview_time))
     {
+        // this makes it depend on the preview time length, which isn't great, but at this point we've seen worse lol
+        release_projectile = false;
+
         double mouse_pos_x, mouse_pos_y;
         glfwGetCursorPos(window, &mouse_pos_x, &mouse_pos_y);
         vec2 mouse_pos = vec2(mouse_pos_x, mouse_pos_y);
@@ -1034,7 +1037,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 	// Move snail if alive and has turns remaining
 	if (!ECS::registry<DeathTimer>.has(player_snail))
 	{
-		if ((ECS::registry<Turn>.components[0].type == PLAYER_WAITING) && (action == GLFW_PRESS))
+		if (!left_mouse_pressed && (ECS::registry<Turn>.components[0].type == PLAYER_WAITING) && (action == GLFW_PRESS))
 		{
 			switch (key)
 			{
@@ -1158,8 +1161,8 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 
 void WorldSystem::on_mouse_move(vec2 mouse_pos)
 {
-    // Remove current previews if mouse moves
-    SnailProjectile::Preview::removeCurrent();
+    // do nothing (see setGLFWCallbacks() for more detail)
+    return;
 }
 
 void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
@@ -1195,14 +1198,17 @@ void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
             vec2 mouse_pos = vec2(mouse_pos_x, mouse_pos_y);
             if (action == GLFW_RELEASE)
             {
-                projectiles_fired++;
-                shootProjectile(mouse_pos);
+                if (release_projectile)
+                {
+                    projectiles_fired++;
+                    shootProjectile(mouse_pos);
+                    SnailProjectile::Preview::removeCurrent();
+                }
                 left_mouse_pressed = false;
-                SnailProjectile::Preview::removeCurrent();
-
             }
             else if (action == GLFW_PRESS)
             {
+                release_projectile = true;
                 left_mouse_pressed = true;
                 can_show_projectile_preview_time = std::chrono::high_resolution_clock::now()
                                                    + std::chrono::milliseconds{ PROJECTILE_PREVIEW_DELAY_MS };
@@ -1252,7 +1258,7 @@ void  WorldSystem::setGLFWCallbacks()
     auto mouse_button_redirect = [](GLFWwindow* wnd, int _0, int _1, int _2) { ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_button(_0, _1, _2); };
 
     glfwSetKeyCallback(window, key_redirect);
-    glfwSetCursorPosCallback(window, cursor_pos_redirect);
+    glfwSetCursorPosCallback(window, cursor_pos_redirect); // tried removing this, but for some reason since the something analogous exists in the menu system, it breaks
     glfwSetMouseButtonCallback(window, mouse_button_redirect);
 }
 int WorldSystem::snailMoves = 0;
