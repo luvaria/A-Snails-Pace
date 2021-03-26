@@ -94,6 +94,8 @@ private:
 
 	std::chrono::time_point<std::chrono::high_resolution_clock> can_show_projectile_preview_time;
 	bool left_mouse_pressed;
+    // if someone holds the left mouse button for a while we shouldn't release the projectile on release of the button
+    bool release_projectile;
 
 	// NEW: turn_number is not used for now, but will probably be used to keep track
 	// of what day it is on the calendar. snail_move is how many tiles the snail can
