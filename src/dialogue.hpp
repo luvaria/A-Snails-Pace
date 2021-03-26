@@ -20,7 +20,7 @@ public:
 	// constructor
 	DialogueSystem(vec2 window_size_in_game_units);
 
-	void step(float elapsed_ms, vec2 window_size_in_game_units);
+	void step(float elapsed_ms);
 
 	// sets new dialogue (sets active flag)
 	void setDialogue(std::string dialogue);

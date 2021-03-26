@@ -127,4 +127,4 @@ void WaterTile::onNotify(Event env, ECS::Entity& e)
         }
     }
 }
-int WaterTile::splashEntityID = 0;
+unsigned int WaterTile::splashEntityID = 0;

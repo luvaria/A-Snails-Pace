@@ -228,12 +228,11 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             // Restart the game once the death timer expired
             if (counter.counter_ms < 0)
             {
-                ECS::registry<DeathTimer>.remove(entity);
-                for (auto& entity : ECS::registry<WaterTile>.entities)
+                for (auto& waterEntity : ECS::registry<WaterTile>.entities)
                 {
-                    if(WaterTile::splashEntityID!=entity.id) {
-                        ECS::ContainerInterface::remove_all_components_of(entity);
-                        ECS::registry<WaterTile>.remove(entity);
+                    if (WaterTile::splashEntityID != waterEntity.id) {
+                        ECS::ContainerInterface::remove_all_components_of(waterEntity);
+                        ECS::registry<WaterTile>.remove(waterEntity);
                     }
                 }
                 WaterTile::splashEntityID = 0;
@@ -1161,7 +1160,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
     current_speed = std::max(0.f, current_speed);
 }
 
-void WorldSystem::on_mouse_move(vec2 mouse_pos)
+void WorldSystem::on_mouse_move(vec2 /*mouse_pos*/)
 {
     // do nothing (see setGLFWCallbacks() for more detail)
     return;

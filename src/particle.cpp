@@ -14,7 +14,7 @@ void Particle::setP1Motion(Motion& mot) {
     max_number = 105;
     float yVel = rand() % (max_number + 1 - minimum_number) + minimum_number;
 
-    mot.angle = 0.2;
+    mot.angle = 0.2f;
     mot.lastDirection = DIRECTION_WEST;
     mot.scale = {12, 12};
     mot.velocity = {xVel, yVel};
