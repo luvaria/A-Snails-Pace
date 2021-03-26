@@ -1030,24 +1030,58 @@ void WorldSystem::fallDown(ECS::Entity& entity, int& moves) {
 // Check out https://www.glfw.org/docs/3.3/input_guide.html
 void WorldSystem::on_key(int key, int, int action, int mod)
 {
-    // remove prompt on mouse click
     if (action == GLFW_PRESS)
+    {
+        // remove prompt on key press
         ControlsOverlay::removeControlsPrompt();
 
-    if (action == GLFW_PRESS && key == GLFW_KEY_ESCAPE)
+        bool shouldReturn = true;
+
+        switch (key)
+        {
+        // Pause
+        case GLFW_KEY_ESCAPE:
+            {
+                running = false;
+                left_mouse_pressed = false;
+                SnailProjectile::Preview::removeCurrent();
+                ControlsOverlay::removeControlsOverlay();
+                notify(Event(Event::PAUSE));
+                break;
+            }
+        // toggle controls overlay
+        case GLFW_KEY_C:
+            ControlsOverlay::toggleControlsOverlay();
+            break;
+        // Debugging
+        case GLFW_KEY_V:
+            DebugSystem::in_debug_mode = !DebugSystem::in_debug_mode;
+            break;
+        // Path debugging
+        case GLFW_KEY_P:
+            DebugSystem::in_path_debug_mode = !DebugSystem::in_path_debug_mode;
+            break;
+        default:
+            {
+                shouldReturn = false;
+                break;
+            }
+        }
+
+        if (shouldReturn) return;
+    }
+
+    // Resetting game
+    if (action == GLFW_RELEASE && key == GLFW_KEY_R)
     {
-        running = false;
-        left_mouse_pressed = false;
-        SnailProjectile::Preview::removeCurrent();
-        ControlsOverlay::removeControlsOverlay();
-        notify(Event(Event::PAUSE));
+        restart(level);
         return;
     }
     
-    // Move snail if alive and has turns remaining
-	if (!ECS::registry<DeathTimer>.has(player_snail))
+    // Snail action if alive
+	if (!ECS::registry<DeathTimer>.has(player_snail) && action == GLFW_PRESS)
 	{
-		if (!left_mouse_pressed && (ECS::registry<Turn>.components[0].type == PLAYER_WAITING) && (action == GLFW_PRESS))
+		if (!left_mouse_pressed && ECS::registry<Turn>.components[0].type == PLAYER_WAITING)
 		{
 			switch (key)
 			{
@@ -1088,7 +1122,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
                 break;
 			}
 		}
-        else if ((ECS::registry<Turn>.components[0].type == NPC_ENCOUNTER) && (action == GLFW_PRESS))
+        else if (ECS::registry<Turn>.components[0].type == NPC_ENCOUNTER)
         {
             switch (key)
             {
@@ -1103,39 +1137,6 @@ void WorldSystem::on_key(int key, int, int action, int mod)
             }
         }
 	}
-
-    // Resetting game
-    if (action == GLFW_RELEASE && key == GLFW_KEY_R)
-    {
-        int w, h;
-        glfwGetWindowSize(window, &w, &h);
-
-        restart(level);
-    }
-
-    // toggle controls overlay
-    if (action == GLFW_PRESS && key == GLFW_KEY_C)
-        ControlsOverlay::toggleControlsOverlay();
-
-	// Debugging
-	// CHANGE: Switched debug key to V so it would not trigger when moving to the right
-	if (action == GLFW_PRESS && key == GLFW_KEY_V)
-		DebugSystem::in_debug_mode = !DebugSystem::in_debug_mode;
-    if (action == GLFW_PRESS && key == GLFW_KEY_P)
-        DebugSystem::in_path_debug_mode = !DebugSystem::in_path_debug_mode;
-
-    // Control the current speed with `<` `>`
-    if (action == GLFW_RELEASE && (mod & GLFW_MOD_SHIFT) && key == GLFW_KEY_COMMA)
-    {
-        current_speed -= 0.1f;
-        std::cout << "Current speed = " << current_speed << std::endl;
-    }
-    if (action == GLFW_RELEASE && (mod & GLFW_MOD_SHIFT) && key == GLFW_KEY_PERIOD)
-    {
-        current_speed += 0.1f;
-        std::cout << "Current speed = " << current_speed << std::endl;
-    }
-    current_speed = std::max(0.f, current_speed);
 }
 
 void WorldSystem::on_mouse_move(vec2 mouse_pos)
