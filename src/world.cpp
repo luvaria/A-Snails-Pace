@@ -1259,7 +1259,7 @@ void  WorldSystem::setGLFWCallbacks()
     auto mouse_button_redirect = [](GLFWwindow* wnd, int _0, int _1, int _2) { ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_button(_0, _1, _2); };
 
     glfwSetKeyCallback(window, key_redirect);
-    glfwSetCursorPosCallback(window, cursor_pos_redirect); // tried removing this, but for some reason since the something analogous exists in the menu system, it breaks
+    glfwSetCursorPosCallback(window, cursor_pos_redirect);
     glfwSetMouseButtonCallback(window, mouse_button_redirect);
 }
 int WorldSystem::snailMoves = 0;
