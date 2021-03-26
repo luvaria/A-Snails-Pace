@@ -184,17 +184,21 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 		}
 	}
 
-    if (left_mouse_pressed && (std::chrono::high_resolution_clock::now() >= can_show_projectile_preview_time))
+    TurnType& turnType = ECS::registry<Turn>.components[0].type;
+	if (left_mouse_pressed && (std::chrono::high_resolution_clock::now() >= can_show_projectile_preview_time))
     {
         // this makes it depend on the preview time length, which isn't great, but at this point we've seen worse lol
         release_projectile = false;
 
-        double mouse_pos_x, mouse_pos_y;
-        glfwGetCursorPos(window, &mouse_pos_x, &mouse_pos_y);
-        vec2 mouse_pos = vec2(mouse_pos_x, mouse_pos_y);
-        shootProjectile(mouse_pos, true);
-        can_show_projectile_preview_time = std::chrono::high_resolution_clock::now()
-            + std::chrono::milliseconds{ PROJECTILE_PREVIEW_DELAY_MS };
+        if (turnType == PLAYER_WAITING)
+        {
+            double mouse_pos_x, mouse_pos_y;
+            glfwGetCursorPos(window, &mouse_pos_x, &mouse_pos_y);
+            vec2 mouse_pos = vec2(mouse_pos_x, mouse_pos_y);
+            shootProjectile(mouse_pos, true);
+            can_show_projectile_preview_time = std::chrono::high_resolution_clock::now()
+                                               + std::chrono::milliseconds{ PROJECTILE_PREVIEW_DELAY_MS };
+        }
     }
 
     float step_seconds = 1.0f * (elapsed_ms / 1000.f);
@@ -263,7 +267,6 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
         }
 	}
 
-    TurnType& turnType = ECS::registry<Turn>.components[0].type;
 	if (turnType == PLAYER_WAITING)
     {
 	    if (snail_move <= 0)
@@ -1174,47 +1177,44 @@ void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
         ControlsOverlay::removeControlsPrompt();
 
     TurnType& turnType = ECS::registry<Turn>.components[0].type;
-    if (turnType == PLAYER_WAITING)
+    if ((turnType == PLAYER_WAITING) && (button == GLFW_MOUSE_BUTTON_RIGHT) && (action == GLFW_RELEASE))
     {
-        if ((button == GLFW_MOUSE_BUTTON_RIGHT) && (action == GLFW_RELEASE))
+        // Check if we would go off screen and die, and prevent that from happening
+        auto& cameraEntity = ECS::registry<Camera>.entities[0];
+        vec2& cameraOffset = ECS::registry<Motion>.get(cameraEntity).position;
+        float scale = TileSystem::getScale();
+        vec2 possibleOffset = { cameraOffset.x + scale, cameraOffset.y };
+        // Have to get window size this way because no access to window_size_in_game_units
+        int w, h;
+        glfwGetWindowSize(window, &w, &h);
+        if (!offScreen(ECS::registry<Motion>.get(player_snail).position, vec2(w, h), possibleOffset))
         {
-            // Check if we would go off screen and die, and prevent that from happening
-            auto& cameraEntity = ECS::registry<Camera>.entities[0];
-            vec2& cameraOffset = ECS::registry<Motion>.get(cameraEntity).position;
-            float scale = TileSystem::getScale();
-            vec2 possibleOffset = { cameraOffset.x + scale, cameraOffset.y };
-            // Have to get window size this way because no access to window_size_in_game_units
-            int w, h;
-            glfwGetWindowSize(window, &w, &h);
-            if (!offScreen(ECS::registry<Motion>.get(player_snail).position, vec2(w, h), possibleOffset))
-            {
-                Camera::update(k_move_seconds);
-                ECS::registry<Turn>.components[0].type = CAMERA;
-            }
+            Camera::update(k_move_seconds);
+            ECS::registry<Turn>.components[0].type = CAMERA;
         }
-        else if (button == GLFW_MOUSE_BUTTON_LEFT)
+    }
+    else if (button == GLFW_MOUSE_BUTTON_LEFT)
+    {
+        double mouse_pos_x;
+        double mouse_pos_y;
+        glfwGetCursorPos(window, &mouse_pos_x, &mouse_pos_y);
+        vec2 mouse_pos = vec2(mouse_pos_x, mouse_pos_y);
+        if (action == GLFW_RELEASE)
         {
-            double mouse_pos_x;
-            double mouse_pos_y;
-            glfwGetCursorPos(window, &mouse_pos_x, &mouse_pos_y);
-            vec2 mouse_pos = vec2(mouse_pos_x, mouse_pos_y);
-            if (action == GLFW_RELEASE)
+            if ((turnType == PLAYER_WAITING) && release_projectile)
             {
-                if (release_projectile)
-                {
-                    projectiles_fired++;
-                    shootProjectile(mouse_pos);
-                    SnailProjectile::Preview::removeCurrent();
-                }
-                left_mouse_pressed = false;
+                projectiles_fired++;
+                shootProjectile(mouse_pos);
+                SnailProjectile::Preview::removeCurrent();
             }
-            else if (action == GLFW_PRESS)
-            {
-                release_projectile = true;
-                left_mouse_pressed = true;
-                can_show_projectile_preview_time = std::chrono::high_resolution_clock::now()
-                                                   + std::chrono::milliseconds{ PROJECTILE_PREVIEW_DELAY_MS };
-            }
+            left_mouse_pressed = false;
+        }
+        else if (action == GLFW_PRESS)
+        {
+            release_projectile = true;
+            left_mouse_pressed = true;
+            can_show_projectile_preview_time = std::chrono::high_resolution_clock::now()
+                                               + std::chrono::milliseconds{ PROJECTILE_PREVIEW_DELAY_MS };
         }
     }
 
