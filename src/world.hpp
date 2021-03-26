@@ -82,6 +82,10 @@ private:
 	// Loads the audio
 	void init_audio();
 
+	// NPC encounters
+	void stopNPC();
+	void stepNPC();
+
 	// Game state
 	float current_speed;
 	ECS::Entity player_snail;

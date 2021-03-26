@@ -1034,7 +1034,17 @@ void WorldSystem::on_key(int key, int, int action, int mod)
     if (action == GLFW_PRESS)
         ControlsOverlay::removeControlsPrompt();
 
-	// Move snail if alive and has turns remaining
+    if (action == GLFW_PRESS && key == GLFW_KEY_ESCAPE)
+    {
+        running = false;
+        left_mouse_pressed = false;
+        SnailProjectile::Preview::removeCurrent();
+        ControlsOverlay::removeControlsOverlay();
+        notify(Event(Event::PAUSE));
+        return;
+    }
+    
+    // Move snail if alive and has turns remaining
 	if (!ECS::registry<DeathTimer>.has(player_snail))
 	{
 		if (!left_mouse_pressed && (ECS::registry<Turn>.components[0].type == PLAYER_WAITING) && (action == GLFW_PRESS))
@@ -1080,39 +1090,15 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		}
         else if ((ECS::registry<Turn>.components[0].type == NPC_ENCOUNTER) && (action == GLFW_PRESS))
         {
-            NPC& npc = ECS::registry<NPC>.get(encountered_npc);
-
             switch (key)
             {
             // exit dialogue
             case GLFW_KEY_Q:
-                npc.endEncounter();
-                ECS::registry<Turn>.components[0].type = PLAYER_WAITING;
+                stopNPC();
                 break;
             // step encounter
-            case GLFW_KEY_E:
-                npc.stepEncounter();
-                if (!npc.isActive)
-                {
-                    ECS::registry<Turn>.components[0].type = PLAYER_WAITING;
-                }
-                if (npc.timesTalkedTo >= 2)
-                {
-                    // after two interactions, npc disappears
-
-                    // update tile type to EMPTY
-                    Motion& npcMotion = ECS::registry<Motion>.get(encountered_npc);
-                    float scale = TileSystem::getScale();
-                    TileSystem::getTiles()[npcMotion.position.y / scale][npcMotion.position.x / scale].type = EMPTY;
-
-                    // remove npc and its hat
-                    if (ECS::registry<Equipped>.has(encountered_npc))
-                    {
-                        ECS::Entity hatEntity = ECS::registry<Equipped>.get(encountered_npc).collectible;
-                        ECS::ContainerInterface::remove_all_components_of(hatEntity);
-                    }
-                    ECS::ContainerInterface::remove_all_components_of(encountered_npc);
-                }
+            default:
+                stepNPC();
                 break;
             }
         }
@@ -1130,15 +1116,6 @@ void WorldSystem::on_key(int key, int, int action, int mod)
     // toggle controls overlay
     if (action == GLFW_PRESS && key == GLFW_KEY_C)
         ControlsOverlay::toggleControlsOverlay();
-
-    if (action == GLFW_PRESS && key == GLFW_KEY_ESCAPE)
-    {
-        running = false;
-        left_mouse_pressed = false;
-        SnailProjectile::Preview::removeCurrent();
-        ControlsOverlay::removeControlsOverlay();
-        notify(Event(Event::PAUSE));
-    }
 
 	// Debugging
 	// CHANGE: Switched debug key to V so it would not trigger when moving to the right
@@ -1217,7 +1194,10 @@ void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
             }
         }
     }
-
+    else if ((ECS::registry<Turn>.components[0].type == NPC_ENCOUNTER) && (action == GLFW_PRESS))
+    {
+        stepNPC();
+    }
 }
 
 void WorldSystem::shootProjectile(vec2 mousePos, bool preview /* = false */)
@@ -1249,7 +1229,7 @@ void WorldSystem::shootProjectile(vec2 mousePos, bool preview /* = false */)
     }
 }
 
-void  WorldSystem::setGLFWCallbacks()
+void WorldSystem::setGLFWCallbacks()
 {
     // Setting callbacks to member functions (that's why the redirect is needed)
     // Input is handled using GLFW, for more info see
@@ -1263,4 +1243,39 @@ void  WorldSystem::setGLFWCallbacks()
     glfwSetCursorPosCallback(window, cursor_pos_redirect); // tried removing this, but for some reason since the something analogous exists in the menu system, it breaks
     glfwSetMouseButtonCallback(window, mouse_button_redirect);
 }
+
+void WorldSystem::stopNPC()
+{
+    NPC& npc = ECS::registry<NPC>.get(encountered_npc);
+    npc.endEncounter();
+    ECS::registry<Turn>.components[0].type = PLAYER_WAITING;
+}
+
+void WorldSystem::stepNPC()
+{
+    NPC& npc = ECS::registry<NPC>.get(encountered_npc);
+    npc.stepEncounter();
+    if (!npc.isActive)
+    {
+        ECS::registry<Turn>.components[0].type = PLAYER_WAITING;
+    }
+    if (npc.timesTalkedTo >= 2)
+    {
+        // after two interactions, npc disappears
+
+        // update tile type to EMPTY
+        Motion& npcMotion = ECS::registry<Motion>.get(encountered_npc);
+        float scale = TileSystem::getScale();
+        TileSystem::getTiles()[npcMotion.position.y / scale][npcMotion.position.x / scale].type = EMPTY;
+
+        // remove npc and its hat
+        if (ECS::registry<Equipped>.has(encountered_npc))
+        {
+            ECS::Entity hatEntity = ECS::registry<Equipped>.get(encountered_npc).collectible;
+            ECS::ContainerInterface::remove_all_components_of(hatEntity);
+        }
+        ECS::ContainerInterface::remove_all_components_of(encountered_npc);
+    }
+}
+
 int WorldSystem::snailMoves = 0;
