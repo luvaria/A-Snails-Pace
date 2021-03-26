@@ -499,12 +499,12 @@ void PhysicsSystem::stepToDestinationAroundCorner(ECS::Entity entity, float step
 
 	if (ECS::registry<Snail>.has(entity)) 
 	{
-		for (auto entity : ECS::registry<BlurParticle>.entities)
+		for (auto blurEntity : ECS::registry<BlurParticle>.entities)
 		{
 			vec2 velocity = motion.position - oldPosition;
-			auto& motion2 = ECS::registry<Motion>.get(entity);
+			auto& motion2 = ECS::registry<Motion>.get(blurEntity);
 			motion2.position += (velocity + motion2.velocity);
-			float scaleFactor = 0.99;
+			float scaleFactor = 0.99f;
 			motion2.scale *= scaleFactor;
 			motion2.angle = motion.angle;
 			motion2.lastDirection = motion.lastDirection;
@@ -522,7 +522,6 @@ void PhysicsSystem::stepToDestination(ECS::Entity entity, float step_seconds)
     {
 		bool isSnailOrSpider = (ECS::registry<Snail>.has(entity) || ECS::registry<Spider>.has(entity));
         auto& dest = destReg.get(entity);
-        auto& motion = ECS::registry<Motion>.get(entity);
 		vec2 newPos = motion.position + (motion.velocity * step_seconds);
 		if ((dot(motion.position - newPos, dest.position - newPos) > 0) || (dest.position == newPos)) 
 		{
@@ -548,12 +547,12 @@ void PhysicsSystem::stepToDestination(ECS::Entity entity, float step_seconds)
     if(ECS::registry<Snail>.has(entity)) 
 	{
         motion = ECS::registry<Motion>.get(entity);
-        for (auto entity : ECS::registry<BlurParticle>.entities)
+        for (auto blurEntity : ECS::registry<BlurParticle>.entities)
         {
             vec2 velocity = motion.position - oldPosition;
-            auto& motion2 = ECS::registry<Motion>.get(entity);
+            auto& motion2 = ECS::registry<Motion>.get(blurEntity);
             motion2.position += (velocity + motion2.velocity);
-            float scaleFactor = 0.99;
+            float scaleFactor = 0.99f;
             motion2.scale *= scaleFactor;
             motion2.angle = motion.angle;
             motion2.lastDirection = motion.lastDirection;

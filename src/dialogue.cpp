@@ -13,7 +13,7 @@ Dialogue::Dialogue(int lineNumber) : lineNumber(lineNumber) {}
 DialogueSystem::DialogueSystem(vec2 window_size_in_game_units) :
 	isActive(false), window_size_in_game_units(window_size_in_game_units) {}
 
-void DialogueSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
+void DialogueSystem::step(float elapsed_ms)
 {
 	if (isActive)
 	{

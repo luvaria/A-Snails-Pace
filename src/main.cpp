@@ -84,7 +84,7 @@ int main()
 			world.step(elapsed_ms, window_size_in_game_units);
 			physics.step(elapsed_ms, window_size_in_game_units);
 			bg.step();
-			dialogue.step(elapsed_ms, window_size_in_game_units);
+			dialogue.step(elapsed_ms);
 		}
 
 		renderer.draw(window_size_in_game_units, elapsed_ms);

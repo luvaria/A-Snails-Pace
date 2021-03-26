@@ -123,10 +123,10 @@ struct DirectionInput
 struct CornerMotion 
 {
 	float t = 0; // t between 0 and 1 for rounding the corner.
-	float total_time; //total elapsed_time that it should take to round the corner
+	float total_time = 0; //total elapsed_time that it should take to round the corner
 	float theta_old = 0; //represents the angle that the previous time step had
 	float segment_angle = 0; //angle for the previous segment
-	float dest_angle;
+	float dest_angle = 0;
 	int numSegmentsCompleted = 0;
 	int numSegments = 0;
 	bool isSegmentAngleIncreasing = true;

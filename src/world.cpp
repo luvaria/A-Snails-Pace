@@ -232,12 +232,11 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             // Restart the game once the death timer expired
             if (counter.counter_ms < 0)
             {
-                ECS::registry<DeathTimer>.remove(entity);
-                for (auto& entity : ECS::registry<WaterTile>.entities)
+                for (auto& waterEntity : ECS::registry<WaterTile>.entities)
                 {
-                    if(WaterTile::splashEntityID!=entity.id) {
-                        ECS::ContainerInterface::remove_all_components_of(entity);
-                        ECS::registry<WaterTile>.remove(entity);
+                    if (WaterTile::splashEntityID != waterEntity.id) {
+                        ECS::ContainerInterface::remove_all_components_of(waterEntity);
+                        ECS::registry<WaterTile>.remove(waterEntity);
                     }
                 }
                 WaterTile::splashEntityID = 0;
@@ -1142,7 +1141,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 	}
 }
 
-void WorldSystem::on_mouse_move(vec2 mouse_pos)
+void WorldSystem::on_mouse_move(vec2 /*mouse_pos*/)
 {
     // do nothing (see setGLFWCallbacks() for more detail)
     return;
@@ -1242,7 +1241,7 @@ void WorldSystem::setGLFWCallbacks()
     auto mouse_button_redirect = [](GLFWwindow* wnd, int _0, int _1, int _2) { ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_button(_0, _1, _2); };
 
     glfwSetKeyCallback(window, key_redirect);
-    glfwSetCursorPosCallback(window, cursor_pos_redirect); // tried removing this, but for some reason since the something analogous exists in the menu system, it breaks
+    glfwSetCursorPosCallback(window, cursor_pos_redirect);
     glfwSetMouseButtonCallback(window, mouse_button_redirect);
 }
 
