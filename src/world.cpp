@@ -1195,14 +1195,15 @@ void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
     }
     else if (button == GLFW_MOUSE_BUTTON_LEFT)
     {
-        double mouse_pos_x;
-        double mouse_pos_y;
-        glfwGetCursorPos(window, &mouse_pos_x, &mouse_pos_y);
-        vec2 mouse_pos = vec2(mouse_pos_x, mouse_pos_y);
         if (action == GLFW_RELEASE)
         {
             if ((turnType == PLAYER_WAITING) && release_projectile)
             {
+                double mouse_pos_x;
+                double mouse_pos_y;
+                glfwGetCursorPos(window, &mouse_pos_x, &mouse_pos_y);
+                vec2 mouse_pos = vec2(mouse_pos_x, mouse_pos_y);
+
                 projectiles_fired++;
                 shootProjectile(mouse_pos);
                 SnailProjectile::Preview::removeCurrent();
