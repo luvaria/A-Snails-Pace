@@ -179,9 +179,9 @@ void StartMenu::loadEntities()
 	// volume slider
 	auto volumeSliderEntity = ECS::Entity();
 
-	std::string key = "volume_slider";
-	ShadedMesh& resource = cache_resource(key);
-	if (resource.effect.program.resource == 0) {
+	std::string sliderKey = "volume_slider";
+	ShadedMesh& sliderResource = cache_resource(sliderKey);
+	if (sliderResource.effect.program.resource == 0) {
 		// create a procedural circle
 		constexpr float z = -0.1f;
 
@@ -189,27 +189,27 @@ void StartMenu::loadEntities()
 		ColoredVertex v;
 		v.color = DEFAULT_COLOUR;
 		v.position = { -0.5, -0.5, z };
-		resource.mesh.vertices.push_back(v);
+		sliderResource.mesh.vertices.push_back(v);
 		v.position = { -0.5, 0.5, z };
-		resource.mesh.vertices.push_back(v);
+		sliderResource.mesh.vertices.push_back(v);
 		v.position = { 0.5, 0.5, z };
-		resource.mesh.vertices.push_back(v);
+		sliderResource.mesh.vertices.push_back(v);
 		v.position = { 0.5, -0.5, z };
-		resource.mesh.vertices.push_back(v);
+		sliderResource.mesh.vertices.push_back(v);
 
 		// Two triangles
-		resource.mesh.vertex_indices.push_back(0);
-		resource.mesh.vertex_indices.push_back(1);
-		resource.mesh.vertex_indices.push_back(3);
-		resource.mesh.vertex_indices.push_back(1);
-		resource.mesh.vertex_indices.push_back(2);
-		resource.mesh.vertex_indices.push_back(3);
+		sliderResource.mesh.vertex_indices.push_back(0);
+		sliderResource.mesh.vertex_indices.push_back(1);
+		sliderResource.mesh.vertex_indices.push_back(3);
+		sliderResource.mesh.vertex_indices.push_back(1);
+		sliderResource.mesh.vertex_indices.push_back(2);
+		sliderResource.mesh.vertex_indices.push_back(3);
 
-		RenderSystem::createColoredMesh(resource, "colored_mesh");
+		RenderSystem::createColoredMesh(sliderResource, "colored_mesh");
 	}
 
 	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
-	ECS::registry<ShadedMeshRef>.emplace(volumeSliderEntity, resource, RenderBucket::OVERLAY);
+	ECS::registry<ShadedMeshRef>.emplace(volumeSliderEntity, sliderResource, RenderBucket::OVERLAY);
 
 	// Create motion
 	Motion& volMotion = ECS::registry<Motion>.emplace(volumeSliderEntity);
@@ -220,6 +220,47 @@ void StartMenu::loadEntities()
 
 	ECS::registry<MenuButton>.emplace(volumeSliderEntity, ButtonEventType::SET_VOLUME);
 	ECS::registry<StartMenuTag>.emplace(volumeSliderEntity);
+
+	// volume min max icons
+	// min
+	ECS::Entity minVolEntity = ECS::Entity();
+	std::string minVolKey = "min_volume";
+	ShadedMesh& minVolResource = cache_resource(minVolKey);
+	if (minVolResource.effect.program.resource == 0)
+	{
+		minVolResource = ShadedMesh();
+		RenderSystem::createSprite(minVolResource, textures_path("min_volume.png"), "textured", false);
+	}
+
+	ECS::registry<ShadedMeshRef>.emplace(minVolEntity, minVolResource, RenderBucket::OVERLAY);
+
+	Motion& minVolMotion = ECS::registry<Motion>.emplace(minVolEntity);
+	minVolMotion.angle = 0.f;
+	minVolMotion.velocity = { 0, 0 };
+	minVolMotion.position = { 25, 50 };
+	minVolMotion.scale = static_cast<vec2>(minVolResource.texture.size) / static_cast<vec2>(minVolResource.texture.size).y * 20.f;
+
+	ECS::registry<StartMenuTag>.emplace(minVolEntity);
+
+	// max
+	ECS::Entity maxVolEntity = ECS::Entity();
+	std::string maxVolKey = "max_volume";
+	ShadedMesh& maxVolResource = cache_resource(maxVolKey);
+	if (maxVolResource.effect.program.resource == 0)
+	{
+		maxVolResource = ShadedMesh();
+		RenderSystem::createSprite(maxVolResource, textures_path("max_volume.png"), "textured", false);
+	}
+
+	ECS::registry<ShadedMeshRef>.emplace(maxVolEntity, maxVolResource, RenderBucket::OVERLAY);
+
+	Motion& maxVolMotion = ECS::registry<Motion>.emplace(maxVolEntity);
+	maxVolMotion.angle = 0.f;
+	maxVolMotion.velocity = { 0, 0 };
+	maxVolMotion.position = { 175, 50 };
+	maxVolMotion.scale = static_cast<vec2>(maxVolResource.texture.size) / static_cast<vec2>(maxVolResource.texture.size).y * 20.f;
+
+	ECS::registry<StartMenuTag>.emplace(maxVolEntity);
 }
 
 void StartMenu::removeEntities()
