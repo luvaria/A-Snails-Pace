@@ -177,15 +177,13 @@ void StartMenu::loadEntities()
     buttonEntities.push_back(clearCollectibleDataEntity);
 
 	// volume slider
-	auto volumeSliderEntity = ECS::Entity();
+	ECS::Entity volumeSliderEntity = ECS::Entity();
 
 	std::string sliderKey = "volume_slider";
 	ShadedMesh& sliderResource = cache_resource(sliderKey);
 	if (sliderResource.effect.program.resource == 0) {
-		// create a procedural circle
 		constexpr float z = -0.1f;
 
-		// Corner points
 		ColoredVertex v;
 		v.color = DEFAULT_COLOUR;
 		v.position = { -0.5, -0.5, z };
@@ -197,7 +195,6 @@ void StartMenu::loadEntities()
 		v.position = { 0.5, -0.5, z };
 		sliderResource.mesh.vertices.push_back(v);
 
-		// Two triangles
 		sliderResource.mesh.vertex_indices.push_back(0);
 		sliderResource.mesh.vertex_indices.push_back(1);
 		sliderResource.mesh.vertex_indices.push_back(3);
@@ -208,10 +205,8 @@ void StartMenu::loadEntities()
 		RenderSystem::createColoredMesh(sliderResource, "colored_mesh");
 	}
 
-	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
 	ECS::registry<ShadedMeshRef>.emplace(volumeSliderEntity, sliderResource, RenderBucket::OVERLAY);
 
-	// Create motion
 	Motion& volMotion = ECS::registry<Motion>.emplace(volumeSliderEntity);
 	volMotion.angle = 0.f;
 	volMotion.velocity = { 0, 0 };
@@ -220,6 +215,48 @@ void StartMenu::loadEntities()
 
 	ECS::registry<MenuButton>.emplace(volumeSliderEntity, ButtonEventType::SET_VOLUME);
 	ECS::registry<StartMenuTag>.emplace(volumeSliderEntity);
+
+	// slider feedback
+	float curVol = max(Mix_Volume(-1, -1), Mix_VolumeMusic(-1)) / MIX_MAX_VOLUME;
+	ECS::Entity volumeIndicatorEntity = ECS::Entity();
+
+	std::string indicatorKey = "volume_indicator";
+	ShadedMesh& indicatorResource = cache_resource(indicatorKey);
+	if (indicatorResource.effect.program.resource == 0) {
+		constexpr float z = -0.1f;
+
+		ColoredVertex v;
+		v.color = HIGHLIGHT_COLOUR;
+		v.position = { -0.5, -0.5, z };
+		indicatorResource.mesh.vertices.push_back(v);
+		v.position = { -0.5, 0.5, z };
+		indicatorResource.mesh.vertices.push_back(v);
+		v.position = { 0.5, 0.5, z };
+		indicatorResource.mesh.vertices.push_back(v);
+		v.position = { 0.5, -0.5, z };
+		indicatorResource.mesh.vertices.push_back(v);
+
+		indicatorResource.mesh.vertex_indices.push_back(0);
+		indicatorResource.mesh.vertex_indices.push_back(1);
+		indicatorResource.mesh.vertex_indices.push_back(3);
+		indicatorResource.mesh.vertex_indices.push_back(1);
+		indicatorResource.mesh.vertex_indices.push_back(2);
+		indicatorResource.mesh.vertex_indices.push_back(3);
+
+		RenderSystem::createColoredMesh(indicatorResource, "colored_mesh");
+	}
+
+	ECS::registry<ShadedMeshRef>.emplace(volumeIndicatorEntity, indicatorResource, RenderBucket::OVERLAY_2);
+
+	Motion& indicatorMotion = ECS::registry<Motion>.emplace(volumeIndicatorEntity);
+	indicatorMotion.angle = 0.f;
+	indicatorMotion.velocity = { 0, 0 };
+	indicatorMotion.scale = { 100, 10 };
+	indicatorMotion.scale.x *= curVol;
+	indicatorMotion.position = { 50 + indicatorMotion.scale.x / 2, 50 };
+
+	ECS::registry<StartMenuTag>.emplace(volumeIndicatorEntity);
+	ECS::registry<VolumeIndicator>.emplace(volumeIndicatorEntity);
 
 	// volume min max icons
 	// min
@@ -240,6 +277,7 @@ void StartMenu::loadEntities()
 	minVolMotion.position = { 25, 50 };
 	minVolMotion.scale = static_cast<vec2>(minVolResource.texture.size) / static_cast<vec2>(minVolResource.texture.size).y * 20.f;
 
+	ECS::registry<MenuButton>.emplace(minVolEntity, ButtonEventType::MIN_VOLUME);
 	ECS::registry<StartMenuTag>.emplace(minVolEntity);
 
 	// max
@@ -260,6 +298,7 @@ void StartMenu::loadEntities()
 	maxVolMotion.position = { 175, 50 };
 	maxVolMotion.scale = static_cast<vec2>(maxVolResource.texture.size) / static_cast<vec2>(maxVolResource.texture.size).y * 20.f;
 
+	ECS::registry<MenuButton>.emplace(maxVolEntity, ButtonEventType::MAX_VOLUME);
 	ECS::registry<StartMenuTag>.emplace(maxVolEntity);
 }
 
@@ -357,6 +396,8 @@ void StartMenu::selectedKeyEvent()
 		// perform action for button being hovered over (and pressed)
 		if (button.selected && !button.disabled)
 		{
+			double volumeRatio = 0;
+
 			switch (button.event)
 			{
 			case ButtonEventType::START_GAME:
@@ -377,15 +418,21 @@ void StartMenu::selectedKeyEvent()
 			case ButtonEventType::CLEAR_COLLECT_DATA:
 				ECS::registry<Inventory>.components[0].clear();
 			    break;
+			case ButtonEventType::MIN_VOLUME:
+				setVolume(buttonEntity, 0);
+				break;
+			case ButtonEventType::MAX_VOLUME:
+				setVolume(buttonEntity, 1);
+				break;
 			case ButtonEventType::SET_VOLUME:
 			{
-				Motion& motion = ECS::registry<Motion>.get(buttonEntity);
 				double xPos = 0;
 				double yPos = 0;
 				glfwGetCursorPos(&window, &xPos, &yPos);
+				Motion& motion = ECS::registry<Motion>.get(buttonEntity);
 				double volumeRatio = (xPos - (motion.position.x - abs(motion.scale.x) / 2)) / abs(motion.scale.x);
-				Mix_Volume(-1, volumeRatio * MIX_MAX_VOLUME);
-				Mix_VolumeMusic(volumeRatio * MIX_MAX_VOLUME);
+				setVolume(buttonEntity, volumeRatio);
+				break;
 			}
 			default:
 				break;
@@ -400,4 +447,17 @@ void StartMenu::updateDisabled(MenuButton &button)
     {
         button.disabled = ECS::registry<Inventory>.components[0].collectibles.empty();
     }
+}
+
+void StartMenu::setVolume(ECS::Entity buttonEntity, double volumeRatio)
+{
+	Motion& motion = ECS::registry<Motion>.get(buttonEntity);
+
+	ECS::Entity volumeIndicatorEntity = ECS::registry<VolumeIndicator>.entities[0];
+	Motion& indicatorMotion = ECS::registry<Motion>.get(volumeIndicatorEntity);
+	indicatorMotion.scale.x = volumeRatio * 100;
+	indicatorMotion.position = { 50 + indicatorMotion.scale.x / 2, 50 };
+
+	Mix_Volume(-1, volumeRatio * MIX_MAX_VOLUME);
+	Mix_VolumeMusic(volumeRatio * MIX_MAX_VOLUME);
 }
