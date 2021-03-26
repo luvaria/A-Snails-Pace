@@ -6,6 +6,10 @@
 #include "../tiles/wall.hpp"
 #include "../tiles/vine.hpp"
 
+#define SDL_MAIN_HANDLED
+#include <SDL.h>
+#include <SDL_mixer.h>
+
 // start menu button size (since you can't tell based on the Text component)
 const vec2 buttonScale = { 250.f, 33.3f };
 
@@ -33,6 +37,12 @@ void StartMenu::step(vec2 /*window_size_in_game_units*/)
 	{
 		MenuButton& button = buttonContainer.components[i];
 		ECS::Entity buttonEntity = buttonContainer.entities[i];
+
+		if (!textContainer.has(buttonEntity))
+		{
+			continue;
+		}
+
 		Text& buttonText = textContainer.get(buttonEntity);
 
 		updateDisabled(button);
@@ -56,8 +66,8 @@ void StartMenu::loadEntities()
 {
 	// a big boi
 	ECS::Entity snail = Snail::createSnail({ 350, 460 });
-	Motion& motion = ECS::registry<Motion>.get(snail);
-	motion.scale *= 6;
+	Motion& snailMotion = ECS::registry<Motion>.get(snail);
+	snailMotion.scale *= 6;
 	ECS::registry<StartMenuTag>.emplace(snail);
 
 	// ensure snail is not red from quitting during DeathTimer
@@ -166,6 +176,50 @@ void StartMenu::loadEntities()
     ECS::registry<StartMenuTag>.emplace(clearCollectibleDataEntity);
     buttonEntities.push_back(clearCollectibleDataEntity);
 
+	// volume slider
+	auto volumeSliderEntity = ECS::Entity();
+
+	std::string key = "volume_slider";
+	ShadedMesh& resource = cache_resource(key);
+	if (resource.effect.program.resource == 0) {
+		// create a procedural circle
+		constexpr float z = -0.1f;
+
+		// Corner points
+		ColoredVertex v;
+		v.color = DEFAULT_COLOUR;
+		v.position = { -0.5, -0.5, z };
+		resource.mesh.vertices.push_back(v);
+		v.position = { -0.5, 0.5, z };
+		resource.mesh.vertices.push_back(v);
+		v.position = { 0.5, 0.5, z };
+		resource.mesh.vertices.push_back(v);
+		v.position = { 0.5, -0.5, z };
+		resource.mesh.vertices.push_back(v);
+
+		// Two triangles
+		resource.mesh.vertex_indices.push_back(0);
+		resource.mesh.vertex_indices.push_back(1);
+		resource.mesh.vertex_indices.push_back(3);
+		resource.mesh.vertex_indices.push_back(1);
+		resource.mesh.vertex_indices.push_back(2);
+		resource.mesh.vertex_indices.push_back(3);
+
+		RenderSystem::createColoredMesh(resource, "colored_mesh");
+	}
+
+	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
+	ECS::registry<ShadedMeshRef>.emplace(volumeSliderEntity, resource, RenderBucket::OVERLAY);
+
+	// Create motion
+	Motion& volMotion = ECS::registry<Motion>.emplace(volumeSliderEntity);
+	volMotion.angle = 0.f;
+	volMotion.velocity = { 0, 0 };
+	volMotion.position = { 100, 50 };
+	volMotion.scale = { 100, 10 };
+
+	ECS::registry<MenuButton>.emplace(volumeSliderEntity, ButtonEventType::SET_VOLUME);
+	ECS::registry<StartMenuTag>.emplace(volumeSliderEntity);
 }
 
 void StartMenu::removeEntities()
@@ -221,21 +275,32 @@ void StartMenu::on_mouse_move(vec2 mouse_pos)
 	{
 		MenuButton& button = buttonContainer.components[i];
 		ECS::Entity buttonEntity = buttonContainer.entities[i];
-		Text& buttonText = textContainer.get(buttonEntity);
-
-		// check whether button is being hovered over
-		button.selected = mouseover(vec2(buttonText.position.x, buttonText.position.y), buttonScale, mouse_pos);
-		// track for deselect on key press
-		if (button.selected)
+		
+		// text buttons
+		if (textContainer.has(buttonEntity))
 		{
-			activeButtonEntity = buttonEntity;
+			Text& buttonText = textContainer.get(buttonEntity);
 
-			// find and set index of this active button in the button entities vector
-			for (int j = 0; j < buttonEntities.size(); j++)
+			// check whether button is being hovered over
+			button.selected = mouseover(vec2(buttonText.position.x, buttonText.position.y), buttonScale, mouse_pos);
+			// track for deselect on key press
+			if (button.selected)
 			{
-				if (buttonEntity.id == buttonEntities[j].id)
-					activeButtonIndex = j;
+				activeButtonEntity = buttonEntity;
+
+				// find and set index of this active button in the button entities vector
+				for (int j = 0; j < buttonEntities.size(); j++)
+				{
+					if (buttonEntity.id == buttonEntities[j].id)
+						activeButtonIndex = j;
+				}
 			}
+		}
+		// volume slider
+		else
+		{
+			Motion& motion = ECS::registry<Motion>.get(buttonEntity);
+			button.selected = mouseover(motion, mouse_pos);
 		}
 	}
 }
@@ -245,6 +310,7 @@ void StartMenu::selectedKeyEvent()
 	auto& buttonContainer = ECS::registry<MenuButton>;
 	for (unsigned int i = 0; i < buttonContainer.components.size(); i++)
 	{
+		ECS::Entity buttonEntity = buttonContainer.entities[i];
 		MenuButton& button = buttonContainer.components[i];
 
 		// perform action for button being hovered over (and pressed)
@@ -270,6 +336,16 @@ void StartMenu::selectedKeyEvent()
 			case ButtonEventType::CLEAR_COLLECT_DATA:
 				ECS::registry<Inventory>.components[0].clear();
 			    break;
+			case ButtonEventType::SET_VOLUME:
+			{
+				Motion& motion = ECS::registry<Motion>.get(buttonEntity);
+				double xPos = 0;
+				double yPos = 0;
+				glfwGetCursorPos(&window, &xPos, &yPos);
+				double volumeRatio = (xPos - (motion.position.x - abs(motion.scale.x) / 2)) / abs(motion.scale.x);
+				Mix_Volume(-1, volumeRatio * MIX_MAX_VOLUME);
+				Mix_VolumeMusic(volumeRatio * MIX_MAX_VOLUME);
+			}
 			default:
 				break;
 			}
