@@ -1081,10 +1081,10 @@ void WorldSystem::on_key(int key, int, int action, int mod)
         return;
     }
     
-    // Snail action if alive
+    // Snail action if alive and has turns remaining.
 	if (!ECS::registry<DeathTimer>.has(player_snail) && action == GLFW_PRESS)
 	{
-		if (!left_mouse_pressed && ECS::registry<Turn>.components[0].type == PLAYER_WAITING)
+		if (!left_mouse_pressed && ECS::registry<Turn>.components[0].type == PLAYER_WAITING && (snail_move > 0))
 		{
 			switch (key)
 			{
