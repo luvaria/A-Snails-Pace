@@ -1216,7 +1216,7 @@ void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
             left_mouse_pressed = true;
             // give double the time for first preview (for slow clickers)
             can_show_projectile_preview_time = std::chrono::high_resolution_clock::now()
-                                               + (2*std::chrono::milliseconds{ PROJECTILE_PREVIEW_DELAY_MS });
+                                               + (4*std::chrono::milliseconds{ PROJECTILE_PREVIEW_DELAY_MS });
         }
     }
 
