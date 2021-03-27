@@ -217,7 +217,7 @@ void StartMenu::loadEntities()
 	ECS::registry<StartMenuTag>.emplace(volumeSliderEntity);
 
 	// slider feedback
-	float curVol = max(Mix_Volume(-1, -1), Mix_VolumeMusic(-1)) / MIX_MAX_VOLUME;
+	float curVol = static_cast<float>(max(Mix_Volume(-1, -1), Mix_VolumeMusic(-1))) / MIX_MAX_VOLUME;
 	ECS::Entity volumeIndicatorEntity = ECS::Entity();
 
 	std::string indicatorKey = "volume_indicator";
