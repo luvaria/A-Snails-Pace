@@ -1,0 +1,40 @@
+{
+  "name": "SuperSpider Test",
+  "description": "Testing SuperSpider",
+  "scale": 100,
+  "direction": "right",
+  "turnsPerCamera": 20,
+  "AI-PathFinding-Algorithm": "Astar",
+  "endCoordinates": {
+    "x": 12,
+    "y": 6
+  },
+  "tiles": [
+    "             ",
+    "             ",
+    "  XXXXXXXXX  ",
+    "     V       ",
+    "     V       ",
+    "     V       ",
+    "X    V       ",
+    "XXXXXXXXXXXXX"
+  ],
+  "characters": {
+    "snail": [
+      {
+        "x": 4,
+        "y": 6
+      }
+    ],
+    "spider": [
+      {
+        "x": 3,
+        "y": 6
+      },
+      {
+        "x": 7,
+        "y": 6
+      }
+    ]
+  }
+}

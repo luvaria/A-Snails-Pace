@@ -422,7 +422,8 @@ void WorldSystem::onNotify(Event event) {
         {
             // Check collisions that result in death
             if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<WaterTile>.has(event.other_entity)
-                || ECS::registry<Slug>.has(event.other_entity) || ECS::registry<SlugProjectile>.has(event.other_entity))
+                || ECS::registry<Slug>.has(event.other_entity) || ECS::registry<SlugProjectile>.has(event.other_entity)
+                || ECS::registry<SuperSpider>.has(event.other_entity))
             {
                 // Initiate death unless already dying
                 if (!ECS::registry<DeathTimer>.has(event.entity))
@@ -450,8 +451,8 @@ void WorldSystem::onNotify(Event event) {
             if (!ECS::registry<SnailProjectile::Preview>.has(event.entity))
             {
                 // Checking Projectile - Spider collisions
-                if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<Slug>.has(event.other_entity) 
-                    || ECS::registry<SlugProjectile>.has(event.other_entity))
+                if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<Slug>.has(event.other_entity) || 
+                    ECS::registry<SuperSpider>.has(event.other_entity)|| ECS::registry<SlugProjectile>.has(event.other_entity))
                 {
                     // tile no longer occupied by spider
                     float scale = TileSystem::getScale();
@@ -471,6 +472,27 @@ void WorldSystem::onNotify(Event event) {
                 }
             }
         }
+        //spider to spider collision creates super spider
+        if (ECS::registry<Spider>.has(event.entity)) {
+            if (ECS::registry<Spider>.has(event.other_entity)) {
+                float scale = TileSystem::getScale();
+                auto& motion1 = ECS::registry<Motion>.get(event.entity);
+                auto& motion2 = ECS::registry<Motion>.get(event.other_entity);
+                int xCoord = static_cast<int>(motion1.position.x / scale);
+                int yCoord = static_cast<int>(motion1.position.y / scale);
+                Tile& t = TileSystem::getTiles()[yCoord][xCoord];
+                // maybe I need 2 calls to remove both of them?
+                t.removeOccupyingEntity();
+                t.removeOccupyingEntity();
+                ECS::Entity superSpider;
+                vec2 pos = { t.x, t.y };
+                t.addOccupyingEntity();
+                SuperSpider::createSuperSpider(pos, superSpider);
+                ECS::ContainerInterface::remove_all_components_of(event.entity);
+                ECS::ContainerInterface::remove_all_components_of(event.other_entity);
+            }
+        }
+
     }
     else if (event.type == Event::LOAD_LEVEL)
     {

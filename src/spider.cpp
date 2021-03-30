@@ -147,7 +147,7 @@ ECS::Entity SuperSpider::createSuperSpider(vec2 position, ECS::Entity entity)
 
 	ECS::registry<AI>.emplace(entity);
 	ECS::registry<Enemy>.emplace(entity);
-	ECS::registry<Spider>.emplace(entity);
+	//ECS::registry<Spider>.emplace(entity);
 	ECS::registry<SuperSpider>.emplace(entity);
 	ECS::registry<DirectionInput>.emplace(entity);
 
