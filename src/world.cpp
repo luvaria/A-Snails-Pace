@@ -119,13 +119,13 @@ void WorldSystem::init_audio()
     if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) == -1)
         throw std::runtime_error("Failed to open audio device");
 
-    background_music = Mix_LoadMUS(audio_path("music.wav").c_str());
+    background_music = Mix_LoadMUS(audio_path("Arcade - Battle Network.mid").c_str());
     salmon_dead_sound = Mix_LoadWAV(audio_path("salmon_dead.wav").c_str());
     salmon_eat_sound = Mix_LoadWAV(audio_path("salmon_eat.wav").c_str());
 
     if (background_music == nullptr || salmon_dead_sound == nullptr || salmon_eat_sound == nullptr)
         throw std::runtime_error("Failed to load sounds make sure the data directory is present: " +
-            audio_path("music.wav") +
+            audio_path("Arcade - Battle Network.mid") +
             audio_path("salmon_dead.wav") +
             audio_path("salmon_eat.wav"));
 
