@@ -59,7 +59,7 @@ void LevelSelect::step(vec2 /*window_size_in_game_units*/)
 void LevelSelect::loadEntities()
 {
 	// a big bad
-	ECS::Entity spider = Spider::createSpider({ 1100, 400 });
+	ECS::Entity spider = Spider::createSpider({ 1100, 550 });
 	Motion& motion = ECS::registry<Motion>.get(spider);
 	motion.scale *= 10;
 	ECS::registry<ShadedMeshRef>.get(spider).renderBucket = RenderBucket::BACKGROUND_2; // render spider behind levels

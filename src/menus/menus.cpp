@@ -34,6 +34,27 @@ void MenuSystem::setup()
 		ECS::ContainerInterface::remove_all_components_of(ECS::registry<Text>.entities.back());
 	Camera::reset();
 	notify(Event(Event::CLOSE_BG));
+
+	// background, shader over dummy geometry
+	ECS::Entity backgroundEntity = ECS::Entity();
+
+	std::string backgroundKey = "menu_background";
+	ShadedMesh& backgroundResource = cache_resource(backgroundKey);
+	if (backgroundResource.effect.program.resource == 0)
+	{
+		backgroundResource = ShadedMesh();
+		RenderSystem::createSprite(backgroundResource, textures_path("background.png"), "menu_background");
+	}
+
+	ECS::registry<ShadedMeshRef>.emplace(backgroundEntity, backgroundResource, RenderBucket::BACKGROUND_3);
+
+	Motion& backgroundMotion = ECS::registry<Motion>.emplace(backgroundEntity);
+	backgroundMotion.angle = 0.f;
+	backgroundMotion.velocity = { 0, 0 };
+	backgroundMotion.position = { 600, 400 };
+	backgroundMotion.scale = { 1200, 800 };
+
+	ECS::registry<MenuTag>.emplace(backgroundEntity);
 }
 
 bool MenuSystem::hasOpenMenu()
@@ -150,6 +171,10 @@ void MenuSystem::closeMenu()
 	{
 		// all menus exited, game should be running
 		//	(notify event depends on start or pause menu exit or level selected)
+		for (ECS::Entity entity : ECS::registry<MenuTag>.entities)
+		{
+			ECS::ContainerInterface::remove_all_components_of(entity);
+		}
 	}
 	else
 	{	
