@@ -14,7 +14,9 @@ char constexpr LoadSaveSystem::COLLECTIBLE_KEY[];
 char constexpr LoadSaveSystem::EQUIPPED_KEY[];
 char constexpr LoadSaveSystem::POINTS_KEY[];
 char constexpr LoadSaveSystem::PLAYER_DIR[];
+char constexpr LoadSaveSystem::LEVEL_DIR[];
 char constexpr LoadSaveSystem::PLAYER_FILE[];
+char constexpr LoadSaveSystem::LEVEL_FILE[];
 
 // for convenience
 using json = nlohmann::json;
@@ -61,4 +63,13 @@ void LoadSaveSystem::writePlayerFile()
     save[POINTS_KEY] = inventory.points;
 
     o << save << std::endl;
+}
+
+bool LoadSaveSystem::levelFileExists()
+{
+    std::string const filename = std::string(LEVEL_DIR) + std::string(LEVEL_FILE);
+    std::ifstream i(save_path(filename));
+
+    // uwu
+    return !(!i);
 }

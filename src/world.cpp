@@ -349,9 +349,6 @@ void WorldSystem::restart(int newLevel)
         }
     }
 
-    // Debugging for memory/component leaks
-    ECS::ContainerInterface::list_all_components();
-
     // Load backgrounds
     notify(Event(Event::LOAD_BG));
 
