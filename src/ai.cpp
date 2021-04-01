@@ -36,6 +36,14 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             auto entity = aiRegistry.entities[i];
             auto& tree = aiRegistry.components[i].tree;
             tree->process(entity);
+            
+            
+            if (ECS::registry<SuperSpider>.has(entity) == true && fire == true) {
+                fire = false;
+                superSpiderShoot(entity);
+            }
+            
+            
             aiMovedThisStep = true;
         }
 
@@ -43,7 +51,9 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             aiMoved = true;
         }
     }
-    
+    if (ECS::registry<Turn>.components[0].type == PLAYER_WAITING) {
+        fire = true;
+    }
 	(void)elapsed_ms; // placeholder to silence unused warning until implemented
 	(void)window_size_in_game_units; // placeholder to silence unused warning until implemented
 }
@@ -398,51 +408,23 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
 
 }
 
-void AISystem::superSpiderMove(ECS::Entity& entity, std::vector<vec2> current) {
-    float scale = TileSystem::getScale();
-    auto& motion = ECS::registry<Motion>.get(entity);
-    vec2 aiPos = motion.position;
-    int xAiPos = (aiPos.x - (0.5 * scale)) / scale;
-    int yAiPos = (aiPos.y - (0.5 * scale)) / scale;
-    for (int i = 0; i < 2; i++) {
-        int aiMove = current.size() == 1 ? 1 : 0;
-        vec2 currPos = current.size() > 1 ? current[1] : current[0];
-        if (aiMove == 0) {
-            if (currPos.x - yAiPos > 0) {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_SOUTH;
-                WorldSystem::goDown(entity, aiMove);
-            }
-            else if (currPos.x - yAiPos < 0) {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_NORTH;
-                WorldSystem::goUp(entity, aiMove);
-            }
-            else if (currPos.y - xAiPos > 0) {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_EAST;
-                WorldSystem::goRight(entity, aiMove);
-            }
-            else {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_WEST;
-                WorldSystem::goLeft(entity, aiMove);
-            }
-        }
-        if (aiMove == 0) {
-            if (motion.lastDirection == DIRECTION_NORTH) {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_NORTH;
-                WorldSystem::goUp(entity, aiMove);
-            }
-            else if (motion.lastDirection == DIRECTION_SOUTH) {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_SOUTH;
-                WorldSystem::goDown(entity, aiMove);
-            }
-            else if (motion.lastDirection == DIRECTION_EAST) {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_EAST;
-                WorldSystem::goRight(entity, aiMove);
-            }
-            else {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_WEST;
-                WorldSystem::goLeft(entity, aiMove);
-            }
-        }
+void AISystem::superSpiderShoot(ECS::Entity& e) {
+    vec2 spiderPosition = ECS::registry<Motion>.get(e).position;
+
+    auto& snailEntity = ECS::registry<Snail>.entities[0];
+
+    // now you want to go in the direction of the (mouse_pos - snail_pos), but make it a unit vector
+    vec2 snailPosition = ECS::registry<Motion>.get(snailEntity).position;
+
+    vec2 projectilePosition = spiderPosition + glm::normalize(snailPosition - spiderPosition) * TileSystem::getScale() / 2.f;
+    vec2 projectileVelocity = (snailPosition - projectilePosition);
+    float length = glm::length(projectileVelocity);
+    projectileVelocity.x = (projectileVelocity.x / length) * TileSystem::getScale();
+    projectileVelocity.y = (projectileVelocity.y / length) * TileSystem::getScale();
+    if (projectileVelocity != vec2(0, 0))
+    {
+        // implement a version of this for the slug
+        SlugProjectile::createProjectile(projectilePosition, projectileVelocity);
     }
 }
 
@@ -493,10 +475,13 @@ BTState LookForSnail::process(ECS::Entity e) {
     if (ECS::registry<Turn>.components[0].type == ENEMY && !AISystem::aiMoved) {
         int aiMove = current.size() == 1 ? 1 : 0;
         vec2 currPos = current.size() > 1 ? current[1] : current[0];
+        /*
         if (ECS::registry<SuperSpider>.has(e) == true) {
+            std::cout << "super spider" << std::endl;
             AISystem::superSpiderMove(entity, current);
         }
-        else {
+        */
+        //else {
             if (aiMove == 0) {
                 if (currPos.x - yAiPos > 0) {
                     ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_SOUTH;
@@ -533,7 +518,7 @@ BTState LookForSnail::process(ECS::Entity e) {
                     WorldSystem::goLeft(entity, aiMove);
                 }
             }
-        }
+        //}
         //std::cout << "returning Failure" << std::endl;
         return BTState::Failure;
     }
@@ -642,5 +627,6 @@ BTState GetToSnail::process(ECS::Entity e) {
 }
 
 bool AISystem::aiMoved = false;
+bool AISystem::fire = true;
 std::string AISystem::aiPathFindingAlgorithm = "BFS";
 //std::vector<vec2> birdPath = AISystem::getBirdPath();
