@@ -47,7 +47,8 @@ public:
 
 	// return true if a given point is off screen, false otherwise
 	static bool offScreen(vec2 const& pos, vec2 window_size_in_game_units, vec2 cameraOffset);
-
+    static bool offScreenExceptNegativeYWithBuffer(vec2 const& pos, vec2 window_size_in_game_units, vec2 cameraOffset, int buffer);
+    
 	// movement functions
     static void goRight(ECS::Entity &entity, int &moves);
     static void goLeft(ECS::Entity &entity, int &moves);

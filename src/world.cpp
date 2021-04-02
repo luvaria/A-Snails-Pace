@@ -248,8 +248,8 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
         } else if (ECS::registry<Particle>.has(entity) || ECS::registry<Spider>.has(entity)){
             auto& motion = ECS::registry<Motion>.get(entity);
             bool isParticle = ECS::registry<Particle>.has(entity);
-            bool isWeatherParticle = ECS::registry<WeatherParticle>.has(entity);
-            if(isParticle) {
+            bool isWeatherParticle = ECS::registry<WeatherParticle>.has(entity) || ECS::registry<WeatherParentParticle>.has(entity);
+            if(isParticle || isWeatherParticle) {
                 motion.scale *= (isWeatherParticle) ? (1-(step_seconds/8)) : (1+(step_seconds/3));
                 motion.angle *= (isWeatherParticle) ? (1+(step_seconds)) : 1;
             }
@@ -257,9 +257,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             counter.counter_ms -= elapsed_ms;
             if (counter.counter_ms < 0)
             {
-                if(isWeatherParticle && offScreen(motion.position, window_size_in_game_units, cameraOffset)) {
-                    ECS::ContainerInterface::remove_all_components_of(entity);
-                } else {
+                if(!isWeatherParticle) {
                     ECS::ContainerInterface::remove_all_components_of(entity);
                 }
             }
@@ -510,6 +508,14 @@ bool WorldSystem::offScreen(vec2 const& pos, vec2 window_size_in_game_units, vec
         || offsetPos.y < 0.f || offsetPos.y > window_size_in_game_units.y);
 }
 
+bool WorldSystem::offScreenExceptNegativeYWithBuffer(vec2 const& pos, vec2 window_size_in_game_units, vec2 cameraOffset, int buffer)
+{
+    vec2 offsetPos = { pos.x - cameraOffset.x, pos.y - cameraOffset.y };
+    if(offsetPos.x > window_size_in_game_units.x) {
+        // haha
+    }
+    return (offsetPos.x + buffer < 0.f || offsetPos.x - buffer > window_size_in_game_units.x || offsetPos.y > window_size_in_game_units.y);
+}
 
 void WorldSystem::doX(Motion& motion, Tile& currTile, Tile& nextTile, int defaultDirection) {
     if (currTile.x == nextTile.x) {

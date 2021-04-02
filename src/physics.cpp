@@ -570,49 +570,98 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 {
     (void)window_size_in_game_units;
     float step_seconds = 1.0f * (elapsed_ms / 1000.f);
+    WeatherParentParticle::nextSpawn -= elapsed_ms;
     WeatherParticle::nextSpawn -= elapsed_ms;
-    ECS::Entity newSnowflakeParticle;
-    if (ECS::registry<WeatherParticle>.components.size() <= WeatherParticle::count && WeatherParticle::nextSpawn < 0.f)
+    
+    if (ECS::registry<WeatherParentParticle>.components.size() < WeatherParentParticle::count && WeatherParentParticle::nextSpawn < 0)
     {
+        ECS::Entity newSnowflakeParticle;
         Particle::createWeatherParticle("snowflake", newSnowflakeParticle, window_size_in_game_units);
-        WeatherParticle::nextSpawn = Particle::timer * 2 * uniform_dist(rng);
+        WeatherParentParticle::nextSpawn = WeatherParentParticle::timer/3;
+        WeatherParentParticle::nextSpawn = WeatherParentParticle::timer * uniform_dist(rng);
     }
+    
+    auto& camera = ECS::registry<Camera>.entities[0];
+    vec2 cameraOffset = ECS::registry<Motion>.get(camera).position;
+
+    for (auto entity : ECS::registry<WeatherParentParticle>.entities) {
+        auto& motion = ECS::registry<Motion>.get(entity);
+        motion.position.x = (cameraOffset.x + window_size_in_game_units.x/2);
+        auto& element = ECS::registry<WeatherParentParticle>.get(entity);
+        int particlesSize = element.particles.size();
+        if(particlesSize < WeatherParticle::count && WeatherParticle::nextSpawn < 0)
+        {
+            ECS::Entity newSnowflakeParticle;
+            Particle::createWeatherChildParticle("snowflake", newSnowflakeParticle, window_size_in_game_units);
+            element.particles.push_back(newSnowflakeParticle);
+            WeatherParticle::nextSpawn = Particle::timer * uniform_dist(rng);
+        }
+    }
+    
+ 
+    
+    int i = 0;
     for (auto entity : ECS::registry<WeatherParticle>.entities)
     {
         auto& motion = ECS::registry<Motion>.get(entity);
-        DeathTimer dt = ECS::registry<DeathTimer>.get(entity);
-        int phaseTime = WeatherParticle::timer/3;
-        RejectedStages& rs = ECS::registry<RejectedStages>.get(entity);
-        if(!rs.rejectedState3 && (dt.counter_ms <= WeatherParticle::timer-(2*phaseTime)) ) {
-            if(randomBool()){
-                Particle::setP3Motion(motion);
-            } else {
-                rs.rejectedState3 = true;
+        DeathTimer& dt = ECS::registry<DeathTimer>.get(entity);
+        if(!ECS::registry<WeatherParentParticle>.has(entity)) {
+            
+            int phaseTime = WeatherParentParticle::timer/5;
+            
+            RejectedStages& rs = ECS::registry<RejectedStages>.get(entity);
+            if(!rs.rejectedState3 && (dt.counter_ms <= WeatherParentParticle::timer-(2*phaseTime)) ) {
+                if(randomBool()){
+                    Particle::setP3Motion(motion);
+                } else {
+                    rs.rejectedState3 = true;
+                }
+            } else if(!rs.rejectedState2 && (dt.counter_ms <= WeatherParentParticle::timer-(phaseTime))) {
+                if(randomBool()){
+                    Particle::setP2Motion(motion);
+                } else {
+                    rs.rejectedState2 = true;
+                }
             }
-        } else if(!rs.rejectedState2 && (dt.counter_ms <= WeatherParticle::timer-(phaseTime))) {
-            if(randomBool()){
-                Particle::setP2Motion(motion);
-            } else {
-                rs.rejectedState2 = true;
+            
+            if(WorldSystem::offScreenExceptNegativeYWithBuffer(motion.position, window_size_in_game_units, cameraOffset, 250)) {
+                float xValue = 0;
+                int minimum_number = 0;
+                int max_number = 0;
+                float yValue = 0;
+                minimum_number = cameraOffset.x - 10;
+                max_number = cameraOffset.x + window_size_in_game_units.x + 200;
+                xValue = rand() % (max_number + 1 - minimum_number) + minimum_number;
+                minimum_number = cameraOffset.y - 100;
+                max_number = cameraOffset.y - 1;
+                yValue = rand() % (max_number + 1 - minimum_number) + minimum_number;
+                Particle::setP1Motion(motion);
+                motion.position = { xValue , yValue};
+                dt.counter_ms = WeatherParentParticle::timer;
+                RejectedStages& rs = ECS::registry<RejectedStages>.get(entity);
+                rs.rejectedState2 = false;
+                rs.rejectedState3 = false;
             }
+            
+            float gravity_acceleration = 0.0004;
+            motion.velocity += gravity_acceleration * step_seconds;
+            motion.position += motion.velocity * step_seconds;
+            i++;
         }
-        float gravity_acceleration = 0.004;
-        motion.velocity += gravity_acceleration * step_seconds;
-        motion.position += motion.velocity * step_seconds;
     }
-
+    
     //now we update the state of the entities with regards to which entites are rounding the corner
-	for (auto entity : ECS::registry<Destination>.entities) 
-	{
-		auto& motion = ECS::registry<Motion>.get(entity);
-		if (!ECS::registry<CornerMotion>.has(entity) && areRoundingCorner(motion)) 
-		{
-			//then initialize rounding the corner
-			auto& dest = ECS::registry<Destination>.get(entity);
-			SetupCornerMovement(entity, dest);
-			SetupNextCornerSegment(entity, motion);
-		}
-	}
+    for (auto entity : ECS::registry<Destination>.entities)
+    {
+        auto& motion = ECS::registry<Motion>.get(entity);
+        if (!ECS::registry<CornerMotion>.has(entity) && areRoundingCorner(motion))
+        {
+            //then initialize rounding the corner
+            auto& dest = ECS::registry<Destination>.get(entity);
+            SetupCornerMovement(entity, dest);
+            SetupNextCornerSegment(entity, motion);
+        }
+    }
     // Move entities based on how much time has passed, this is to (partially) avoid
 	// having entities move at different speed based on the machine.
 
