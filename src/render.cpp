@@ -60,15 +60,14 @@ void RenderSystem::drawTexturedMeshForParticles(ECS::Entity entity, vec2 window_
     
     int index = 0;
     auto element = ECS::registry<WeatherParentParticle>.get(entity);
-    glm::vec2 translations[element.particles.size()];
-
+    std::vector<glm::vec2> translations;
     for (int y = 0; y < element.particles.size(); y++)
     {
         Motion& m = ECS::registry<Motion>.get(element.particles[y]);
         glm::vec2 translation;
         translation.x = (motion.position.x - m.position.x)/15.f;
         translation.y = abs(motion.position.y - m.position.y)/15.f;
-        translations[index++] = translation;
+        translations.push_back(translation);
     }
 
     unsigned int instanceVBO;
