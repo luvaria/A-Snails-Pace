@@ -203,6 +203,7 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
     }
 
 	TileSystem::vec2Map& tileMovesMap = TileSystem::getAllTileMovesMap();
+    tileMovesMap.clear();
 	int y = 0;
 	for (auto& rows : tiles) // Iterating over rows
 	{
