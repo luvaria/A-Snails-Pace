@@ -92,10 +92,10 @@ WorldSystem::~WorldSystem() {
     // Destroy music components
     if (background_music != nullptr)
         Mix_FreeMusic(background_music);
-    if (salmon_dead_sound != nullptr)
-        Mix_FreeChunk(salmon_dead_sound);
-    if (salmon_eat_sound != nullptr)
-        Mix_FreeChunk(salmon_eat_sound);
+    if (level_complete_sound != nullptr)
+        Mix_FreeChunk(level_complete_sound);
+    if (snail_dead_sound != nullptr)
+        Mix_FreeChunk(snail_dead_sound);
     Mix_CloseAudio();
 
     SDL_Quit();
@@ -120,14 +120,14 @@ void WorldSystem::init_audio()
         throw std::runtime_error("Failed to open audio device");
 
     background_music = Mix_LoadMUS(audio_path("Arcade - Battle Network.mid").c_str());
-    salmon_dead_sound = Mix_LoadWAV(audio_path("salmon_dead.wav").c_str());
-    salmon_eat_sound = Mix_LoadWAV(audio_path("salmon_eat.wav").c_str());
+    level_complete_sound = Mix_LoadWAV(audio_path("Jingle - Victory.wav").c_str());
+    snail_dead_sound = Mix_LoadWAV(audio_path("Jingle - Lose.wav").c_str());
 
-    if (background_music == nullptr || salmon_dead_sound == nullptr || salmon_eat_sound == nullptr)
+    if (background_music == nullptr || level_complete_sound == nullptr || snail_dead_sound == nullptr)
         throw std::runtime_error("Failed to load sounds make sure the data directory is present: " +
             audio_path("Arcade - Battle Network.mid") +
-            audio_path("salmon_dead.wav") +
-            audio_path("salmon_eat.wav"));
+            audio_path("Jingle - Victory.wav") +
+            audio_path("Jingle - Lose.wav"));
 
 }
 
@@ -159,7 +159,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
         && offScreen(snailMotion.position, window_size_in_game_units, cameraOffset))
     {
         ECS::registry<DeathTimer>.emplace(player_snail);
-        Mix_PlayChannel(-1, salmon_dead_sound, 0);
+        Mix_PlayChannel(-1, snail_dead_sound, 0);
     }
 
     float scale = TileSystem::getScale();
@@ -171,6 +171,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             && xCoord == endCoordinates.x && yCoord == endCoordinates.y) {
         running = false;
         ControlsOverlay::removeControlsOverlay();
+        Mix_PlayChannel(-1, level_complete_sound, 0);
         notify(Event(Event::LEVEL_COMPLETE));
     }
 
@@ -429,7 +430,7 @@ void WorldSystem::onNotify(Event event) {
                 {
                     // Scream, reset timer, and make the snail sink
                     ECS::registry<DeathTimer>.emplace(event.entity);
-                    Mix_PlayChannel(-1, salmon_dead_sound, 0);
+                    Mix_PlayChannel(-1, snail_dead_sound, 0);
                 }
             }
             else if (ECS::registry<Collectible>.has(event.other_entity))
