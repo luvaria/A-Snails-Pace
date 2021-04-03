@@ -125,6 +125,12 @@ void MenuSystem::onNotify(Event event)
 		openMenu(Event::START_MENU);
 		break;
 	case Event::LOAD_SAVE:
+        while (!menus.empty())
+        {
+            Menu* menu = menus.top();
+            menus.pop();
+            toDelete.push(menu);
+        }
         // notify world to load level by passing event on
         notify(event);
 	    break;

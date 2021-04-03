@@ -4,6 +4,7 @@
 #include "tiny_ecs.hpp"
 #include "spider.hpp"
 #include "slug.hpp"
+#include "tiles/tiles.hpp"
 
 // stlib
 #include <fstream>
@@ -103,7 +104,7 @@ json LoadSaveSystem::loadLevelFileToJson()
 
 void LoadSaveSystem::writeLevelFile(json& toSave)
 {
-    // TODO
+    // TODO finish this
     std::string const filename = std::string(LEVEL_DIR) + std::string(LEVEL_FILE);
     std::ofstream o(save_path(filename));
 
@@ -134,8 +135,8 @@ void LoadSaveSystem::writeLevelFile(json& toSave)
 json LoadSaveSystem::makeBaseCharacterJson(Motion const& motion)
 {
     json character;
-    character[CHARACTER_X_POS_KEY] = motion.position.x;
-    character[CHARACTER_Y_POS_KEY] = motion.position.y;
+    character[CHARACTER_X_POS_KEY] = static_cast<int>(motion.position.x / TileSystem::getScale());
+    character[CHARACTER_Y_POS_KEY] = static_cast<int>(motion.position.y / TileSystem::getScale());
     return character;
 }
 

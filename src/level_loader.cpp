@@ -10,6 +10,7 @@
 #include "tiles/water.hpp"
 #include "tiles/wall.hpp"
 #include "menus/level_select.hpp"
+#include "load_save.hpp"
 
 // stlib
 #include <fstream>
@@ -140,9 +141,21 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset, bool from
 		}
 		tiles.push_back(tileRow);
 	}
-    
-	// load characters
-	for (auto it = level["characters"].begin(); it != level["characters"].end(); ++it)
+
+    // load characters
+	json characters;
+	if (fromSave)
+    {
+        std::string const filename = std::string(LoadSaveSystem::LEVEL_DIR) + std::string(LoadSaveSystem::LEVEL_FILE);
+        std::ifstream iSaved(save_path(filename));
+        json saved = json::parse(iSaved);
+        characters = saved["characters"];
+    }
+	else
+    {
+	    characters = level["characters"];
+    }
+	for (auto it = characters.begin(); it != characters.end(); ++it)
 	{
 		auto entity = ECS::Entity();
 		if (preview)

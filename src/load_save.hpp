@@ -49,5 +49,7 @@ public:
     static int getSavedLevelNum(); // returns -1 if file doesn't exist
     static json loadLevelFileToJson();
     static void writeLevelFile(json& toSave); // passing partially filled json with world data
+
+private:
     static json makeBaseCharacterJson(Motion const& motion);
 };

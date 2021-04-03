@@ -354,7 +354,7 @@ void WorldSystem::restart(int newLevel, bool fromSave)
 
 	// Load level from data/levels
     level = newLevel;
-    LevelLoader::loadLevel(newLevel);
+    LevelLoader::loadLevel(newLevel, false, {0,0}, fromSave); // the trouble with multiple defaults.. oh well its m4
     // register NPCs in observer pattern
     notify(Event(Event::LEVEL_LOADED));
     // can't access player_snail in level loader
@@ -366,7 +366,7 @@ void WorldSystem::restart(int newLevel, bool fromSave)
         Collectible::equip(player_snail, ECS::registry<Inventory>.components[0].equipped);
     }
     
-    // Reset Camera
+    // Reset Camera TODO deal with fromSave camera
     Camera::reset();
     turns_per_camera_move = TileSystem::getTurnsForCameraUpdate();
 
@@ -386,9 +386,10 @@ void WorldSystem::restart(int newLevel, bool fromSave)
     }
     else
     {
-        snail_move = 1;
         turn_number = 0;
     }
+
+    snail_move = 1;
 
     setGLFWCallbacks();
 }
@@ -479,6 +480,10 @@ void WorldSystem::onNotify(Event event) {
     }
     else if (event.type == Event::LOAD_SAVE)
     {
+        running = true;
+        DebugSystem::in_debug_mode = false;
+        ControlsOverlay::toggleControlsOverlayOff();
+
         int saved_level = LoadSaveSystem::getSavedLevelNum();
         // save file should exist and level should exist
         assert(saved_level != -1 && saved_level < levels.size());
