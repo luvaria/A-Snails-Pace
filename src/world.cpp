@@ -15,6 +15,7 @@
 #include "render_components.hpp"
 #include "tiles/tiles.hpp"
 #include "level_loader.hpp"
+#include "load_save.hpp"
 #include "controls_overlay.hpp"
 #include "parallax_background.hpp"
 #include "dialogue.hpp"
@@ -32,8 +33,6 @@
 // Game configuration
 const size_t PROJECTILE_PREVIEW_DELAY_MS = 100; // frequency of projectile previews
 
-int level = 0;
-
 // Create the fish world
 // Note, this has a lot of OpenGL specific things, could be moved to the renderer; but it also defines the callbacks to the mouse and keyboard. That is why it is called here.
 WorldSystem::WorldSystem(ivec2 window_size_px) :
@@ -43,6 +42,7 @@ WorldSystem::WorldSystem(ivec2 window_size_px) :
     projectiles_fired(0),
     left_mouse_pressed(false),
     release_projectile(false),
+    level(0),
     snail_move(1), // this might be something we want to load in
     turns_per_camera_move(1),
     projectile_turn_over_time(0.f)
@@ -325,7 +325,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 }
 
 // Reset the world state to its initial state
-void WorldSystem::restart(int newLevel)
+void WorldSystem::restart(int newLevel, bool fromSave)
 {
     // Debugging for memory/component leaks
     ECS::ContainerInterface::list_all_components();
@@ -377,10 +377,18 @@ void WorldSystem::restart(int newLevel)
     if (level == 0 && deaths == 0)
         ControlsOverlay::addControlsPrompt();
 
-	snail_move = 1;
-	turn_number = 0;
-
     AISystem::aiMoved = false;
+
+    if (fromSave)
+    {
+        json save = LoadSaveSystem::loadLevelFileToJson();
+        setFromJson(save);
+    }
+    else
+    {
+        snail_move = 1;
+        turn_number = 0;
+    }
 
     setGLFWCallbacks();
 }
@@ -469,6 +477,14 @@ void WorldSystem::onNotify(Event event) {
             }
         }
     }
+    else if (event.type == Event::LOAD_SAVE)
+    {
+        int saved_level = LoadSaveSystem::getSavedLevelNum();
+        // save file should exist and level should exist
+        assert(saved_level != -1 && saved_level < levels.size());
+        level = saved_level;
+        restart(level, true);
+    }
     else if (event.type == Event::LOAD_LEVEL)
     {
         running = true;
@@ -489,6 +505,24 @@ void WorldSystem::onNotify(Event event) {
             WaterTile::onNotify(Event::SPLASH, event.entity);
         }
     }
+}
+
+void WorldSystem::setFromJson(nlohmann::json const& saved)
+{
+    level = saved[WorldKeys::LEVEL_NUM_KEY];
+    turn_number = saved[WorldKeys::TURNS_KEY];
+    deaths = saved[WorldKeys::NUM_DEATHS_KEY];
+    enemies_killed = saved[WorldKeys::NUM_ENEMIES_KILLS_KEY];
+    projectiles_fired = saved[WorldKeys::NUM_PROJECTILES_FIRED_KEY];
+}
+
+void WorldSystem::writeToJson(nlohmann::json& toSave)
+{
+    toSave[WorldKeys::LEVEL_NUM_KEY] = level;
+    toSave[WorldKeys::TURNS_KEY] = turn_number;
+    toSave[WorldKeys::NUM_DEATHS_KEY] = deaths;
+    toSave[WorldKeys::NUM_ENEMIES_KILLS_KEY] = enemies_killed;
+    toSave[WorldKeys::NUM_PROJECTILES_FIRED_KEY]= projectiles_fired;
 }
 
 // Should the game be over ?

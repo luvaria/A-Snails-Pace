@@ -23,7 +23,7 @@ using json = nlohmann::json;
 float LevelLoader::previewScale = 20.f;
 vec2 LevelLoader::previewDimensions = { 12, 8 };
 
-void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
+void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset, bool fromSave)
 {
 	std::ifstream i(levels_path(levels[levelIndex]));
 	json level = json::parse(i);

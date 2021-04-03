@@ -12,6 +12,9 @@
 #include <random>
 #include <chrono>
 
+// json
+#include <../ext/nlohmann_json/single_include/nlohmann/json.hpp>
+
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
 #include <SDL_mixer.h>
@@ -31,7 +34,7 @@ public:
 	~WorldSystem();
 
 	// restart level
-	void restart(int level);
+	void restart(int level, bool fromSave = false);
 
 	// Steps the game ahead by ms milliseconds
 	void step(float elapsed_ms, vec2 window_size_in_game_units);
@@ -42,6 +45,9 @@ public:
 	void shootProjectile(vec2 mouse_pos, bool preview = false);
 
 	void onNotify(Event event);
+
+	void setFromJson(nlohmann::json const& saved);
+	void writeToJson(nlohmann::json& toSave);
 
 	static int snailMoves;
 
@@ -101,11 +107,10 @@ private:
     // if someone holds the left mouse button for a while we shouldn't release the projectile on release of the button
     bool release_projectile;
 
-	// NEW: turn_number is not used for now, but will probably be used to keep track
-	// of what day it is on the calendar. snail_move is how many tiles the snail can
-	// move during the current turn.
+    int level;
 	int turn_number;
     // snail_move is the number of moves the snail has each turn
+    // right now we only allow 1
 	int snail_move;
 	unsigned turns_per_camera_move;
     float projectile_turn_over_time;

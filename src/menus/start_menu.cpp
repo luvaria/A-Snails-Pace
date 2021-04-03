@@ -256,6 +256,11 @@ void StartMenu::selectedKeyEvent()
 				// exit menu and start game
 				exit();
 				break;
+			case ButtonEventType::LOAD_SAVE:
+                removeEntities();
+                resetButtons();
+                notify(Event(Event::LOAD_SAVE));
+			    break;
 			case ButtonEventType::SELECT_LEVEL:
 				// don't overlay level select on top (text render order issues; always on top)
 				removeEntities();

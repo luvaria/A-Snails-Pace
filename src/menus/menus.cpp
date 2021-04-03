@@ -124,6 +124,10 @@ void MenuSystem::onNotify(Event event)
 		setup();
 		openMenu(Event::START_MENU);
 		break;
+	case Event::LOAD_SAVE:
+        // notify world to load level by passing event on
+        notify(event);
+	    break;
 	case Event::NEXT_LEVEL:
 	case Event::LOAD_LEVEL:
 		// move all current menus to delete queue

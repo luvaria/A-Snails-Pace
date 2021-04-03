@@ -90,6 +90,10 @@ int main()
 		renderer.draw(window_size_in_game_units, elapsed_ms);
 	}
 
+	// TODO perhaps don't have this autosave (too many edge cases)
+	json toSave;
+	world.writeToJson(toSave);
+	LoadSaveSystem::writeLevelFile(toSave);
 	LoadSaveSystem::writePlayerFile();
 
 	return EXIT_SUCCESS;

@@ -11,7 +11,7 @@ public:
 	static float previewScale;
 	static vec2 previewDimensions;
 
-	static void loadLevel(int levelIndex, bool preview = false, vec2 offset = { 0, 0 });
+	static void loadLevel(int levelIndex, bool preview = false, vec2 offset = { 0, 0 }, bool fromSave = false);
 	static void previewLevel(int levelIndex, vec2 offset);
 private:
 	// to allow switching on strings
