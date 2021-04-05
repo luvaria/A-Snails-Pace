@@ -314,13 +314,22 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             else if (ECS::registry<Destination>.size() == 0)
             {
                 turnType = PLAYER_WAITING;
+                json toSave;
+                writeToJson(toSave);
+                LoadSaveSystem::writeLevelFile(toSave);
             }
         }
     }
 	else if (turnType == CAMERA)
     {
 	    if (!ECS::registry<Destination>.has(cameraEntity))
+        {
+            // duplicated code :(
 	        turnType = PLAYER_WAITING;
+	        json toSave;
+            writeToJson(toSave);
+            LoadSaveSystem::writeLevelFile(toSave);
+        }
     }
 }
 
@@ -386,9 +395,6 @@ void WorldSystem::restart(int newLevel, bool fromSave)
         Camera::reset();
         turn_number = 0;
     }
-
-    // Reset Camera TODO deal with fromSave camera
-
     turns_per_camera_move = TileSystem::getTurnsForCameraUpdate();
 
     snail_move = 1;
