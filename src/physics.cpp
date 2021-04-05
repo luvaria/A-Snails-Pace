@@ -572,39 +572,51 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     float step_seconds = 1.0f * (elapsed_ms / 1000.f);
     WeatherParentParticle::nextSpawn -= elapsed_ms;
     WeatherParticle::nextSpawn -= elapsed_ms;
-    
-    if (ECS::registry<WeatherParentParticle>.components.size() < WeatherParentParticle::count && WeatherParentParticle::nextSpawn < 0)
+    bool areAllDeprecated = true;
+
+    for (auto entity : ECS::registry<WeatherParentParticle>.entities) {
+        if(!ECS::registry<Deprecated>.has(entity)) {
+            areAllDeprecated = false;
+        }
+    }
+    if (ECS::registry<WeatherParentParticle>.components.size() < WeatherParentParticle::count && WeatherParentParticle::nextSpawn < 0 && areAllDeprecated)
     {
+        
         ECS::Entity newSnowflakeParticle;
         Particle::createWeatherParticle("snowflake", newSnowflakeParticle, window_size_in_game_units);
-        WeatherParentParticle::nextSpawn = WeatherParentParticle::timer/3;
-        WeatherParentParticle::nextSpawn = WeatherParentParticle::timer * uniform_dist(rng);
+        WeatherParentParticle::nextSpawn = Particle::timer * uniform_dist(rng);
     }
     
     auto& camera = ECS::registry<Camera>.entities[0];
     vec2 cameraOffset = ECS::registry<Motion>.get(camera).position;
 
     for (auto entity : ECS::registry<WeatherParentParticle>.entities) {
-        auto& motion = ECS::registry<Motion>.get(entity);
-        motion.position.x = (cameraOffset.x + window_size_in_game_units.x/2);
+        bool isDeprecated = ECS::registry<Deprecated>.has(entity);
         auto& element = ECS::registry<WeatherParentParticle>.get(entity);
         int particlesSize = element.particles.size();
-        if(particlesSize < WeatherParticle::count && WeatherParticle::nextSpawn < 0)
-        {
-            ECS::Entity newSnowflakeParticle;
-            Particle::createWeatherChildParticle("snowflake", newSnowflakeParticle, window_size_in_game_units);
-            element.particles.push_back(newSnowflakeParticle);
-            WeatherParticle::nextSpawn = Particle::timer * uniform_dist(rng);
+        if(isDeprecated) {
+            if(particlesSize == 0)
+                ECS::ContainerInterface::remove_all_components_of(entity);
+        } else {
+            if(particlesSize < WeatherParticle::count && WeatherParticle::nextSpawn < 0)
+            {
+                ECS::Entity newSnowflakeParticle;
+                Particle::createWeatherChildParticle("snowflake", newSnowflakeParticle, entity, window_size_in_game_units);
+                element.particles.push_back(newSnowflakeParticle);
+                WeatherParticle::nextSpawn = Particle::timer * uniform_dist(rng);
+            }
         }
     }
-    
- 
     
     int i = 0;
     for (auto entity : ECS::registry<WeatherParticle>.entities)
     {
+        auto& parentEntity = ECS::registry<WeatherParticle>.get(entity).parentEntity;
+        
         auto& motion = ECS::registry<Motion>.get(entity);
         DeathTimer& dt = ECS::registry<DeathTimer>.get(entity);
+        bool isDeprecated = ECS::registry<Deprecated>.has(parentEntity);
+        
         if(!ECS::registry<WeatherParentParticle>.has(entity)) {
             
             int phaseTime = WeatherParentParticle::timer/5;
@@ -624,23 +636,34 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
                 }
             }
             
-            if(WorldSystem::offScreenExceptNegativeYWithBuffer(motion.position, window_size_in_game_units, cameraOffset, 250)) {
-                float xValue = 0;
-                int minimum_number = 0;
-                int max_number = 0;
-                float yValue = 0;
-                minimum_number = cameraOffset.x - 10;
-                max_number = cameraOffset.x + window_size_in_game_units.x + 200;
-                xValue = rand() % (max_number + 1 - minimum_number) + minimum_number;
-                minimum_number = cameraOffset.y - 100;
-                max_number = cameraOffset.y - 1;
-                yValue = rand() % (max_number + 1 - minimum_number) + minimum_number;
-                Particle::setP1Motion(motion);
-                motion.position = { xValue , yValue};
-                dt.counter_ms = WeatherParentParticle::timer;
-                RejectedStages& rs = ECS::registry<RejectedStages>.get(entity);
-                rs.rejectedState2 = false;
-                rs.rejectedState3 = false;
+            if(isDeprecated && WorldSystem::offScreen(motion.position, window_size_in_game_units, cameraOffset)) {
+                auto& elementList = ECS::registry<WeatherParentParticle>.get(parentEntity).particles;
+                std::vector<ECS::Entity>::iterator it3;
+                for (it3 = elementList.begin(); it3 != elementList.end(); ++it3) {
+                    if (it3->id == entity.id) {
+                        it3 = elementList.erase(it3); // After erasing, it3 is now pointing the next location.
+                        --it3; // Go to the prev location because of ++it3 in the end of for loop.
+                    }
+                }
+                ECS::ContainerInterface::remove_all_components_of(entity);
+                continue;
+            } else if(!isDeprecated && WorldSystem::offScreenExceptNegativeYWithBuffer(motion.position, window_size_in_game_units, cameraOffset, 250)) {
+                    float xValue = 0;
+                    int minimum_number = 0;
+                    int max_number = 0;
+                    float yValue = 0;
+                    minimum_number = cameraOffset.x - 10;
+                    max_number = cameraOffset.x + window_size_in_game_units.x + 200;
+                    xValue = rand() % (max_number + 1 - minimum_number) + minimum_number;
+                    minimum_number = cameraOffset.y - 100;
+                    max_number = cameraOffset.y - 1;
+                    yValue = rand() % (max_number + 1 - minimum_number) + minimum_number;
+                    Particle::setP1Motion(motion);
+                    motion.position = { xValue , yValue};
+                    dt.counter_ms = WeatherParentParticle::timer;
+                    RejectedStages& rs = ECS::registry<RejectedStages>.get(entity);
+                    rs.rejectedState2 = false;
+                    rs.rejectedState3 = false;
             }
             
             float gravity_acceleration = 0.0004;
@@ -732,6 +755,13 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
         // move camera
         auto &cameraEntity = ECS::registry<Camera>.entities[0];
         stepToDestination(cameraEntity, step_seconds);
+        for (auto entity : ECS::registry<WeatherParentParticle>.entities) {
+            auto& element = ECS::registry<WeatherParentParticle>.get(entity);
+            int particlesSize = element.particles.size();
+
+            if(!ECS::registry<Deprecated>.has(entity) && particlesSize != 0)
+                ECS::registry<Deprecated>.emplace(entity);
+        }
     }
 
 	Equipped::moveEquippedWithHost();

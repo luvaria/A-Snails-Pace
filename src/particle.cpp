@@ -77,7 +77,7 @@ ECS::Entity Particle::createWeatherParticle(std::string particleName, ECS::Entit
     
     int minimum_number = cameraMotion.position.x - 10;
     int max_number = cameraMotion.position.x + window_size_in_game_units.x + 200;
-    float xValue = (cameraMotion.position.x + window_size_in_game_units.x) / 2;
+    float xValue = cameraMotion.position.x + (window_size_in_game_units.x) / 2;
     
     minimum_number = cameraMotion.position.y - 200;
     max_number = cameraMotion.position.y - 100;
@@ -100,7 +100,7 @@ ECS::Entity Particle::createWeatherParticle(std::string particleName, ECS::Entit
     return entity;
 }
 
-ECS::Entity Particle::createWeatherChildParticle(std::string particleName, ECS::Entity entity, vec2 window_size_in_game_units)
+ECS::Entity Particle::createWeatherChildParticle(std::string particleName, ECS::Entity entity, ECS::Entity parentEntity, vec2 window_size_in_game_units)
 {
     std::string key = particleName;
     Motion& motion = ECS::registry<Motion>.emplace(entity);
@@ -125,7 +125,8 @@ ECS::Entity Particle::createWeatherChildParticle(std::string particleName, ECS::
     
     motion.position = { xValue , yValue};
     ECS::registry<Particle>.emplace(entity);
-    ECS::registry<WeatherParticle>.emplace(entity);
+    auto& wp = ECS::registry<WeatherParticle>.emplace(entity);
+    wp.parentEntity = parentEntity;
     ECS::registry<RejectedStages>.emplace(entity);
     return entity;
 }
@@ -181,6 +182,6 @@ bool BlurParticle::canCreateNew = true;
 float BlurParticle::timer = Particle::timer;
 float WeatherParentParticle::timer = Particle::timer*40;
 float WeatherParentParticle::nextSpawn = 2000;
-float WeatherParentParticle::count = 1;
+float WeatherParentParticle::count = 10;
 float WeatherParticle::nextSpawn = 1000;
 int WeatherParticle::count = 300;
