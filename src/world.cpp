@@ -365,10 +365,6 @@ void WorldSystem::restart(int newLevel, bool fromSave)
     {
         Collectible::equip(player_snail, ECS::registry<Inventory>.components[0].equipped);
     }
-    
-    // Reset Camera TODO deal with fromSave camera
-    Camera::reset();
-    turns_per_camera_move = TileSystem::getTurnsForCameraUpdate();
 
     // Reset Turn
     ECS::registry<Turn>.components[0].type = PLAYER_WAITING;
@@ -379,6 +375,7 @@ void WorldSystem::restart(int newLevel, bool fromSave)
 
     AISystem::aiMoved = false;
 
+
     if (fromSave)
     {
         json save = LoadSaveSystem::loadLevelFileToJson();
@@ -386,8 +383,13 @@ void WorldSystem::restart(int newLevel, bool fromSave)
     }
     else
     {
+        Camera::reset();
         turn_number = 0;
     }
+
+    // Reset Camera TODO deal with fromSave camera
+
+    turns_per_camera_move = TileSystem::getTurnsForCameraUpdate();
 
     snail_move = 1;
 
@@ -519,6 +521,7 @@ void WorldSystem::setFromJson(nlohmann::json const& saved)
     deaths = saved[WorldKeys::NUM_DEATHS_KEY];
     enemies_killed = saved[WorldKeys::NUM_ENEMIES_KILLS_KEY];
     projectiles_fired = saved[WorldKeys::NUM_PROJECTILES_FIRED_KEY];
+    Camera::reset({ saved[WorldKeys::CAMERA_KEY]["x"], saved[WorldKeys::CAMERA_KEY]["y"] });
 }
 
 void WorldSystem::writeToJson(nlohmann::json& toSave)
@@ -528,6 +531,10 @@ void WorldSystem::writeToJson(nlohmann::json& toSave)
     toSave[WorldKeys::NUM_DEATHS_KEY] = deaths;
     toSave[WorldKeys::NUM_ENEMIES_KILLS_KEY] = enemies_killed;
     toSave[WorldKeys::NUM_PROJECTILES_FIRED_KEY]= projectiles_fired;
+
+    vec2 cameraPos = Camera::getPosition();
+    toSave[WorldKeys::CAMERA_KEY]["x"] = cameraPos.x;
+    toSave[WorldKeys::CAMERA_KEY]["y"] = cameraPos.y;
 }
 
 // Should the game be over ?

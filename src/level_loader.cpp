@@ -11,6 +11,7 @@
 #include "tiles/wall.hpp"
 #include "menus/level_select.hpp"
 #include "load_save.hpp"
+#include "projectile.hpp"
 
 // stlib
 #include <fstream>
@@ -142,19 +143,46 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset, bool from
 		tiles.push_back(tileRow);
 	}
 
-    // load characters
 	json characters;
+	json collectibles;
 	if (fromSave)
     {
         std::string const filename = std::string(LoadSaveSystem::LEVEL_DIR) + std::string(LoadSaveSystem::LEVEL_FILE);
         std::ifstream iSaved(save_path(filename));
         json saved = json::parse(iSaved);
         characters = saved["characters"];
+        collectibles = saved["collectibles"];
+
+        // load saved projectiles
+        if (saved.contains(LoadSaveSystem::PROJECTILE_KEY))
+        {
+            for (auto& projectile : saved[LoadSaveSystem::PROJECTILE_KEY])
+            {
+                Motion motion = LoadSaveSystem::makeMotionFromJson(projectile);
+                switch (hashit(projectile[LoadSaveSystem::PROJECTILE_TYPE_KEY]))
+                {
+                    case eSnail:
+                        SnailProjectile::createProjectile(motion);
+                        break;
+                    case eSpider:
+                        throw std::runtime_error("somehow loaded a spider projectile???");
+                        break;
+                    case eSlug:
+                        SlugProjectile::createProjectile(motion);
+                        break;
+                    default:
+                        throw std::runtime_error("failed to load projectile type: " + std::string(projectile[LoadSaveSystem::PROJECTILE_TYPE_KEY]));
+                }
+            }
+        }
     }
 	else
     {
 	    characters = level["characters"];
+        collectibles = level["collectibles"];
     }
+
+    // load characters
 	for (auto it = characters.begin(); it != characters.end(); ++it)
 	{
 		auto entity = ECS::Entity();
@@ -172,8 +200,17 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset, bool from
 				Tile& tile = tiles[snail["y"]][snail["x"]];
 				// may not want this for snail location depending on enemy type and AI
 				tile.addOccupyingEntity();
-				ECS::Entity snailEntity = Snail::createSnail({ tile.x, tile.y }, createTaggedEntity(preview));
-				ECS::registry<Player>.emplace(snailEntity);
+                ECS::Entity snailEntity;
+				if (fromSave)
+                {
+				    Motion motion = LoadSaveSystem::makeMotionFromJson(snail);
+				    snailEntity = Snail::createSnail(motion);
+                }
+				else
+                {
+                    snailEntity = Snail::createSnail({ tile.x, tile.y }, createTaggedEntity(preview));
+                }
+                ECS::registry<Player>.emplace(snailEntity);
 			}
 			break;
 		case eSpider:
@@ -184,7 +221,15 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset, bool from
 					continue;
 				Tile& tile = tiles[spider["y"]][spider["x"]];
 				tile.addOccupyingEntity();
-				Spider::createSpider({ tile.x, tile.y }, createTaggedEntity(preview));
+				if (fromSave)
+                {
+                    Motion motion = LoadSaveSystem::makeMotionFromJson(spider);
+                    Spider::createSpider(motion);
+                }
+				else
+                {
+                    Spider::createSpider({ tile.x, tile.y }, createTaggedEntity(preview));
+                }
 			}
 			break;
 		case eSlug:
@@ -195,7 +240,15 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset, bool from
 					continue;
 				Tile& tile = tiles[slug["y"]][slug["x"]];
 				tile.addOccupyingEntity();
-				Slug::createSlug({ tile.x, tile.y }, createTaggedEntity(preview));
+				if (fromSave)
+                {
+                    Motion motion = LoadSaveSystem::makeMotionFromJson(slug);
+                    Slug::createSlug(motion);
+                }
+				else
+                {
+                    Slug::createSlug({ tile.x, tile.y }, createTaggedEntity(preview));
+                }
 			}
 			break;
 		default:
@@ -208,7 +261,7 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset, bool from
 	if (preview)
 		return;
 
-    for (auto& collectible : level["collectibles"])
+    for (auto& collectible : collectibles)
     {
         int id = collectible["id"];
         Tile& tile = tiles[collectible["y"]][collectible["x"]];

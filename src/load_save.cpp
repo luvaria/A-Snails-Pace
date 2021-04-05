@@ -5,6 +5,8 @@
 #include "spider.hpp"
 #include "slug.hpp"
 #include "tiles/tiles.hpp"
+#include "projectile.hpp"
+#include "collectible.hpp"
 
 // stlib
 #include <fstream>
@@ -24,8 +26,16 @@ char constexpr LoadSaveSystem::CHARACTER_KEY[];
 char constexpr LoadSaveSystem::PLAYER_KEY[];
 char constexpr LoadSaveSystem::SPIDER_KEY[];
 char constexpr LoadSaveSystem::SLUG_KEY[];
+
+char constexpr LoadSaveSystem::PROJECTILE_KEY[];
+char constexpr LoadSaveSystem::PROJECTILE_TYPE_KEY[];
+
 char constexpr LoadSaveSystem::CHARACTER_X_POS_KEY[];
 char constexpr LoadSaveSystem::CHARACTER_Y_POS_KEY[];
+char constexpr LoadSaveSystem::CHARACTER_ANGLE_KEY[];
+char constexpr LoadSaveSystem::CHARACTER_VELOCITY_KEY[];
+char constexpr LoadSaveSystem::CHARACTER_SCALE_KEY[];
+char constexpr LoadSaveSystem::CHARACTER_LAST_DIR_KEY[];
 
 void LoadSaveSystem::loadPlayerFile()
 {
@@ -68,7 +78,7 @@ void LoadSaveSystem::writePlayerFile()
     save[EQUIPPED_KEY] = inventory.equipped;
     save[POINTS_KEY] = inventory.points;
 
-    o << save << std::endl;
+    o << std::setw(2) << save << std::endl;
 }
 
 bool LoadSaveSystem::levelFileExists()
@@ -115,21 +125,63 @@ void LoadSaveSystem::writeLevelFile(json& toSave)
         toSave[CHARACTER_KEY][PLAYER_KEY].push_back(character);
     }
 
-    for (ECS::Entity player : ECS::registry<Spider>.entities)
+    for (ECS::Entity spider : ECS::registry<Spider>.entities)
     {
-        auto& motion = ECS::registry<Motion>.get(player);
+        auto& motion = ECS::registry<Motion>.get(spider);
         json character = makeBaseCharacterJson(motion);
         toSave[CHARACTER_KEY][SPIDER_KEY].push_back(character);
     }
 
-    for (ECS::Entity player : ECS::registry<Slug>.entities)
+    for (ECS::Entity slug : ECS::registry<Slug>.entities)
     {
-        auto& motion = ECS::registry<Motion>.get(player);
+        auto& motion = ECS::registry<Motion>.get(slug);
         json character = makeBaseCharacterJson(motion);
         toSave[CHARACTER_KEY][SLUG_KEY].push_back(character);
     }
 
-    o << toSave << std::endl;
+    for (ECS::Entity projectile : ECS::registry<Projectile>.entities)
+    {
+        auto& motion = ECS::registry<Motion>.get(projectile);
+        json character = makeBaseCharacterJson(motion);
+
+        if (ECS::registry<SnailProjectile>.has(projectile))
+        {
+            character[PROJECTILE_TYPE_KEY] = "snail";
+        }
+        else if (ECS::registry<SlugProjectile>.has(projectile))
+        {
+            character[PROJECTILE_TYPE_KEY] = "slug";
+        }
+
+        toSave[PROJECTILE_KEY].push_back(character);
+    }
+
+    // save unequipped collectibles
+    for (ECS::Entity collectible : ECS::registry<Collectible>.entities)
+    {
+        if (!ECS::registry<NoCollide>.has(collectible)) // hack way of checking if it's not equipped
+        {
+            auto& motion = ECS::registry<Motion>.get(collectible);
+            json character = makeBaseCharacterJson(motion);
+            character["id"] = ECS::registry<Collectible>.get(collectible).id;
+            toSave[COLLECTIBLE_KEY].push_back(character);
+        }
+    }
+
+    o << std::setw(2) << toSave << std::endl;
+}
+
+Motion LoadSaveSystem::makeMotionFromJson(json const& motionJson)
+{
+    Motion motion = Motion();
+    Tile tile = TileSystem::getTiles()[motionJson[CHARACTER_Y_POS_KEY]][motionJson[CHARACTER_X_POS_KEY]];
+    motion.position.x = tile.x;
+    motion.position.y = tile.y;
+    motion.angle = motionJson[CHARACTER_ANGLE_KEY];
+    motion.velocity = { motionJson[CHARACTER_VELOCITY_KEY]["x"], motionJson[CHARACTER_VELOCITY_KEY]["y"] };
+    motion.scale = { motionJson[CHARACTER_SCALE_KEY]["x"], motionJson[CHARACTER_SCALE_KEY]["y"] };
+    motion.lastDirection = motionJson[CHARACTER_LAST_DIR_KEY];
+    return motion;
 }
 
 json LoadSaveSystem::makeBaseCharacterJson(Motion const& motion)
@@ -137,6 +189,12 @@ json LoadSaveSystem::makeBaseCharacterJson(Motion const& motion)
     json character;
     character[CHARACTER_X_POS_KEY] = static_cast<int>(motion.position.x / TileSystem::getScale());
     character[CHARACTER_Y_POS_KEY] = static_cast<int>(motion.position.y / TileSystem::getScale());
+    character[CHARACTER_ANGLE_KEY] = motion.angle;
+    character[CHARACTER_VELOCITY_KEY]["x"] = motion.velocity.x;
+    character[CHARACTER_VELOCITY_KEY]["y"] = motion.velocity.y;
+    character[CHARACTER_SCALE_KEY]["x"] = motion.scale.x;
+    character[CHARACTER_SCALE_KEY]["y"] = motion.scale.y;
+    character[CHARACTER_LAST_DIR_KEY] = motion.lastDirection;
     return character;
 }
 
