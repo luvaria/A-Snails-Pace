@@ -10,7 +10,7 @@
 #include <functional>
 
 enum ButtonEventType { NO_ACTION, START_GAME, SELECT_LEVEL, NEXT_LEVEL, COLLECTIBLES, LOAD_SAVE, CLEAR_COLLECT_DATA,
-        LOAD_LEVEL, EQUIP_COLLECTIBLE, QUIT_GAME };
+        LOAD_LEVEL, EQUIP_COLLECTIBLE, QUIT_GAME, SET_VOLUME, MIN_VOLUME, MAX_VOLUME };
 
 // button tag
 struct MenuButton
@@ -32,12 +32,23 @@ protected:
 	Menu(GLFWwindow& window) : window(window), activeButtonIndex(-1) {}
 
 	// returns true if mouse is hovering over button, false otherwise
+	// text buttons
 	bool mouseover(vec2 buttonPos, vec2 buttonScale, vec2 mousePos)
 	{
 		float upperBound = buttonPos.y - buttonScale.y;
 		float lowerBound = buttonPos.y;
 		float leftBound = buttonPos.x;
 		float rightBound = buttonPos.x + buttonScale.x;
+
+		return (mousePos.y >= upperBound && mousePos.y <= lowerBound && mousePos.x >= leftBound && mousePos.x <= rightBound);
+	}
+	// Motion-based buttons
+	bool mouseover(Motion& motion, vec2 mousePos)
+	{
+		float upperBound = motion.position.y - abs(motion.scale.y) / 2;
+		float lowerBound = motion.position.y + abs(motion.scale.y) / 2;
+		float leftBound = motion.position.x - abs(motion.scale.x) / 2;
+		float rightBound = motion.position.x + abs(motion.scale.x) / 2;
 
 		return (mousePos.y >= upperBound && mousePos.y <= lowerBound && mousePos.x >= leftBound && mousePos.x <= rightBound);
 	}
