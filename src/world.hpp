@@ -62,6 +62,8 @@ public:
     static void rotate(Tile &currTile, Motion &motion, Tile &nextTile);
     
     static void changeDirection(Motion &motion, Tile &currTile, Tile &nextTile, int defaultDirection, ECS::Entity& entity);
+
+	static void fishMove(ECS::Entity &entity, int &moves);
     
 	// OpenGL window handle
 	GLFWwindow* window;

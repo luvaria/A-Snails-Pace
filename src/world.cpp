@@ -7,6 +7,7 @@
 #include "projectile.hpp"
 #include "ai.hpp"
 #include "bird.hpp"
+#include "fish.hpp"
 #include "tiles/wall.hpp"
 #include "tiles/water.hpp"
 #include "tiles/vine.hpp"
@@ -422,7 +423,8 @@ void WorldSystem::onNotify(Event event) {
         {
             // Check collisions that result in death
             if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<WaterTile>.has(event.other_entity)
-                || ECS::registry<Slug>.has(event.other_entity) || ECS::registry<SlugProjectile>.has(event.other_entity))
+                || ECS::registry<Slug>.has(event.other_entity) || ECS::registry<SlugProjectile>.has(event.other_entity)
+                || ECS::registry<Fish>.has(event.other_entity))
             {
                 // Initiate death unless already dying
                 if (!ECS::registry<DeathTimer>.has(event.entity))
@@ -1025,6 +1027,55 @@ void WorldSystem::fallDown(ECS::Entity& entity, int& moves) {
         moves--;
     }
     return;
+}
+
+void WorldSystem::fishMove(ECS::Entity& entity, int& moves) {
+    float scale = TileSystem::getScale();
+    auto& tiles = TileSystem::getTiles();
+
+    //if fish is going up
+
+    auto& motion = ECS::registry<Motion>.get(entity);
+    int xCoord = static_cast<int>(motion.position.x / scale);
+    int yCoord = static_cast<int>(motion.position.y / scale);
+    auto& move = ECS::registry<Move>.get(entity);
+    if (move.direction == true) {
+        if (yCoord - 1 < 0) {
+            return;
+        }
+        Tile upDest = tiles[yCoord - 1][xCoord];
+        if (upDest.type == WALL) {
+            return;
+        }
+        Destination& dest = ECS::registry<Destination>.has(entity) ? ECS::registry<Destination>.get(entity) : ECS::registry<Destination>.emplace(entity);
+        dest.position = { upDest.x, upDest.y };
+        motion.velocity = (dest.position - motion.position) / k_move_seconds;
+        moves--;
+        if (yCoord - 2 < 0) {
+            move.direction = false;
+            return;
+        }
+        Tile next = tiles[yCoord - 2][xCoord];
+        if (next.type == WALL) {
+            move.direction = false;
+        }
+        return;
+    }
+    else {
+        if (yCoord + 1 == tiles.size()) {
+            move.direction = true;
+            return;
+        }
+        Tile downDest = tiles[yCoord + 1][xCoord];
+        if (downDest.type == WATER) {
+            move.direction = true;
+        }
+        Destination& dest = ECS::registry<Destination>.has(entity) ? ECS::registry<Destination>.get(entity) : ECS::registry<Destination>.emplace(entity);
+        dest.position = { downDest.x, downDest.y };
+        motion.velocity = (dest.position - motion.position) / k_move_seconds;
+        moves--;
+        return;
+    }
 }
 
 
