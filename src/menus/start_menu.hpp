@@ -20,7 +20,12 @@ private:
 
 	// only for this subclass, may be useful for all subclasses?
 	void updateDisabled(MenuButton& button);
+
+	// sets volume for effects and music (all channels), and updates slider indicator
+	void setVolume(ECS::Entity buttonEntity, double volumeRatio);
 };
 
 // component tag
 struct StartMenuTag {};
+
+struct VolumeIndicator {};

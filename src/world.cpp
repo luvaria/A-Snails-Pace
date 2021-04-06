@@ -129,7 +129,6 @@ void WorldSystem::init_audio()
             audio_path("music.wav") +
             audio_path("salmon_dead.wav") +
             audio_path("salmon_eat.wav"));
-
 }
 
 // Update our game world
