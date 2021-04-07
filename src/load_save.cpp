@@ -7,6 +7,7 @@
 #include "tiles/tiles.hpp"
 #include "projectile.hpp"
 #include "collectible.hpp"
+#include "npc.hpp"
 
 // stlib
 #include <fstream>
@@ -36,6 +37,11 @@ char constexpr LoadSaveSystem::CHARACTER_ANGLE_KEY[];
 char constexpr LoadSaveSystem::CHARACTER_VELOCITY_KEY[];
 char constexpr LoadSaveSystem::CHARACTER_SCALE_KEY[];
 char constexpr LoadSaveSystem::CHARACTER_LAST_DIR_KEY[];
+
+char constexpr LoadSaveSystem::NPC_KEY[];
+char constexpr LoadSaveSystem::NPC_CUR_NODE_KEY[];
+char constexpr LoadSaveSystem::NPC_CUR_LINE_KEY[];
+char constexpr LoadSaveSystem::NPC_TIMES_TALKED_KEY[];
 
 void LoadSaveSystem::loadPlayerFile()
 {
@@ -166,6 +172,21 @@ void LoadSaveSystem::writeLevelFile(json& toSave)
             character["id"] = ECS::registry<Collectible>.get(collectible).id;
             toSave[COLLECTIBLE_KEY].push_back(character);
         }
+    }
+
+    // npc is much more different because we save the position as a key to make it easier to match up in level loading
+    for (ECS::Entity npc : ECS::registry<NPC>.entities)
+    {
+        NPC component = ECS::registry<NPC>.get(npc);
+        auto position = ECS::registry<Motion>.get(npc).position;
+        std::string posKey = std::to_string(static_cast<int>(position.x / TileSystem::getScale()))
+                + "," + std::to_string(static_cast<int>(position.y / TileSystem::getScale()));
+
+        json npcJson;
+        npcJson[NPC_CUR_NODE_KEY] = component.curNode;
+        npcJson[NPC_CUR_LINE_KEY] = component.curLine;
+        npcJson[NPC_TIMES_TALKED_KEY] = component.timesTalkedTo;
+        toSave[NPC_KEY][posKey] = npcJson;
     }
 
     o << std::setw(2) << toSave << std::endl;

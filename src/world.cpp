@@ -1298,6 +1298,11 @@ void WorldSystem::stopNPC()
 {
     NPC& npc = ECS::registry<NPC>.get(encountered_npc);
     npc.endEncounter();
+
+    json toSave;
+    writeToJson(toSave);
+    LoadSaveSystem::writeLevelFile(toSave);
+
     ECS::registry<Turn>.components[0].type = PLAYER_WAITING;
 }
 
@@ -1307,6 +1312,10 @@ void WorldSystem::stepNPC()
     npc.stepEncounter();
     if (!npc.isActive)
     {
+        json toSave;
+        writeToJson(toSave);
+        LoadSaveSystem::writeLevelFile(toSave);
+
         ECS::registry<Turn>.components[0].type = PLAYER_WAITING;
     }
     if (npc.timesTalkedTo >= 2)

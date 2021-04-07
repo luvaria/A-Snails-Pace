@@ -71,6 +71,29 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset, bool from
 		offset.x += 1.f * previewScale; // show one tile to the left of snail
 	}
 
+    json saved;
+	json characters;
+    json collectibles;
+    json npcs;
+    if (fromSave)
+    {
+        std::string const filename = std::string(LoadSaveSystem::LEVEL_DIR) + std::string(LoadSaveSystem::LEVEL_FILE);
+        std::ifstream iSaved(save_path(filename));
+        saved = json::parse(iSaved);
+        characters = saved["characters"];
+        collectibles = saved["collectibles"];
+
+        if (saved.contains(LoadSaveSystem::NPC_KEY))
+        {
+            npcs = saved[LoadSaveSystem::NPC_KEY];
+        }
+    }
+    else
+    {
+        characters = level["characters"];
+        collectibles = level["collectibles"];
+    }
+
 	// load tile types row by row
 	std::string row;
 	auto& tiles = TileSystem::getTiles();
@@ -125,9 +148,26 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset, bool from
 				VineTile::createVineTile(tile, entity);
 				break;
 			case 'N':
+			    if (fromSave)
+			    {
+			        std::string npcPosKey = std::to_string(x) + "," + std::to_string(y);
+			        if (!npcs.contains(npcPosKey))
+			            break;
+			    }
+
 				tile.type = INACCESSIBLE;
 				tile.addOccupyingEntity();
 				NPC::createNPC(tile, levelName, entity);
+				if (fromSave)
+                {
+				    // perhaps make a function in NPC struct for this lol...
+				    NPC& component = ECS::registry<NPC>.get(entity);
+                    std::string npcPosKey = std::to_string(x) + "," + std::to_string(y);
+                    json savedNPC = npcs[npcPosKey];
+				    component.curNode = savedNPC[LoadSaveSystem::NPC_CUR_NODE_KEY];
+				    component.curLine = savedNPC[LoadSaveSystem::NPC_CUR_LINE_KEY];
+				    component.timesTalkedTo = savedNPC[LoadSaveSystem::NPC_TIMES_TALKED_KEY];
+                }
 				if (!preview)
 				{
 					Collectible::equip(entity, 1); // bbcap
@@ -142,45 +182,6 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset, bool from
 		}
 		tiles.push_back(tileRow);
 	}
-
-	json characters;
-	json collectibles;
-	if (fromSave)
-    {
-        std::string const filename = std::string(LoadSaveSystem::LEVEL_DIR) + std::string(LoadSaveSystem::LEVEL_FILE);
-        std::ifstream iSaved(save_path(filename));
-        json saved = json::parse(iSaved);
-        characters = saved["characters"];
-        collectibles = saved["collectibles"];
-
-        // load saved projectiles
-        if (saved.contains(LoadSaveSystem::PROJECTILE_KEY))
-        {
-            for (auto& projectile : saved[LoadSaveSystem::PROJECTILE_KEY])
-            {
-                Motion motion = LoadSaveSystem::makeMotionFromJson(projectile);
-                switch (hashit(projectile[LoadSaveSystem::PROJECTILE_TYPE_KEY]))
-                {
-                    case eSnail:
-                        SnailProjectile::createProjectile(motion);
-                        break;
-                    case eSpider:
-                        throw std::runtime_error("somehow loaded a spider projectile???");
-                        break;
-                    case eSlug:
-                        SlugProjectile::createProjectile(motion);
-                        break;
-                    default:
-                        throw std::runtime_error("failed to load projectile type: " + std::string(projectile[LoadSaveSystem::PROJECTILE_TYPE_KEY]));
-                }
-            }
-        }
-    }
-	else
-    {
-	    characters = level["characters"];
-        collectibles = level["collectibles"];
-    }
 
     // load characters
 	for (auto it = characters.begin(); it != characters.end(); ++it)
@@ -256,6 +257,29 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset, bool from
 			break;
 		}
 	}
+
+    // load saved projectiles
+    if (fromSave && saved.contains(LoadSaveSystem::PROJECTILE_KEY))
+    {
+        for (auto& projectile : saved[LoadSaveSystem::PROJECTILE_KEY])
+        {
+            Motion motion = LoadSaveSystem::makeMotionFromJson(projectile);
+            switch (hashit(projectile[LoadSaveSystem::PROJECTILE_TYPE_KEY]))
+            {
+                case eSnail:
+                    SnailProjectile::createProjectile(motion);
+                    break;
+                case eSpider:
+                    throw std::runtime_error("somehow loaded a spider projectile???");
+                    break;
+                case eSlug:
+                    SlugProjectile::createProjectile(motion);
+                    break;
+                default:
+                    throw std::runtime_error("failed to load projectile type: " + std::string(projectile[LoadSaveSystem::PROJECTILE_TYPE_KEY]));
+            }
+        }
+    }
 
 	// no moves map or collectibles if preview
 	if (preview)

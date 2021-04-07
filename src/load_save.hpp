@@ -49,6 +49,11 @@ public:
     static char constexpr CHARACTER_SCALE_KEY[] = "scale";
     static char constexpr CHARACTER_LAST_DIR_KEY[] = "last_dir";
 
+    static char constexpr NPC_KEY[] = "npc";
+    static char constexpr NPC_CUR_NODE_KEY[] = "cur_node";
+    static char constexpr NPC_CUR_LINE_KEY[] = "cur_line";
+    static char constexpr NPC_TIMES_TALKED_KEY[] = "times_talked";
+
     /* shared constants */
     static char constexpr COLLECTIBLE_KEY[] = "collectibles";
 
