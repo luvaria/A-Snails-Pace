@@ -63,7 +63,6 @@ void sky(inout vec3 col, float sun_dist)
     col = mix(LIGHT_BLUE, DEEP_BLUE, sun_dist);
 }
 
-
 vec2 rotate_sky(vec2 uv_in)
 {
     float angle = time * STAR_ROTATION * PI;

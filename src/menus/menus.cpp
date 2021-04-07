@@ -46,7 +46,7 @@ void MenuSystem::setup()
 		RenderSystem::createSprite(backgroundResource, textures_path("background.png"), "menu_background");
 	}
 
-	ECS::registry<ShadedMeshRef>.emplace(backgroundEntity, backgroundResource, RenderBucket::BACKGROUND_3);
+	ECS::registry<ShadedMeshRef>.emplace(backgroundEntity, backgroundResource, RenderBucket::BACKGROUND_2);
 
 	Motion& backgroundMotion = ECS::registry<Motion>.emplace(backgroundEntity);
 	backgroundMotion.angle = 0.f;
