@@ -62,6 +62,7 @@ public:
     static void writePlayerFile();
 
     static bool levelFileExists();
+    static void deleteSaveFile();
     static int getSavedLevelNum(); // returns -1 if file doesn't exist
     static json loadLevelFileToJson();
     static void writeLevelFile(json& toSave); // passing partially filled json with world data

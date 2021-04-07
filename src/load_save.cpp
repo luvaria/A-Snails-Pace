@@ -93,8 +93,30 @@ bool LoadSaveSystem::levelFileExists()
     std::string const filename = std::string(LEVEL_DIR) + std::string(LEVEL_FILE);
     std::ifstream i(save_path(filename));
 
-    // uwu
-    return !(!i);
+    return i.good();
+}
+
+void LoadSaveSystem::deleteSaveFile()
+{
+    std::string const filename = std::string(LEVEL_DIR) + std::string(LEVEL_FILE);
+    std::string const fullFilename = save_path(filename);
+    std::ifstream i(fullFilename);
+
+    if (i.good())
+    {
+        i.close();
+    }
+    else
+    {
+        // file does not exist
+        return;
+    }
+
+    if (remove(fullFilename.c_str()) != 0)
+    {
+        std::string msg = "failed to remove save file: " + fullFilename;
+        perror(msg.c_str());
+    }
 }
 
 int LoadSaveSystem::getSavedLevelNum()
@@ -113,7 +135,7 @@ json LoadSaveSystem::loadLevelFileToJson()
     std::string const filename = std::string(LEVEL_DIR) + std::string(LEVEL_FILE);
     std::ifstream i(save_path(filename));
 
-    assert(!(!i)); // file does not exist
+    assert(i.good()); // file does not exist
 
     json save = json::parse(i);
     return save;

@@ -157,8 +157,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     if (!ECS::registry<DeathTimer>.has(player_snail)
         && offScreen(snailMotion.position, window_size_in_game_units, cameraOffset))
     {
-        ECS::registry<DeathTimer>.emplace(player_snail);
-        Mix_PlayChannel(-1, salmon_dead_sound, 0);
+        die();
     }
 
     float scale = TileSystem::getScale();
@@ -240,7 +239,6 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
                 }
                 WaterTile::splashEntityID = 0;
                 ECS::registry<DeathTimer>.remove(entity);
-                deaths++;
                 restart(level);
                 return;
             }
@@ -313,9 +311,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             else if (ECS::registry<Destination>.size() == 0)
             {
                 turnType = PLAYER_WAITING;
-                json toSave;
-                writeToJson(toSave);
-                LoadSaveSystem::writeLevelFile(toSave);
+                saveGame();
             }
         }
     }
@@ -323,11 +319,8 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     {
 	    if (!ECS::registry<Destination>.has(cameraEntity))
         {
-            // duplicated code :(
 	        turnType = PLAYER_WAITING;
-	        json toSave;
-            writeToJson(toSave);
-            LoadSaveSystem::writeLevelFile(toSave);
+	        saveGame();
         }
     }
 }
@@ -399,6 +392,9 @@ void WorldSystem::restart(int newLevel, bool fromSave)
     snail_move = 1;
 
     setGLFWCallbacks();
+
+    // save upon restart
+    saveGame();
 }
 
 void WorldSystem::onNotify(Event event) {
@@ -440,9 +436,7 @@ void WorldSystem::onNotify(Event event) {
                 // Initiate death unless already dying
                 if (!ECS::registry<DeathTimer>.has(event.entity))
                 {
-                    // Scream, reset timer, and make the snail sink
-                    ECS::registry<DeathTimer>.emplace(event.entity);
-                    Mix_PlayChannel(-1, salmon_dead_sound, 0);
+                    die();
                 }
             }
             else if (ECS::registry<Collectible>.has(event.other_entity))
@@ -1312,9 +1306,7 @@ void WorldSystem::stepNPC()
     npc.stepEncounter();
     if (!npc.isActive)
     {
-        json toSave;
-        writeToJson(toSave);
-        LoadSaveSystem::writeLevelFile(toSave);
+        saveGame();
 
         ECS::registry<Turn>.components[0].type = PLAYER_WAITING;
     }
@@ -1335,8 +1327,28 @@ void WorldSystem::stepNPC()
         }
         ECS::ContainerInterface::remove_all_components_of(encountered_npc);
 
+        saveGame();
+    }
+}
+
+void WorldSystem::saveGame()
+{
+    if (!ECS::registry<DeathTimer>.has(player_snail))
+    {
         json toSave;
         writeToJson(toSave);
         LoadSaveSystem::writeLevelFile(toSave);
     }
+}
+
+void WorldSystem::die()
+{
+    // scream, reset timer, increment deaths, delete save file
+    ECS::registry<DeathTimer>.emplace(player_snail);
+    Mix_PlayChannel(-1, salmon_dead_sound, 0);
+
+    deaths++;
+
+    // no redos sorry :(
+    LoadSaveSystem::deleteSaveFile();
 }

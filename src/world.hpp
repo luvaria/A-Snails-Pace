@@ -92,6 +92,10 @@ private:
 	void stopNPC();
 	void stepNPC();
 
+	void saveGame();
+
+	void die();
+
 	// Game state
 	float current_speed;
 	ECS::Entity player_snail;
