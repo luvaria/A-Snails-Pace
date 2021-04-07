@@ -1334,7 +1334,9 @@ void WorldSystem::stepNPC()
             ECS::ContainerInterface::remove_all_components_of(hatEntity);
         }
         ECS::ContainerInterface::remove_all_components_of(encountered_npc);
+
+        json toSave;
+        writeToJson(toSave);
+        LoadSaveSystem::writeLevelFile(toSave);
     }
 }
-
-int WorldSystem::snailMoves = 0;

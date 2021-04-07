@@ -48,17 +48,16 @@ ECS::Entity SnailProjectile::createProjectile(Motion motion, bool preview /* = f
     ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::PROJECTILE);
     ECS::registry<MinShadedMeshRef>.emplace(entity, resource_min, RenderBucket::PROJECTILE);
 
-    ECS::registry<Motion>.insert(entity, std::move(motion));
-
-    ECS::registry<Projectile>.emplace(entity);
-    ECS::registry<SnailProjectile>.emplace(entity);
-
     if (preview)
     {
         ECS::registry<Preview>.emplace(entity);
         resource.texture.alpha = 0.5f;
         motion.velocity *= 12.f;
     }
+    ECS::registry<Motion>.insert(entity, std::move(motion));
+
+    ECS::registry<Projectile>.emplace(entity);
+    ECS::registry<SnailProjectile>.emplace(entity);
 
     return entity;
 }

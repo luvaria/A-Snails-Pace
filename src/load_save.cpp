@@ -8,6 +8,7 @@
 #include "projectile.hpp"
 #include "collectible.hpp"
 #include "npc.hpp"
+#include "render_components.hpp"
 
 // stlib
 #include <fstream>
@@ -133,9 +134,13 @@ void LoadSaveSystem::writeLevelFile(json& toSave)
 
     for (ECS::Entity spider : ECS::registry<Spider>.entities)
     {
-        auto& motion = ECS::registry<Motion>.get(spider);
-        json character = makeBaseCharacterJson(motion);
-        toSave[CHARACTER_KEY][SPIDER_KEY].push_back(character);
+        // exclude exploding spiders
+        if (!ECS::registry<DeathTimer>.has(spider))
+        {
+            auto& motion = ECS::registry<Motion>.get(spider);
+            json character = makeBaseCharacterJson(motion);
+            toSave[CHARACTER_KEY][SPIDER_KEY].push_back(character);
+        }
     }
 
     for (ECS::Entity slug : ECS::registry<Slug>.entities)
