@@ -45,7 +45,7 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             auto& fire = ECS::registry<Fire>.get(entity);
             if (fire.fired == true) {
                 fire.fired = false;
-                superSpiderShoot(entity);
+                projectileShoot(entity);
             }
             
         }
@@ -422,7 +422,7 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
 
 }
 
-void AISystem::superSpiderShoot(ECS::Entity& e) {
+void AISystem::projectileShoot(ECS::Entity& e) {
 
     // range of bird firing, don't want him to fire if he is off the screen.
     if (ECS::registry<Bird>.has(e) == true) {

@@ -270,6 +270,10 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     {
 	    if (snail_move <= 0)
         {
+            for (auto& entity : ECS::registry<Fish>.entities) {
+                auto& move = ECS::registry<Move>.get(entity);
+                move.hasMoved = false;
+            }
 	        turnType = PLAYER_UPDATE;
         }
     }
@@ -288,10 +292,6 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
                 Camera::update(k_move_seconds);
             }
         }
-        for (auto& entity : ECS::registry<Fish>.entities) {
-            auto& move = ECS::registry<Move>.get(entity);
-            move.hasMoved = false;
-        }
     }
 	else if (turnType == ENEMY)
     {
@@ -308,9 +308,10 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 
         
         // projectile done moving or no projectiles AND AI path calculated or AI all dead
+        // changed from AI.size to Enemy.size
         if (((ECS::registry<Projectile>.size() != 0 && projectile_turn_over_time <= 0) 
             || (ECS::registry<Projectile>.size() == 0))
-            && (AISystem::aiMoved || (ECS::registry<AI>.size() == 0)))
+            && (AISystem::aiMoved || (ECS::registry<Enemy>.size() == 0)))
         {
             // In the following two cases, if true, all the enemies will have moved
             // Camera has to move
