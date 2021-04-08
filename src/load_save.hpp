@@ -20,6 +20,38 @@ namespace WorldKeys
     static std::string const CAMERA_KEY = "camera";
 }
 
+
+typedef std::string NodeType;
+namespace BTKeys
+{
+    namespace NodeTypes
+    {
+        static NodeType const SEQUENCE_KEY = "sequence";
+        static NodeType const SELECTOR_KEY = "selector";
+        static NodeType const REPEAT_FOR_N_KEY = "repeat_for_n";
+        static NodeType const SNAIL_IN_RANGE_KEY = "is_snail_in_range";
+        static NodeType const LOOK_FOR_SNAIL_KEY = "look_for_snail";
+        static NodeType const FIRE_X_SHOTS_KEY = "fire_x_shots";
+        static NodeType const RANDOM_SELECTOR = "random_selector";
+        static NodeType const PREDICT_SHOT_KEY = "predict_shot";
+        static NodeType const GET_TO_SNAIL_KEY = "get_to_snail";
+    }
+
+    static std::string const TYPE_KEY = "type";
+    static std::string const INDEX_KEY = "index";
+    static std::string const CHILDREN_KEY = "children";
+    static std::string const CHILD_KEY = "child";
+    static std::string const ITERATIONS_REMAINING_KEY = "iterations_remaining";
+    static std::string const IN_RANGE_KEY = "in_range";
+    static std::string const SKIP_KEY = "skip";
+
+    // random selector node keys
+    static std::string const CHILD_1_KEY = "child_1";
+    static std::string const CHILD_2_KEY = "child_2";
+    static std::string const CHOSEN_KEY = "chosen";
+    static std::string const CHANCE_KEY = "chance";
+}
+
 class LoadSaveSystem
 {
 public:
@@ -38,6 +70,8 @@ public:
     static char constexpr PLAYER_KEY[] = "snail";
     static char constexpr SPIDER_KEY[] = "spider";
     static char constexpr SLUG_KEY[] = "slug";
+
+    static char constexpr BTREE_KEY[] = "btree";
 
     static char constexpr PROJECTILE_KEY[] = "projectiles";
     static char constexpr PROJECTILE_TYPE_KEY[] = "type";

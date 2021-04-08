@@ -9,6 +9,7 @@
 #include "collectible.hpp"
 #include "npc.hpp"
 #include "render_components.hpp"
+#include "ai.hpp"
 
 // stlib
 #include <fstream>
@@ -28,6 +29,8 @@ char constexpr LoadSaveSystem::CHARACTER_KEY[];
 char constexpr LoadSaveSystem::PLAYER_KEY[];
 char constexpr LoadSaveSystem::SPIDER_KEY[];
 char constexpr LoadSaveSystem::SLUG_KEY[];
+
+char constexpr LoadSaveSystem::BTREE_KEY[];
 
 char constexpr LoadSaveSystem::PROJECTILE_KEY[];
 char constexpr LoadSaveSystem::PROJECTILE_TYPE_KEY[];
@@ -161,6 +164,12 @@ void LoadSaveSystem::writeLevelFile(json& toSave)
         {
             auto& motion = ECS::registry<Motion>.get(spider);
             json character = makeBaseCharacterJson(motion);
+
+            std::shared_ptr<BTNode> tree = ECS::registry<AI>.get(spider).tree;
+            json treeJson;
+            tree->writeToJson(treeJson);
+            character[BTREE_KEY] = treeJson;
+
             toSave[CHARACTER_KEY][SPIDER_KEY].push_back(character);
         }
     }
@@ -169,6 +178,12 @@ void LoadSaveSystem::writeLevelFile(json& toSave)
     {
         auto& motion = ECS::registry<Motion>.get(slug);
         json character = makeBaseCharacterJson(motion);
+
+        std::shared_ptr<BTNode> tree = ECS::registry<AI>.get(slug).tree;
+        json treeJson;
+        tree->writeToJson(treeJson);
+        character[BTREE_KEY] = treeJson;
+
         toSave[CHARACTER_KEY][SLUG_KEY].push_back(character);
     }
 

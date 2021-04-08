@@ -49,8 +49,6 @@ public:
 	void setFromJson(nlohmann::json const& saved);
 	void writeToJson(nlohmann::json& toSave);
 
-	static int snailMoves;
-
 	// return true if a given point is off screen, false otherwise
 	static bool offScreen(vec2 const& pos, vec2 window_size_in_game_units, vec2 cameraOffset);
 
@@ -94,6 +92,7 @@ private:
 
 	void saveGame();
 
+	// kill the player :(
 	void die();
 
 	// Game state

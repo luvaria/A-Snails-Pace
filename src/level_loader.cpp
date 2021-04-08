@@ -225,7 +225,9 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset, bool from
 				if (fromSave)
                 {
                     Motion motion = LoadSaveSystem::makeMotionFromJson(spider);
-                    Spider::createSpider(motion);
+                    std::shared_ptr<BTNode> tree = BTNode::createSubclassNode(spider[LoadSaveSystem::BTREE_KEY][BTKeys::TYPE_KEY]);
+                    tree->setFromJson(spider[LoadSaveSystem::BTREE_KEY]);
+                    Spider::createSpider(motion, ECS::Entity(), tree);
                 }
 				else
                 {
@@ -244,7 +246,9 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset, bool from
 				if (fromSave)
                 {
                     Motion motion = LoadSaveSystem::makeMotionFromJson(slug);
-                    Slug::createSlug(motion);
+                    std::shared_ptr<BTNode> tree = BTNode::createSubclassNode(slug[LoadSaveSystem::BTREE_KEY][BTKeys::TYPE_KEY]);
+                    tree->setFromJson(slug[LoadSaveSystem::BTREE_KEY]);
+                    Slug::createSlug(motion, ECS::Entity(), tree);
                 }
 				else
                 {

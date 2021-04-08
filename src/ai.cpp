@@ -28,7 +28,6 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     int yPos = (snailPos[1] - (0.5*scale))/scale;
     vec2 snailCoord = {yPos, xPos};
 
-    bool aiMovedThisStep = false;
     auto& aiRegistry = ECS::registry<AI>;
     if (ECS::registry<Turn>.components[0].type == ENEMY) {
         for (unsigned int i = 0; i < aiRegistry.components.size(); i++)
@@ -36,12 +35,8 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             auto entity = aiRegistry.entities[i];
             auto& tree = aiRegistry.components[i].tree;
             tree->process(entity);
-            aiMovedThisStep = true;
         }
-
-        if (aiMovedThisStep) {
-            aiMoved = true;
-        }
+        aiMoved = true;
     }
     
 	(void)elapsed_ms; // placeholder to silence unused warning until implemented
@@ -502,6 +497,17 @@ BTState LookForSnail::process(ECS::Entity e) {
     return BTState::Running;
 }
 
+void LookForSnail::writeToJson(json &toSave)
+{
+    toSave[BTKeys::TYPE_KEY] = getNodeType();
+    toSave[BTKeys::IN_RANGE_KEY] = m_inRange;
+}
+
+void LookForSnail::setFromJson(const json &saved)
+{
+    m_inRange = saved[BTKeys::IN_RANGE_KEY];
+}
+
 BTState IsSnailInRange::process(ECS::Entity e) {
     //std::cout << "checking if snail is in range" << std::endl;
     int range = 7;
@@ -545,6 +551,11 @@ BTState IsSnailInRange::process(ECS::Entity e) {
     }
 }
 
+void IsSnailInRange::writeToJson(json &toSave)
+{
+    toSave[BTKeys::TYPE_KEY] = getNodeType();
+}
+
 
 BTState FireXShots::process(ECS::Entity e) {
     
@@ -574,8 +585,17 @@ BTState FireXShots::process(ECS::Entity e) {
     }
    
     return BTState::Success;
-    
+}
 
+void FireXShots::writeToJson(json &toSave)
+{
+    toSave[BTKeys::TYPE_KEY] = getNodeType();
+    toSave[BTKeys::SKIP_KEY] = m_Skip;
+}
+
+void FireXShots::setFromJson(const json &saved)
+{
+    m_Skip = saved[BTKeys::SKIP_KEY];
 }
 
 BTState PredictShot::process(ECS::Entity e) {
@@ -583,8 +603,66 @@ BTState PredictShot::process(ECS::Entity e) {
     return BTState::Success;
 }
 
+void PredictShot::writeToJson(json &toSave)
+{
+    toSave[BTKeys::TYPE_KEY] = getNodeType();
+}
+
 BTState GetToSnail::process(ECS::Entity e) {
     return BTState::Success;
+}
+
+void GetToSnail::writeToJson(json &toSave)
+{
+    toSave[BTKeys::TYPE_KEY] = getNodeType();
+}
+
+std::shared_ptr<BTNode> BTNode::createSubclassNode(NodeType const& type)
+{
+    // T.T really hurts the eyes... sorry
+
+    std::shared_ptr<BTNode> node;
+    if (type == BTKeys::NodeTypes::SEQUENCE_KEY)
+    {
+        node = std::make_shared<BTSequence>(std::vector<std::shared_ptr<BTNode>>());
+    }
+    else if (type == BTKeys::NodeTypes::SELECTOR_KEY)
+    {
+        node = std::make_shared<BTSelector>(std::vector<std::shared_ptr<BTNode>>());
+    }
+    else if (type == BTKeys::NodeTypes::REPEAT_FOR_N_KEY)
+    {
+        node = std::make_shared<RepeatForN>(nullptr, 0);
+    }
+    else if (type == BTKeys::NodeTypes::SNAIL_IN_RANGE_KEY)
+    {
+        node = std::make_shared<IsSnailInRange>();
+    }
+    else if (type == BTKeys::NodeTypes::LOOK_FOR_SNAIL_KEY)
+    {
+        node = std::make_shared<LookForSnail>();
+    }
+    else if (type == BTKeys::NodeTypes::FIRE_X_SHOTS_KEY)
+    {
+        node = std::make_shared<FireXShots>();
+    }
+    else if (type == BTKeys::NodeTypes::RANDOM_SELECTOR)
+    {
+        node = std::make_shared<RandomSelector>(0, nullptr, nullptr);
+    }
+    else if (type == BTKeys::NodeTypes::PREDICT_SHOT_KEY)
+    {
+        node = std::make_shared<PredictShot>();
+    }
+    else if (type == BTKeys::NodeTypes::GET_TO_SNAIL_KEY)
+    {
+        node = std::make_shared<GetToSnail>();
+    }
+    else
+    {
+        throw std::runtime_error("Cannot create BTNode subclass because type does not exist. Type: " + type);
+    }
+    return node;
 }
 
 bool AISystem::aiMoved = false;

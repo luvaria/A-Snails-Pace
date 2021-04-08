@@ -25,7 +25,7 @@ ECS::Entity Slug::createSlug(vec2 position, ECS::Entity entity)
     return entity;
 }
 
-ECS::Entity Slug::createSlug(Motion motion, ECS::Entity entity)
+ECS::Entity Slug::createSlug(Motion motion, ECS::Entity entity, std::shared_ptr<BTNode> tree /* = nullptr */)
 {
     // Create rendering primitives
     std::string key = "slug";
@@ -57,18 +57,21 @@ ECS::Entity Slug::createSlug(Motion motion, ECS::Entity entity)
 
     // Adding Behaviour Tree to Slug
     // testing to see if there is some issue with ai.step
-    std::shared_ptr <BTNode> lfs2 = std::make_unique<LookForSnail>(false);
-    std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>(true);
-    std::shared_ptr <BTNode> iSr = std::make_unique<IsSnailInRange>();
-    std::shared_ptr <BTNode> rfn = std::make_unique<RepeatForN>(lfs, 50);
-    std::shared_ptr <BTNode> fxs = std::make_unique<FireXShots>(0);
-    std::shared_ptr <BTNode> ps = std::make_unique<PredictShot>();
-    std::shared_ptr <BTNode> fxs2 = std::make_unique<FireXShots>(1);
-    std::shared_ptr <BTNode> selector = std::make_unique<BTSelector>(std::vector<std::shared_ptr <BTNode>>({ rfn, fxs }));
-    std::shared_ptr <BTNode> rs = std::make_unique<RandomSelector>(75, fxs2, ps);
-    std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ iSr, selector, lfs2 }));
+    if (!tree)
+    {
+        std::shared_ptr <BTNode> lfs2 = std::make_unique<LookForSnail>(false);
+        std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>(true);
+        std::shared_ptr <BTNode> iSr = std::make_unique<IsSnailInRange>();
+        std::shared_ptr <BTNode> rfn = std::make_unique<RepeatForN>(lfs, 50);
+        std::shared_ptr <BTNode> fxs = std::make_unique<FireXShots>(0);
+        std::shared_ptr <BTNode> ps = std::make_unique<PredictShot>();
+        std::shared_ptr <BTNode> fxs2 = std::make_unique<FireXShots>(1);
+        std::shared_ptr <BTNode> selector = std::make_unique<BTSelector>(std::vector<std::shared_ptr <BTNode>>({ rfn, fxs }));
+        std::shared_ptr <BTNode> rs = std::make_unique<RandomSelector>(75, fxs2, ps);
+        tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ iSr, selector, lfs2 }));
+        tree->init(entity);
+    }
 
-    tree->init(entity);
     auto& ai = ECS::registry<AI>.get(entity);
     ai.tree = tree;
 

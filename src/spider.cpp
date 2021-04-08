@@ -47,14 +47,10 @@ ECS::Entity Spider::createExplodingSpider(Motion givenMotion, ECS::Entity entity
     std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>();
     std::shared_ptr <BTNode> isr = std::make_unique<IsSnailInRange>();
     std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ isr, lfs }));
-    //auto& ai = ECS::registry<AI>.get(entity);
-    //ai.tree = tree;
     tree->init(entity);
     auto& ai = ECS::registry<AI>.get(entity);
     ai.tree = tree;
-    //ECS::registry<std::shared_ptr <BTNode>>.emplace(entity);
     return entity;
-    
 }
 
 ECS::Entity Spider::createSpider(vec2 position, ECS::Entity entity)
@@ -79,7 +75,7 @@ ECS::Entity Spider::createSpider(vec2 position, ECS::Entity entity)
 }
 
 
-ECS::Entity Spider::createSpider(Motion motion, ECS::Entity entity)
+ECS::Entity Spider::createSpider(Motion motion, ECS::Entity entity, std::shared_ptr<BTNode> tree /* = nullptr */)
 {
     // Create rendering primitives
     std::string key = "spider";
@@ -112,11 +108,14 @@ ECS::Entity Spider::createSpider(Motion motion, ECS::Entity entity)
 
     // Adding Behaviour Tree to Spider
     // Maybe add some registry that keeps track of trees??
-    std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>(false);
-    std::shared_ptr <BTNode> isr = std::make_unique<IsSnailInRange>();
-    std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ isr, lfs }));
+    if (!tree)
+    {
+        std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>(false);
+        std::shared_ptr <BTNode> isr = std::make_unique<IsSnailInRange>();
+        tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ isr, lfs }));
+        tree->init(entity);
+    }
 
-    tree->init(entity);
     auto& ai = ECS::registry<AI>.get(entity);
     ai.tree = tree;
     return entity;
