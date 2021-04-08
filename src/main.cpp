@@ -37,6 +37,8 @@ int main()
 {
 	// Initialize the main systems
 	WorldSystem world(window_size_in_px);
+    WorldSystem::window_size_in_game_units = { 1200, 800 };
+
 	MenuSystem menus(*world.window);
 	DialogueSystem dialogue(window_size_in_game_units);
 	RenderSystem renderer(*world.window);

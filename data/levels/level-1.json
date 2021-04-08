@@ -3,7 +3,7 @@
   "description": "First non demo level, slightly more challenging",
   "scale": 100,
   "direction": "right",
-  "turnsPerCamera": 2,
+  "turnsPerCamera": 8,
   "AI-PathFinding-Algorithm": "BFS",
   "endCoordinates": {"x" : 19 , "y" : 6 },
   "tiles": [

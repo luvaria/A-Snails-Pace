@@ -11,11 +11,8 @@ void BackgroundSystem::addBackground(std::string bgName, Parallax::Layer layer)
 	// Create the rendering components
 	std::string key = bgName;
 	ShadedMesh& resource = cache_resource(key);
-	if (resource.effect.program.resource == 0)
-	{
-		resource = ShadedMesh();
-		RenderSystem::createSprite(resource, backgrounds_path(bgName + ".png"), "textured");
-	}
+	resource = ShadedMesh();
+    RenderSystem::createSprite(resource, backgrounds_path(bgName + ".png"), "textured");
 
 	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
 	ECS::registry<ShadedMeshRef>.emplace(entityLeft, resource, RenderBucket::BACKGROUND);
@@ -62,14 +59,13 @@ void BackgroundSystem::addBackground(std::string bgName, Parallax::Layer layer)
 	backgrounds.emplace_back(std::make_pair(entityLeft, entityRight), std::make_pair(entityUp, entityDown));
 }
 
-void BackgroundSystem::addBackgrounds()
+void BackgroundSystem::addBackgrounds(std::string bg)
 {
 	removeBackgrounds();
-
 	std::vector<Parallax::Layer> layers = { Parallax::LAYER_1, Parallax::LAYER_2, Parallax::LAYER_3, Parallax::LAYER_4, Parallax::LAYER_5,Parallax::LAYER_6, Parallax::LAYER_7, Parallax::LAYER_8 };
 	std::vector<std::string> bgNames = { "1", "2", "3", "4", "5", "6", "7", "8" };
 	for (int i = layers.size() - 1; i >= 0; i--)
-		addBackground(bgNames[i], layers[i]);
+		addBackground(bg + "/" + bgNames[i], layers[i]);
 }
 
 void BackgroundSystem::removeBackgrounds()
@@ -124,7 +120,7 @@ void BackgroundSystem::onNotify(Event event)
 	switch (event.type)
 	{
 	case Event::LOAD_BG:
-		addBackgrounds();
+		addBackgrounds(event.dialogue);
 		break;
 	case Event::CLOSE_BG:
 		removeBackgrounds();

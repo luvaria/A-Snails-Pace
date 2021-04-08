@@ -350,11 +350,15 @@ void WorldSystem::restart(int newLevel)
     ECS::ContainerInterface::list_all_components();
 
     // Load backgrounds
-    notify(Event(Event::LOAD_BG));
+//    notify(Event(Event::LOAD_BG));
 
 	// Load level from data/levels
     level = newLevel;
-    LevelLoader::loadLevel(newLevel);
+    LevelLoader lvlldr;
+    BackgroundSystem bg(window_size_in_game_units);
+    lvlldr.addObserver(&bg);
+
+    lvlldr.loadLevel(newLevel);
     // register NPCs in observer pattern
     notify(Event(Event::LEVEL_LOADED));
     // can't access player_snail in level loader
@@ -1286,3 +1290,4 @@ void WorldSystem::stepNPC()
 }
 
 int WorldSystem::snailMoves = 0;
+vec2 WorldSystem::window_size_in_game_units;

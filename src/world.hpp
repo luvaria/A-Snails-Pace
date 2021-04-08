@@ -71,6 +71,7 @@ public:
 
     static float constexpr k_move_seconds = 0.25f;
     static float constexpr k_projectile_turn_ms = 1000.f;
+    static vec2 window_size_in_game_units;
 
 private:
 	// Input callback functions

@@ -10,6 +10,7 @@
 #include "tiles/water.hpp"
 #include "tiles/wall.hpp"
 #include "menus/level_select.hpp"
+#include "parallax_background.hpp"
 
 // stlib
 #include <fstream>
@@ -27,7 +28,22 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 {
 	std::ifstream i(levels_path(levels[levelIndex]));
 	json level = json::parse(i);
+    std::string bgName = "mountain";
+    try {
+        bgName = level["background"];
+    }
+    catch (...) {}
+    
+    std::string weatherName = "snow";
+    try {
+        weatherName = level["weather"];
+    }
+    catch (...) {}
+    
+    notify(Event(Event::LOAD_BG, bgName));
 
+    RenderSystem::randomBoolean = weatherName=="snow";
+    
 	std::string levelName = level["name"];
 
 	AISystem::aiPathFindingAlgorithm = level["AI-PathFinding-Algorithm"];

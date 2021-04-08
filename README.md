@@ -18,3 +18,5 @@ https://img.pngio.com/snowflakes-png-images-free-download-snowflake-png-png-snow
 WaterSplash [sprite]: https://pimen.itch.io/magical-water-effect
 
 WaterTile [sprite]:  https://bayat.itch.io/platform-game-assets/download/eyJleHBpcmVzIjoxNjE2MjQ3MDM1LCJpZCI6MTI4MTM0fQ%3d%3d.wjjmusmz54NOyqViZXG64sZOg%2bc%3d
+
+Parallax asset [PNG]: https://saurabhkgp.itch.io/the-dawn-parallax-background
