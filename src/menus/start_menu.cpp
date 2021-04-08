@@ -6,6 +6,10 @@
 #include "../tiles/wall.hpp"
 #include "../tiles/vine.hpp"
 
+#define SDL_MAIN_HANDLED
+#include <SDL.h>
+#include <SDL_mixer.h>
+
 // start menu button size (since you can't tell based on the Text component)
 const vec2 buttonScale = { 250.f, 33.3f };
 
@@ -33,6 +37,12 @@ void StartMenu::step(vec2 /*window_size_in_game_units*/)
 	{
 		MenuButton& button = buttonContainer.components[i];
 		ECS::Entity buttonEntity = buttonContainer.entities[i];
+
+		if (!textContainer.has(buttonEntity))
+		{
+			continue;
+		}
+
 		Text& buttonText = textContainer.get(buttonEntity);
 
 		updateDisabled(button);
@@ -56,35 +66,13 @@ void StartMenu::loadEntities()
 {
 	// a big boi
 	ECS::Entity snail = Snail::createSnail({ 350, 460 });
-	Motion& motion = ECS::registry<Motion>.get(snail);
-	motion.scale *= 6;
+	Motion& snailMotion = ECS::registry<Motion>.get(snail);
+	snailMotion.scale *= 6;
 	ECS::registry<StartMenuTag>.emplace(snail);
 
 	// ensure snail is not red from quitting during DeathTimer
 	auto& texmesh = *ECS::registry<ShadedMeshRef>.get(snail).reference_to_cache;
 	texmesh.texture.color = { 1, 1, 1 };
-
-	// decorative tiles
-	// assuming 1200 x 800
-	float scale = TileSystem::getScale();
-	// bottom platform
-	for (int x = 0; x < 12; x++)
-	{
-		ECS::Entity wall = WallTile::createWallTile({ (x + 0.5f) * scale, 7.5f * scale });
-		ECS::registry<StartMenuTag>.emplace(wall);
-	}
-	// vines
-	for (int x = 0; x < 12; x++)
-	{
-		if (x == 0 || x == 1 || x == 10 || x == 11)
-		{
-			for (int y = 1; y < 7; y++)
-			{
-				ECS::Entity vine = VineTile::createVineTile({ (x + 0.5f) * scale, (y + 0.5f) * scale });
-				ECS::registry<StartMenuTag>.emplace(vine);
-			}
-		}
-	}
 
 	const auto ABEEZEE_REGULAR = Font::load(ABEEZEE_REGULAR_PATH);
 	const auto VIGA_REGULAR = Font::load(VIGA_REGULAR_PATH);
@@ -166,6 +154,130 @@ void StartMenu::loadEntities()
     ECS::registry<StartMenuTag>.emplace(clearCollectibleDataEntity);
     buttonEntities.push_back(clearCollectibleDataEntity);
 
+	// volume slider
+	ECS::Entity volumeSliderEntity = ECS::Entity();
+
+	std::string sliderKey = "volume_slider";
+	ShadedMesh& sliderResource = cache_resource(sliderKey);
+	if (sliderResource.effect.program.resource == 0) {
+		constexpr float z = -0.1f;
+
+		ColoredVertex v;
+		v.color = DEFAULT_COLOUR;
+		v.position = { -0.5, -0.5, z };
+		sliderResource.mesh.vertices.push_back(v);
+		v.position = { -0.5, 0.5, z };
+		sliderResource.mesh.vertices.push_back(v);
+		v.position = { 0.5, 0.5, z };
+		sliderResource.mesh.vertices.push_back(v);
+		v.position = { 0.5, -0.5, z };
+		sliderResource.mesh.vertices.push_back(v);
+
+		sliderResource.mesh.vertex_indices.push_back(0);
+		sliderResource.mesh.vertex_indices.push_back(1);
+		sliderResource.mesh.vertex_indices.push_back(3);
+		sliderResource.mesh.vertex_indices.push_back(1);
+		sliderResource.mesh.vertex_indices.push_back(2);
+		sliderResource.mesh.vertex_indices.push_back(3);
+
+		RenderSystem::createColoredMesh(sliderResource, "colored_mesh");
+	}
+
+	ECS::registry<ShadedMeshRef>.emplace(volumeSliderEntity, sliderResource, RenderBucket::OVERLAY);
+
+	Motion& volMotion = ECS::registry<Motion>.emplace(volumeSliderEntity);
+	volMotion.angle = 0.f;
+	volMotion.velocity = { 0, 0 };
+	volMotion.position = { 100, 50 };
+	volMotion.scale = { 100, 10 };
+
+	ECS::registry<MenuButton>.emplace(volumeSliderEntity, ButtonEventType::SET_VOLUME);
+	ECS::registry<StartMenuTag>.emplace(volumeSliderEntity);
+
+	// slider feedback
+	float curVol = static_cast<float>(max(Mix_Volume(-1, -1), Mix_VolumeMusic(-1))) / MIX_MAX_VOLUME;
+	ECS::Entity volumeIndicatorEntity = ECS::Entity();
+
+	std::string indicatorKey = "volume_indicator";
+	ShadedMesh& indicatorResource = cache_resource(indicatorKey);
+	if (indicatorResource.effect.program.resource == 0) {
+		constexpr float z = -0.1f;
+
+		ColoredVertex v;
+		v.color = HIGHLIGHT_COLOUR;
+		v.position = { -0.5, -0.5, z };
+		indicatorResource.mesh.vertices.push_back(v);
+		v.position = { -0.5, 0.5, z };
+		indicatorResource.mesh.vertices.push_back(v);
+		v.position = { 0.5, 0.5, z };
+		indicatorResource.mesh.vertices.push_back(v);
+		v.position = { 0.5, -0.5, z };
+		indicatorResource.mesh.vertices.push_back(v);
+
+		indicatorResource.mesh.vertex_indices.push_back(0);
+		indicatorResource.mesh.vertex_indices.push_back(1);
+		indicatorResource.mesh.vertex_indices.push_back(3);
+		indicatorResource.mesh.vertex_indices.push_back(1);
+		indicatorResource.mesh.vertex_indices.push_back(2);
+		indicatorResource.mesh.vertex_indices.push_back(3);
+
+		RenderSystem::createColoredMesh(indicatorResource, "colored_mesh");
+	}
+
+	ECS::registry<ShadedMeshRef>.emplace(volumeIndicatorEntity, indicatorResource, RenderBucket::OVERLAY_2);
+
+	Motion& indicatorMotion = ECS::registry<Motion>.emplace(volumeIndicatorEntity);
+	indicatorMotion.angle = 0.f;
+	indicatorMotion.velocity = { 0, 0 };
+	indicatorMotion.scale = { 100, 10 };
+	indicatorMotion.scale.x *= curVol;
+	indicatorMotion.position = { 50 + indicatorMotion.scale.x / 2, 50 };
+
+	ECS::registry<StartMenuTag>.emplace(volumeIndicatorEntity);
+	ECS::registry<VolumeIndicator>.emplace(volumeIndicatorEntity);
+
+	// volume min max icons
+	// min
+	ECS::Entity minVolEntity = ECS::Entity();
+	std::string minVolKey = "min_volume";
+	ShadedMesh& minVolResource = cache_resource(minVolKey);
+	if (minVolResource.effect.program.resource == 0)
+	{
+		minVolResource = ShadedMesh();
+		RenderSystem::createSprite(minVolResource, textures_path("min_volume.png"), "textured", false);
+	}
+
+	ECS::registry<ShadedMeshRef>.emplace(minVolEntity, minVolResource, RenderBucket::OVERLAY);
+
+	Motion& minVolMotion = ECS::registry<Motion>.emplace(minVolEntity);
+	minVolMotion.angle = 0.f;
+	minVolMotion.velocity = { 0, 0 };
+	minVolMotion.position = { 25, 50 };
+	minVolMotion.scale = static_cast<vec2>(minVolResource.texture.size) / static_cast<vec2>(minVolResource.texture.size).y * 20.f;
+
+	ECS::registry<MenuButton>.emplace(minVolEntity, ButtonEventType::MIN_VOLUME);
+	ECS::registry<StartMenuTag>.emplace(minVolEntity);
+
+	// max
+	ECS::Entity maxVolEntity = ECS::Entity();
+	std::string maxVolKey = "max_volume";
+	ShadedMesh& maxVolResource = cache_resource(maxVolKey);
+	if (maxVolResource.effect.program.resource == 0)
+	{
+		maxVolResource = ShadedMesh();
+		RenderSystem::createSprite(maxVolResource, textures_path("max_volume.png"), "textured", false);
+	}
+
+	ECS::registry<ShadedMeshRef>.emplace(maxVolEntity, maxVolResource, RenderBucket::OVERLAY);
+
+	Motion& maxVolMotion = ECS::registry<Motion>.emplace(maxVolEntity);
+	maxVolMotion.angle = 0.f;
+	maxVolMotion.velocity = { 0, 0 };
+	maxVolMotion.position = { 175, 50 };
+	maxVolMotion.scale = static_cast<vec2>(maxVolResource.texture.size) / static_cast<vec2>(maxVolResource.texture.size).y * 20.f;
+
+	ECS::registry<MenuButton>.emplace(maxVolEntity, ButtonEventType::MAX_VOLUME);
+	ECS::registry<StartMenuTag>.emplace(maxVolEntity);
 }
 
 void StartMenu::removeEntities()
@@ -221,21 +333,32 @@ void StartMenu::on_mouse_move(vec2 mouse_pos)
 	{
 		MenuButton& button = buttonContainer.components[i];
 		ECS::Entity buttonEntity = buttonContainer.entities[i];
-		Text& buttonText = textContainer.get(buttonEntity);
-
-		// check whether button is being hovered over
-		button.selected = mouseover(vec2(buttonText.position.x, buttonText.position.y), buttonScale, mouse_pos);
-		// track for deselect on key press
-		if (button.selected)
+		
+		// text buttons
+		if (textContainer.has(buttonEntity))
 		{
-			activeButtonEntity = buttonEntity;
+			Text& buttonText = textContainer.get(buttonEntity);
 
-			// find and set index of this active button in the button entities vector
-			for (int j = 0; j < buttonEntities.size(); j++)
+			// check whether button is being hovered over
+			button.selected = mouseover(vec2(buttonText.position.x, buttonText.position.y), buttonScale, mouse_pos);
+			// track for deselect on key press
+			if (button.selected)
 			{
-				if (buttonEntity.id == buttonEntities[j].id)
-					activeButtonIndex = j;
+				activeButtonEntity = buttonEntity;
+
+				// find and set index of this active button in the button entities vector
+				for (int j = 0; j < buttonEntities.size(); j++)
+				{
+					if (buttonEntity.id == buttonEntities[j].id)
+						activeButtonIndex = j;
+				}
 			}
+		}
+		// volume slider
+		else
+		{
+			Motion& motion = ECS::registry<Motion>.get(buttonEntity);
+			button.selected = mouseover(motion, mouse_pos);
 		}
 	}
 }
@@ -245,11 +368,14 @@ void StartMenu::selectedKeyEvent()
 	auto& buttonContainer = ECS::registry<MenuButton>;
 	for (unsigned int i = 0; i < buttonContainer.components.size(); i++)
 	{
+		ECS::Entity buttonEntity = buttonContainer.entities[i];
 		MenuButton& button = buttonContainer.components[i];
 
 		// perform action for button being hovered over (and pressed)
 		if (button.selected && !button.disabled)
 		{
+			double volumeRatio = 0;
+
 			switch (button.event)
 			{
 			case ButtonEventType::START_GAME:
@@ -270,6 +396,22 @@ void StartMenu::selectedKeyEvent()
 			case ButtonEventType::CLEAR_COLLECT_DATA:
 				ECS::registry<Inventory>.components[0].clear();
 			    break;
+			case ButtonEventType::MIN_VOLUME:
+				setVolume(buttonEntity, 0);
+				break;
+			case ButtonEventType::MAX_VOLUME:
+				setVolume(buttonEntity, 1);
+				break;
+			case ButtonEventType::SET_VOLUME:
+			{
+				double xPos = 0;
+				double yPos = 0;
+				glfwGetCursorPos(&window, &xPos, &yPos);
+				Motion& motion = ECS::registry<Motion>.get(buttonEntity);
+				double volumeRatio = (xPos - (motion.position.x - abs(motion.scale.x) / 2)) / abs(motion.scale.x);
+				setVolume(buttonEntity, volumeRatio);
+				break;
+			}
 			default:
 				break;
 			}
@@ -283,4 +425,17 @@ void StartMenu::updateDisabled(MenuButton &button)
     {
         button.disabled = ECS::registry<Inventory>.components[0].collectibles.empty();
     }
+}
+
+void StartMenu::setVolume(ECS::Entity buttonEntity, double volumeRatio)
+{
+	Motion& motion = ECS::registry<Motion>.get(buttonEntity);
+
+	ECS::Entity volumeIndicatorEntity = ECS::registry<VolumeIndicator>.entities[0];
+	Motion& indicatorMotion = ECS::registry<Motion>.get(volumeIndicatorEntity);
+	indicatorMotion.scale.x = volumeRatio * 100;
+	indicatorMotion.position = { 50 + indicatorMotion.scale.x / 2, 50 };
+
+	Mix_Volume(-1, volumeRatio * MIX_MAX_VOLUME);
+	Mix_VolumeMusic(volumeRatio * MIX_MAX_VOLUME);
 }

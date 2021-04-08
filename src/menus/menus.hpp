@@ -37,3 +37,6 @@ private:
 	// delete queue (upon menu close notify)
 	std::stack<Menu*> toDelete;
 };
+
+// component tag
+struct MenuTag {};

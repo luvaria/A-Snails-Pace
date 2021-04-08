@@ -40,6 +40,7 @@ private:
 	void drawTexturedMesh(ECS::Entity entity, const mat3& projection, float elapsed_ms);
 	void drawToScreen();
 	void HandleFrameSwitchTiming(ECS::Entity entity, float elapsed_ms);
+    void drawTexturedMeshForParticles(ECS::Entity entity, vec2 window_size_in_game_units, const mat3& projection, float elapsed_ms);
 
 	// Calculates 2D projection matrix based on offset
 	mat3 projection2D(vec2 window_size_in_game_units, vec2 offset);
