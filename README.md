@@ -21,3 +21,4 @@ WaterTile [sprite]:  https://bayat.itch.io/platform-game-assets/download/eyJleHB
 
 ### Audio assets
 Background music: "Arcade - Battle Network" by [TheoAllen on itch.io](https://theoallen.itch.io/theos-bgm-collection)
+Death sound: "8 bit Death sound" by [MentosLat on freesound.org](https://freesound.org/people/MentosLat/sounds/417486/)

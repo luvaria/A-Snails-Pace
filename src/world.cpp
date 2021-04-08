@@ -121,13 +121,13 @@ void WorldSystem::init_audio()
 
     background_music = Mix_LoadMUS(audio_path("Arcade - Battle Network.mid").c_str());
     level_complete_sound = Mix_LoadWAV(audio_path("Jingle - Victory.wav").c_str());
-    snail_dead_sound = Mix_LoadWAV(audio_path("Jingle - Lose.wav").c_str());
+    snail_dead_sound = Mix_LoadWAV(audio_path("417486__mentoslat__8-bit-death-sound.wav").c_str());
 
     if (background_music == nullptr || level_complete_sound == nullptr || snail_dead_sound == nullptr)
         throw std::runtime_error("Failed to load sounds make sure the data directory is present: " +
             audio_path("Arcade - Battle Network.mid") +
             audio_path("Jingle - Victory.wav") +
-            audio_path("Jingle - Lose.wav"));
+            audio_path("417486__mentoslat__8-bit-death-sound.wav"));
 
 }
 
@@ -428,7 +428,7 @@ void WorldSystem::onNotify(Event event) {
                 // Initiate death unless already dying
                 if (!ECS::registry<DeathTimer>.has(event.entity))
                 {
-                    // Scream, reset timer, and make the snail sink
+                    // Play death sound, reset timer
                     ECS::registry<DeathTimer>.emplace(event.entity);
                     Mix_PlayChannel(-1, snail_dead_sound, 0);
                 }
