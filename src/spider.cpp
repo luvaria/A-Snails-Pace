@@ -151,6 +151,9 @@ ECS::Entity SuperSpider::createSuperSpider(vec2 position, ECS::Entity entity)
 	ECS::registry<SuperSpider>.emplace(entity);
 	ECS::registry<DirectionInput>.emplace(entity);
 
+	auto& fire = ECS::registry<Fire>.emplace(entity);
+	fire.fired = false;
+
 
 	// Adding Behaviour Tree to Spider
 	// Maybe add some registry that keeps track of trees??

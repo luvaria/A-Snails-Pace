@@ -72,6 +72,10 @@ struct Motion {
 	int lastDirection = DIRECTION_NORTH;
 };
 
+struct Fire {
+	bool fired;
+};
+
 struct SpriteSheet 
 {
 	int numAnimationFrames = 1;

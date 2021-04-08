@@ -38,9 +38,12 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             tree->process(entity);
             
             
-            if (ECS::registry<SuperSpider>.has(entity) == true && fire == true) {
-                fire = false;
-                superSpiderShoot(entity);
+            if (ECS::registry<SuperSpider>.has(entity) == true) {
+                auto& fire = ECS::registry<Fire>.get(entity);
+                if (fire.fired == true) {
+                    fire.fired = false;
+                    superSpiderShoot(entity);
+                }
             }
             
             
@@ -52,7 +55,11 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
         }
     }
     if (ECS::registry<Turn>.components[0].type == PLAYER_WAITING) {
-        fire = true;
+        for (int i = 0; i < ECS::registry<Fire>.components.size(); i++) {
+            auto& entity = ECS::registry<Fire>.entities[i];
+            auto& fired = ECS::registry<Fire>.components[i].fired;
+            fired = true;
+        }
     }
 	(void)elapsed_ms; // placeholder to silence unused warning until implemented
 	(void)window_size_in_game_units; // placeholder to silence unused warning until implemented
