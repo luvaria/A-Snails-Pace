@@ -288,9 +288,18 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
                 Camera::update(k_move_seconds);
             }
         }
+        for (auto& entity : ECS::registry<Fish>.entities) {
+            auto& move = ECS::registry<Move>.get(entity);
+            move.hasMoved = false;
+        }
     }
 	else if (turnType == ENEMY)
     {
+        int move = 1;
+        for (auto& entity : ECS::registry<Fish>.entities) {
+            fishMove(entity, move);
+        }
+
 	    // this works out so that the projectiles move a set amount of time per enemy turn
 	    if (ECS::registry<Projectile>.size() != 0)
         {
@@ -316,6 +325,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
                 turnType = PLAYER_WAITING;
             }
         }
+
     }
 	else if (turnType == CAMERA)
     {
@@ -1038,41 +1048,42 @@ void WorldSystem::fishMove(ECS::Entity& entity, int& moves) {
     int xCoord = static_cast<int>(motion.position.x / scale);
     int yCoord = static_cast<int>(motion.position.y / scale);
     auto& move = ECS::registry<Move>.get(entity);
-    if (move.direction == true) {
-        if (yCoord - 1 < 0) {
+    if (move.hasMoved == false) {
+        if (move.direction == true) {
+            if (yCoord - 1 < 0) {
+                return;
+            }
+            Tile upDest = tiles[yCoord - 1][xCoord];
+            if (upDest.type == WALL) {
+                move.direction = false;
+                move.hasMoved = true;
+                return;
+            }
+            Destination& dest = ECS::registry<Destination>.has(entity) ? ECS::registry<Destination>.get(entity) : ECS::registry<Destination>.emplace(entity);
+            dest.position = { upDest.x, upDest.y };
+            motion.velocity = (dest.position - motion.position) / k_move_seconds;
+            moves--;
+            move.hasMoved = true;
             return;
         }
-        Tile upDest = tiles[yCoord - 1][xCoord];
-        if (upDest.type == WALL) {
+        else {
+            if (yCoord + 1 == tiles.size()) {
+                move.direction = true;
+                return;
+            }
+            Tile downDest = tiles[yCoord + 1][xCoord];
+            if (downDest.type == WATER) {
+                move.direction = true;
+            }
+            Destination& dest = ECS::registry<Destination>.has(entity) ? ECS::registry<Destination>.get(entity) : ECS::registry<Destination>.emplace(entity);
+            dest.position = { downDest.x, downDest.y };
+            motion.velocity = (dest.position - motion.position) / k_move_seconds;
+            moves--;
+            move.hasMoved = true;
             return;
         }
-        Destination& dest = ECS::registry<Destination>.has(entity) ? ECS::registry<Destination>.get(entity) : ECS::registry<Destination>.emplace(entity);
-        dest.position = { upDest.x, upDest.y };
-        motion.velocity = (dest.position - motion.position) / k_move_seconds;
-        moves--;
-        if (yCoord - 2 < 0) {
-            move.direction = false;
-            return;
-        }
-        Tile next = tiles[yCoord - 2][xCoord];
-        if (next.type == WALL) {
-            move.direction = false;
-        }
-        return;
     }
     else {
-        if (yCoord + 1 == tiles.size()) {
-            move.direction = true;
-            return;
-        }
-        Tile downDest = tiles[yCoord + 1][xCoord];
-        if (downDest.type == WATER) {
-            move.direction = true;
-        }
-        Destination& dest = ECS::registry<Destination>.has(entity) ? ECS::registry<Destination>.get(entity) : ECS::registry<Destination>.emplace(entity);
-        dest.position = { downDest.x, downDest.y };
-        motion.velocity = (dest.position - motion.position) / k_move_seconds;
-        moves--;
         return;
     }
 }

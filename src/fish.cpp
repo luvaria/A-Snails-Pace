@@ -21,6 +21,7 @@ ECS::Entity Fish::createFish(vec2 position, ECS::Entity entity)
 		resource_min.mesh.loadFromMinOBJFile(mesh_path("fish-min.obj"));
 	}
 
+
 	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
 	//we use the same entity for min and regular meshes, so you can access either one.
 	ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::CHARACTER);
@@ -37,6 +38,7 @@ ECS::Entity Fish::createFish(vec2 position, ECS::Entity entity)
 	motion.lastDirection = DIRECTION_NORTH;
 	auto& move = ECS::registry<Move>.emplace(entity);
 	move.direction = true;
+	move.hasMoved = true;
 
 	
 	ECS::registry<Enemy>.emplace(entity);

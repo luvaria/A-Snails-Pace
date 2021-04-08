@@ -3,21 +3,21 @@
   "description": "Fourth Level",
   "scale": 100,
   "direction": "right",
-  "turnsPerCamera": 200,
+  "turnsPerCamera": 2,
   "AI-PathFinding-Algorithm": "Astar",
   "endCoordinates": {
-    "x": 28,
+    "x": 36,
     "y": 6
   },
   "tiles": [
-    "                              ",
-    "  XXXXXXXXXXXXXXXXXXXXXXX     ",
-    "   V                          ",
-    "   V                          ",
-    "   V                          ",
-    "   V                          ",
-    "   V                          ",
-    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    "                                     ",
+    "                                     ",
+    "XXXXXXXXXXXXXX                XXXX   ",
+    "   V      V      XXXXXXXX      V     ",
+    "   V      V       V    V       V     ",
+    "   V      V       V    V XXXXXXXX    ",
+    "   V      V       V    V             ",
+    "XXXXXXXXXWXWWWXXXXXXXXXXXXWWWWWWWWXXX"
   ],
   "characters": {
     "snail": [
@@ -26,11 +26,44 @@
         "y": 6
       }
     ],
+    "spider": [
+      {
+        "x": 18,
+        "y": 6
+      },
+      {
+        "x": 20,
+        "y": 6
+      },
+      {
+        "x": 21,
+        "y": 2
+      },
+      {
+        "x": 17,
+        "y": 2
+      },
+      {
+        "x": 30,
+        "y": 4
+      },
+      {
+        "x": 33,
+        "y": 1
+      }
+    ],
     "bird": [
       {
         "x": 9,
-        "y": 4
+        "y": 5
       }
     ]
-  }
+  },
+  "collectibles": [
+    {
+      "id": 1,
+      "x": 12,
+      "y": 1
+    }
+  ]
 }

@@ -12,4 +12,5 @@ struct Fish
 
 struct Move {
 	bool direction;
+	bool hasMoved;
 };

@@ -38,6 +38,9 @@ ECS::Entity Bird::createBird(vec2 position, ECS::Entity entity)
 	motion.scale *= 0.9f;
 	motion.lastDirection = DIRECTION_WEST;
 
+	auto& fire = ECS::registry<Fire>.emplace(entity);
+	fire.fired = false;
+
 	//ECS::registry<AI>.emplace(entity);
 	ECS::registry<Bird>.emplace(entity);
 	ECS::registry<Enemy>.emplace(entity);
