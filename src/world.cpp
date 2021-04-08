@@ -277,6 +277,11 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
         {
             turnType = ENEMY;
             AISystem::aiMoved = false;
+            for (auto entity : ECS::registry<Projectile>.entities)
+            {
+                auto& proj = ECS::registry<Projectile>.get(entity);
+                proj.moved++;
+            }
             projectile_turn_over_time = k_projectile_turn_ms;
             snail_move = 1;
             turn_number++;

@@ -97,5 +97,6 @@ ECS::Entity SlugProjectile::createProjectile(vec2 position, vec2 velocity) {
 
 	return entity;
 }
-
+int Projectile::snailProjectileMaxMoves = 1;
+int Projectile::aiProjectileMaxMoves = 1;
 

@@ -11,6 +11,7 @@
 #include "tiles/wall.hpp"
 #include "menus/level_select.hpp"
 #include "parallax_background.hpp"
+#include "projectile.hpp"
 
 // stlib
 #include <fstream>
@@ -31,14 +32,17 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
     std::string bgName = "mountain";
     try {
         bgName = level["background"];
-    }
-    catch (...) {}
-    
+    } catch (...) {}
     std::string weatherName = "snow";
     try {
         weatherName = level["weather"];
-    }
-    catch (...) {}
+    } catch (...) {}
+    try {
+        Projectile::aiProjectileMaxMoves = level["aiProjectileMaxMoves"];
+    } catch (...) {Projectile::aiProjectileMaxMoves = 1;}
+    try {
+        Projectile::snailProjectileMaxMoves = level["snailProjectileMaxMoves"];
+    } catch (...) {Projectile::snailProjectileMaxMoves = 1;}
     
     notify(Event(Event::LOAD_BG, bgName));
 

@@ -6,13 +6,15 @@
 struct Projectile
 {
 	// tags all projectile types
+    int moved = 0;
+    static int snailProjectileMaxMoves;
+    static int aiProjectileMaxMoves;
 };
 
 struct SnailProjectile
 {
 	// Creates all the associated render resources and default transform
 	static ECS::Entity createProjectile(vec2 position, vec2 velocity, bool preview = false);
-
 	struct Preview
 	{
 	    static void removeCurrent();
@@ -22,3 +24,4 @@ struct SnailProjectile
 struct SlugProjectile {
 	static ECS::Entity createProjectile(vec2 position, vec2 velocity);
 };
+

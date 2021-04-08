@@ -702,6 +702,13 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             vec2 velocity = motion.velocity;
             motion.position += velocity * step_seconds;
         }
+        for (auto entity : ECS::registry<Projectile>.entities)
+        {
+            auto& proj = ECS::registry<Projectile>.get(entity);
+            if(proj.moved >= (ECS::registry<SnailProjectile>.has(entity) ? Projectile::snailProjectileMaxMoves : Projectile::aiProjectileMaxMoves)) {
+                ECS::ContainerInterface::remove_all_components_of(entity);
+            }
+        }
     }
     // if snail is moving to its destination then nothing else should be! for now...
 	else if (turnType == PLAYER_UPDATE)
@@ -732,6 +739,10 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             auto& motion = ECS::registry<Motion>.get(entity);
             vec2 velocity = motion.velocity;
             motion.position += velocity * step_seconds;
+            auto& proj = ECS::registry<Projectile>.get(entity);
+            if(proj.moved > Projectile::snailProjectileMaxMoves) {
+                ECS::ContainerInterface::remove_all_components_of(entity);
+            }
         }
 		// making sure slug projectiles move
 		for (auto entity : ECS::registry<SlugProjectile>.entities)
@@ -739,6 +750,10 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 			auto& motion = ECS::registry<Motion>.get(entity);
 			vec2 velocity = motion.velocity;
 			motion.position += velocity * step_seconds;
+            auto& proj = ECS::registry<Projectile>.get(entity);
+            if(proj.moved > Projectile::aiProjectileMaxMoves) {
+                ECS::ContainerInterface::remove_all_components_of(entity);
+            }
 		}
 
         // move enemies

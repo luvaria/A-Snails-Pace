@@ -5,6 +5,8 @@
   "direction": "right",
   "turnsPerCamera": 2,
   "AI-PathFinding-Algorithm": "Astar",
+  "snailProjectileMaxMoves" : 3,
+  "aiProjectileMaxMoves" : 3,
   "endCoordinates": {
     "x": 11,
     "y": 6
