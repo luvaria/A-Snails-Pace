@@ -81,10 +81,7 @@ WorldSystem::WorldSystem(ivec2 window_size_px) :
     auto& turn = ECS::registry<Turn>.emplace(turnEntity);
     turn.type = PLAYER_WAITING;
 
-
-	// Playing background music indefinitely
 	init_audio();
-	Mix_PlayMusic(background_music, -1);
 	std::cout << "Loaded music\n";
 }
 
@@ -486,6 +483,9 @@ void WorldSystem::onNotify(Event event) {
         // level index exists
         assert(event.number >= 0 && event.number < levels.size());
         level = event.number;
+
+        // Play background music
+        Mix_PlayMusic(background_music, -1);
 
         restart(level);
     } else if (event.type == Event::SPLASH) {
