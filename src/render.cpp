@@ -69,6 +69,10 @@ void RenderSystem::drawTexturedMeshForParticles(ECS::Entity entity, vec2 window_
         translation.y = abs(motion.position.y - m.position.y)/15.f;
         translations.push_back(translation);
     }
+    
+    if(translations.size() == 0) {
+        return;
+    }
 
     unsigned int instanceVBO;
     glGenBuffers(1, &instanceVBO);

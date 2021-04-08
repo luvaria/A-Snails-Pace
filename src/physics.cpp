@@ -638,11 +638,15 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             
             if(isDeprecated && WorldSystem::offScreen(motion.position, window_size_in_game_units, cameraOffset)) {
                 auto& elementList = ECS::registry<WeatherParentParticle>.get(parentEntity).particles;
-                std::vector<ECS::Entity>::iterator it3;
-                for (it3 = elementList.begin(); it3 != elementList.end(); ++it3) {
-                    if (it3->id == entity.id) {
-                        it3 = elementList.erase(it3); // After erasing, it3 is now pointing the next location.
-                        --it3; // Go to the prev location because of ++it3 in the end of for loop.
+                
+                auto it = elementList.begin();
+                while (it != elementList.end())
+                {
+                    if (it->id == entity.id) {
+                        it = elementList.erase(it);
+                    }
+                    else {
+                        ++it;
                     }
                 }
                 ECS::ContainerInterface::remove_all_components_of(entity);
