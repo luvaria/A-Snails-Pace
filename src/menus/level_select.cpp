@@ -58,13 +58,6 @@ void LevelSelect::step(vec2 /*window_size_in_game_units*/)
 
 void LevelSelect::loadEntities()
 {
-	// a big bad
-	ECS::Entity spider = Spider::createSpider({ 1100, 550 });
-	Motion& motion = ECS::registry<Motion>.get(spider);
-	motion.scale *= 10;
-	ECS::registry<ShadedMeshRef>.get(spider).renderBucket = RenderBucket::BACKGROUND_2; // render spider behind levels
-	ECS::registry<LevelSelectTag>.emplace(spider);
-
 	// level previews
 	vec2 previewSpacing = LevelLoader::previewScale * LevelLoader::previewDimensions + 2.f * vec2(LevelLoader::previewScale, 2.f * LevelLoader::previewScale);
 	vec2 previewOffset = vec2(100.f, 100.f);
