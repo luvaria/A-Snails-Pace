@@ -14,6 +14,7 @@
 // stlib
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 
 char constexpr LoadSaveSystem::PLAYER_DIR[];
 char constexpr LoadSaveSystem::PLAYER_FILE[];
