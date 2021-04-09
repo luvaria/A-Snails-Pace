@@ -5,7 +5,6 @@
   "direction": "right",
   "turnsPerCamera": 2,
   "AI-PathFinding-Algorithm": "BFS",
-  "background": "castle",
   "endCoordinates": {
     "x": 23,
     "y": 14

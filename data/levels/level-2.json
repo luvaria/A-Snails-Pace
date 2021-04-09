@@ -3,9 +3,11 @@
   "description": "Second Level",
   "scale": 100,
   "direction": "right",
-  "turnsPerCamera": 5,
+  "turnsPerCamera": 7,
   "AI-PathFinding-Algorithm": "Astar",
-  "background": "desert",
+  "snailProjectileMaxMoves" : 5,
+  "aiProjectileMaxMoves" : 3,
+  "background": "forest",
   "weather": "rain",
   "endCoordinates": {
     "x": 28,

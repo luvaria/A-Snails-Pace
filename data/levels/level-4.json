@@ -4,7 +4,10 @@
   "scale": 100,
   "direction": "right",
   "turnsPerCamera": 2,
+  "background": "castle",
   "AI-PathFinding-Algorithm": "Astar",
+  "snailProjectileMaxMoves" : 2,
+  "aiProjectileMaxMoves" : 8,
   "endCoordinates": {
     "x": 36,
     "y": 6
