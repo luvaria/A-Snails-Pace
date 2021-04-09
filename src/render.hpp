@@ -3,6 +3,8 @@
 #include "common.hpp"
 #include "tiny_ecs.hpp"
 #include "render_components.hpp"
+#include <random>
+#include <functional>
 
 struct InstancedMesh;
 struct ShadedMesh;
@@ -30,8 +32,38 @@ public:
 	// Expose the creating of visual representations to other systems
 	static void createSprite(ShadedMesh& mesh_container, std::string texture_path, std::string shader_name, bool isSpriteSheet = false);
 	static void createColoredMesh(ShadedMesh& mesh_container, std::string shader_name);
+    
+    static bool randomBool() {
+        static auto gen = std::bind(std::uniform_int_distribution<>(0,1),std::default_random_engine());
+        bool b = gen();
+        return b;
+    }
+    
+    static bool randomBoolean; 
 
 private:
+    float quadVerticesSnow[30] = {
+            -0.05f,  0.05f,  1.0f, 1.0f, 1.0f,
+             0.05f, -0.05f,  1.0f, 1.0f, 1.0f,
+            -0.05f, -0.05f,  1.0f, 1.0f, 1.0f,
+
+            -0.05f,  0.05f,  1.0f, 1.0f, 1.0f,
+             0.05f, -0.05f,  1.0f, 1.0f, 1.0f,
+             0.05f,  0.05f,  1.0f, 1.0f, 1.0f
+    };
+    
+    float quadVerticesRain[30] = {
+        -0.05f,  0.05f,  0.447f, 0.737f, 0.831f,
+         0.05f, -0.05f,  0.447f, 0.737f, 0.831f,
+        -0.05f, -0.05f,  0.447f, 0.737f, 0.831f,
+
+        -0.05f,  0.05f,  0.447f, 0.737f, 0.831f,
+         0.05f, -0.05f,  0.447f, 0.737f, 0.831f,
+         0.05f,  0.05f,  0.447f, 0.737f, 0.831f
+    };
+    
+    
+    
 	// Initialize the screeen texture used as intermediate render target
 	// The draw loop first renders to this texture, then it is used for the water shader
 	void initScreenTexture();

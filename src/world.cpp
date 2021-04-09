@@ -338,6 +338,16 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
         {
             turnType = ENEMY;
             AISystem::aiMoved = false;
+            for (auto entity : ECS::registry<Projectile>.entities)
+            {
+                bool isSnailProjectile = ECS::registry<SnailProjectile>.has(entity);
+                auto& proj = ECS::registry<Projectile>.get(entity);
+                auto& motion = ECS::registry<Motion>.get(entity);
+                int maxMoves = isSnailProjectile ? Projectile::snailProjectileMaxMoves : Projectile::aiProjectileMaxMoves;
+                float scaleFactor = (1.f - (proj.moved*1.0/maxMoves*1.0));
+                motion.scale = proj.origScale * vec2(scaleFactor, scaleFactor);
+                proj.moved++;
+            }
             projectile_turn_over_time = k_projectile_turn_ms;
             snail_move = 1;
             turn_number++;
@@ -418,12 +428,13 @@ void WorldSystem::restart(int newLevel, bool fromSave)
         }
     }
 
-    // Load backgrounds
-    notify(Event(Event::LOAD_BG));
-
 	// Load level from data/levels
     level = newLevel;
-    LevelLoader::loadLevel(newLevel, false, {0,0}, fromSave); // the trouble with multiple defaults.. oh well its m4
+    LevelLoader lvlldr;
+    BackgroundSystem bg(window_size_in_game_units);
+    lvlldr.addObserver(&bg);
+    lvlldr.loadLevel(newLevel, false, {0,0}, fromSave);
+
     // register NPCs in observer pattern
     notify(Event(Event::LEVEL_LOADED));
     // can't access player_snail in level loader
@@ -884,6 +895,7 @@ void WorldSystem::goLeft(ECS::Entity &entity, int &moves)
             }
         }
         nextTile = nextTile.type == WALL || leftTile.type == VINE ? leftTile : nextTile;
+        if (nextTile.type == INACCESSIBLE) return;
         changeDirection(motion, currTile, nextTile, DIRECTION_WEST, entity);
     }
     else if (abs(motion.angle) == PI / 2 && leftTile.type == VINE && currTile.type == VINE) {
@@ -926,7 +938,9 @@ void WorldSystem::goRight(ECS::Entity& entity, int& moves) {
     auto& camera = ECS::registry<Camera>.entities[0];
     vec2 cameraOffset = ECS::registry<Motion>.get(camera).position;
     int cameraOffsetX = cameraOffset.x / TileSystem::getScale();
-    int cameraRight = (window_width / scale) + cameraOffsetX;
+    int window_size = window_size_in_game_units.x;
+    int cameraRight = (window_size / scale) + cameraOffsetX;
+
     if (xCoord + 1 > tiles[yCoord].size() - 1 || xCoord + 1 >= cameraRight) {
         return;
     }
@@ -938,7 +952,6 @@ void WorldSystem::goRight(ECS::Entity& entity, int& moves) {
         nextTile = tiles[yCoord][xCoord];
         changeDirection(motion, currTile, nextTile, DIRECTION_EAST, entity);
         if (abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
-//            motion.scale = { motion.scale.y, motion.scale.x };
             motion.lastDirection = motion.angle == 0 ? DIRECTION_NORTH : DIRECTION_SOUTH;
             motion.angle = -PI / 2;
         }
@@ -971,6 +984,7 @@ void WorldSystem::goRight(ECS::Entity& entity, int& moves) {
             }
         }
         nextTile = nextTile.type == WALL || rightTile.type == VINE ? rightTile : nextTile;
+        if (nextTile.type == INACCESSIBLE) return;
         changeDirection(motion, currTile, nextTile, DIRECTION_EAST, entity);
     }
     else if (abs(motion.angle) == PI / 2 && rightTile.type == VINE && currTile.type == VINE) {
@@ -1069,6 +1083,7 @@ void WorldSystem::goUp(ECS::Entity& entity, int& moves) {
             }
         }
         nextTile = nextTile.type == WALL || upTile.type == VINE ? upTile : nextTile;
+        if (nextTile.type == INACCESSIBLE) return;
         changeDirection(motion, currTile, nextTile, DIRECTION_NORTH, entity);
     }
 
@@ -1156,6 +1171,7 @@ void WorldSystem::goDown(ECS::Entity& entity, int& moves) {
              }
         }
         nextTile = nextTile.type == WALL || downTile.type == VINE ? downTile : nextTile;
+        if (nextTile.type == INACCESSIBLE) return;
         changeDirection(motion, currTile, nextTile, DIRECTION_SOUTH, entity);
     }
     
@@ -1609,5 +1625,4 @@ void WorldSystem::die()
     LoadSaveSystem::deleteSaveFile();
 }
 
-int WorldSystem::window_width = 1200;
-
+vec2 WorldSystem::window_size_in_game_units;

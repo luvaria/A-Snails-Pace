@@ -4,15 +4,18 @@
 #include "common.hpp"
 #include "tiles/tiles.hpp"
 #include "tiny_ecs.hpp"
+#include "subject.hpp"
 
-class LevelLoader
+class LevelLoader : public Subject
 {
+
 public:
 	static float previewScale;
 	static vec2 previewDimensions;
 
-	static void loadLevel(int levelIndex, bool preview = false, vec2 offset = { 0, 0 }, bool fromSave = false);
-	static void previewLevel(int levelIndex, vec2 offset);
+	void loadLevel(int levelIndex, bool preview = false, vec2 offset = { 0, 0 }, bool fromSave = false);
+    void previewLevel(int levelIndex, vec2 offset);
+
 private:
 	// to allow switching on strings
 	// author: D.Shawley

@@ -3,8 +3,12 @@
   "description": "First non demo level, slightly more challenging",
   "scale": 100,
   "direction": "right",
-  "turnsPerCamera": 2,
+  "background": "mountain",
+  "weather": "snow",
+  "turnsPerCamera": 8,
   "AI-PathFinding-Algorithm": "BFS",
+  "snailProjectileMaxMoves" : 8,
+  "aiProjectileMaxMoves" : 2,
   "endCoordinates": {"x" : 19 , "y" : 6 },
   "tiles": [
     "                X   ",

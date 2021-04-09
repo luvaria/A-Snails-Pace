@@ -45,6 +45,8 @@ char constexpr LoadSaveSystem::BTREE_KEY[];
 
 char constexpr LoadSaveSystem::PROJECTILE_KEY[];
 char constexpr LoadSaveSystem::PROJECTILE_TYPE_KEY[];
+char constexpr LoadSaveSystem::PROJECTILE_MOVED_KEY[];
+char constexpr LoadSaveSystem::PROJECTILE_ORIG_SCALE[];
 
 char constexpr LoadSaveSystem::CHARACTER_X_POS_KEY[];
 char constexpr LoadSaveSystem::CHARACTER_Y_POS_KEY[];
@@ -261,6 +263,9 @@ void LoadSaveSystem::writeLevelFile(json& toSave)
         {
             character[PROJECTILE_TYPE_KEY] = "slug";
         }
+
+        Projectile component = ECS::registry<Projectile>.get(projectile);
+        component.writeToJson(character);
 
         toSave[PROJECTILE_KEY].push_back(character);
     }
