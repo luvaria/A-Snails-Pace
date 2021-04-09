@@ -54,6 +54,7 @@ ECS::Entity Fish::createFish(Motion motion, ECS::Entity entity)
     move.hasMoved = true;
 
     ECS::registry<Enemy>.emplace(entity);
+    ECS::registry<Invincible>.emplace(entity);
     ECS::registry<Fish>.emplace(entity);
     ECS::registry<DirectionInput>.emplace(entity);
 

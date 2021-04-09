@@ -25,15 +25,15 @@ void DialogueSystem::step(float elapsed_ms)
 	}
 }
 
-void DialogueSystem::setDialogue(std::string dialogue)
+void DialogueSystem::setDialogue(std::string dialogue, int offset)
 {
 	clearDialogue();
 	isActive = true;
 	wrapDialogue(dialogue);
 	dialogue_displayed_ms = 0.f;
 
-	createTextLines();
-	createTextBox();
+	createTextLines(offset);
+	createTextBox(offset);
 }
 
 void DialogueSystem::clearDialogue()
@@ -84,14 +84,14 @@ void DialogueSystem::displayCurrent(float elapsed_ms)
 	}
 }
 
-void DialogueSystem::nextPage()
+void DialogueSystem::nextPage(int offset)
 {
 	clearDialogueEntities();
 
 	if (!dialogueQueue.empty())
 	{
-		createTextLines();
-		createTextBox();
+		createTextLines(offset);
+		createTextBox(offset);
 		dialogueQueue.pop();
 		dialogue_displayed_ms = 0.f;
 	}
@@ -105,10 +105,10 @@ void DialogueSystem::onNotify(Event event)
 	switch (event.type)
 	{
 	case Event::START_DIALOGUE:
-		setDialogue(event.dialogue);
+		setDialogue(event.dialogue, event.offset);
 		break;
 	case Event::NEXT_DIALOGUE:
-		nextPage();
+		nextPage(event.offset);
 		if (!isActive)
 		{
 			// tell NPC to move to next dialogue (pages exhausted)
@@ -119,8 +119,8 @@ void DialogueSystem::onNotify(Event event)
 	case Event::RESUME_DIALOGUE:
 		if (isActive)
 		{
-			createTextLines();
-			createTextBox();
+			createTextLines(event.offset);
+			createTextBox(event.offset);
 		}
 		break;
 	case Event::END_DIALOGUE:
@@ -189,7 +189,7 @@ void DialogueSystem::wrapDialogue(std::string dialogue)
 	dialogueQueue.push(curPage);
 }
 
-void DialogueSystem::createTextLines()
+void DialogueSystem::createTextLines(int offset)
 {
 	const auto FANTASQUE_SANS_MONO_REGULAR = Font::load(FANTASQUE_SANS_MONO_REGULAR_PATH);
 
@@ -207,11 +207,11 @@ void DialogueSystem::createTextLines()
 		text.colour = OVERLAY_COLOUR;
 		text.scale = DIALOGUE_SCALE;
 		// line spacing
-		text.position.y += i * (VERTICAL_TEXT_SIZE * DIALOGUE_SCALE + window_size_in_game_units.y * LINE_SPACING);
+		text.position.y += i * (VERTICAL_TEXT_SIZE * DIALOGUE_SCALE + window_size_in_game_units.y * LINE_SPACING) - offset;
 	}
 }
 
-void DialogueSystem::createTextBox()
+void DialogueSystem::createTextBox(int offset)
 {
 	// hijacked from DebugSystem createLine()
 
@@ -255,7 +255,7 @@ void DialogueSystem::createTextBox()
 	auto& motion = ECS::registry<Motion>.emplace(entity);
 	motion.angle = 0.f;
 	motion.velocity = { 0, 0 };
-	motion.position = { window_size_in_game_units.x * 0.5f, window_size_in_game_units.y * 0.8f };
+	motion.position = { window_size_in_game_units.x * 0.5f, window_size_in_game_units.y * 0.8f - offset};
 	motion.scale = { window_size_in_game_units.x * 0.9f, window_size_in_game_units.y * 0.325f };;
 }
 

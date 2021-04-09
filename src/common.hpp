@@ -54,7 +54,7 @@ struct Transform {
 #define AI_PF_ALGO_A_STAR "Astar"
 
 // for use with levels_path(): use indices, starting from 0
-const std::vector<std::string> levels = { "demo.json", "demo-2.json", "level-1.json", "level-2.json", "level-3.json", "level-4.json"};
+const std::vector<std::string> levels = { "tutorial.json", "demo.json", "demo-2.json", "demo-4.json", "level-1.json", "level-2.json", "level-3.json", "level-4.json"};
 
 const std::unordered_map<int, std::string> collectibleMap =
 {
@@ -109,6 +109,11 @@ struct Turn
 struct Enemy
 {
 	// tag component for all enemies
+};
+
+struct Invincible
+{
+	// tag for unkillable enemies
 };
 
 typedef int CollectId;

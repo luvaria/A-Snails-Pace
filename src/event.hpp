@@ -16,6 +16,7 @@ public:
 	int number = -1;
 	MenuType menu = INVALID_MENU;
 	std::string dialogue;
+	int offset;
 
 	// Stats
 	int attempts = -1;
@@ -33,7 +34,7 @@ public:
 	// collision
 	Event(EventType t, ECS::Entity& e, ECS::Entity& o) : type(t), entity(e), other_entity(o) {}
 	// start dialogue
-	Event(EventType t, std::string d) : type(t), dialogue(d) {}
+	Event(EventType t, std::string d, int o) : type(t), dialogue(d), offset(o) {}
 	//game end stats
 	Event(EventType t, int a, int e, int p): type(t), attempts(a), enemies_killed(e), projectiles_fired(p) {}
 };

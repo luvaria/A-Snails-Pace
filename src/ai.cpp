@@ -28,7 +28,7 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     int yPos = (snailPos[1] - (0.5*scale))/scale;
     vec2 snailCoord = {yPos, xPos};
 
-    bool aiMovedThisTurn = false;
+    bool aiMovedThisStep = false;
 
     auto& aiRegistry = ECS::registry<AI>;
     if (ECS::registry<Turn>.components[0].type == ENEMY) {
@@ -37,7 +37,15 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             auto entity = aiRegistry.entities[i];
             auto& tree = aiRegistry.components[i].tree;
             tree->process(entity);
-            aiMovedThisTurn = true;
+
+            if (ECS::registry<SuperSpider>.has(entity) == true) {
+                auto& fire = ECS::registry<Fire>.get(entity);
+                if (fire.fired == true) {
+                    fire.fired = false;
+                    projectileShoot(entity);
+                }
+            }
+            aiMovedThisStep = true;
         }
         for (auto& entity : ECS::registry<Bird>.entities) {
             auto& fire = ECS::registry<Fire>.get(entity);
@@ -45,23 +53,20 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
                 fire.fired = false;
                 projectileShoot(entity);
             }
-            
         }
-        if (aiMovedThisTurn)
+        if (aiMovedThisStep)
         {
             aiMoved = true;
         }
     }
 
     if (ECS::registry<Turn>.components[0].type == PLAYER_WAITING) {
-        // add super spider to this arrangement
-        //fire = true;
         for (int i = 0; i < ECS::registry<Fire>.components.size(); i++) {
             auto& fired = ECS::registry<Fire>.components[i].fired;
             fired = true;
         }
     }
-    
+
 	(void)elapsed_ms; // placeholder to silence unused warning until implemented
 	(void)window_size_in_game_units; // placeholder to silence unused warning until implemented
 }
@@ -512,42 +517,50 @@ BTState LookForSnail::process(ECS::Entity e) {
     if (ECS::registry<Turn>.components[0].type == ENEMY && !AISystem::aiMoved) {
         int aiMove = current.size() == 1 ? 1 : 0;
         vec2 currPos = current.size() > 1 ? current[1] : current[0];
-        if (aiMove == 0) {
-            if (currPos.x - yAiPos > 0) {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_SOUTH;
-                WorldSystem::goDown(entity, aiMove);
-            }
-            else if (currPos.x - yAiPos < 0) {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_NORTH;
-                WorldSystem::goUp(entity, aiMove);
-            }
-            else if (currPos.y - xAiPos > 0) {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_EAST;
-                WorldSystem::goRight(entity, aiMove);
-            }
-            else {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_WEST;
-                WorldSystem::goLeft(entity, aiMove);
-            }
+        /*
+        if (ECS::registry<SuperSpider>.has(e) == true) {
+            std::cout << "super spider" << std::endl;
+            AISystem::superSpiderMove(entity, current);
         }
-        if (aiMove == 0) {
-            if (motion.lastDirection == DIRECTION_NORTH) {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_NORTH;
-                WorldSystem::goUp(entity, aiMove);
+        */
+        //else {
+            if (aiMove == 0) {
+                if (currPos.x - yAiPos > 0) {
+                    ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_SOUTH;
+                    WorldSystem::goDown(entity, aiMove);
+                }
+                else if (currPos.x - yAiPos < 0) {
+                    ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_NORTH;
+                    WorldSystem::goUp(entity, aiMove);
+                }
+                else if (currPos.y - xAiPos > 0) {
+                    ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_EAST;
+                    WorldSystem::goRight(entity, aiMove);
+                }
+                else {
+                    ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_WEST;
+                    WorldSystem::goLeft(entity, aiMove);
+                }
             }
-            else if (motion.lastDirection == DIRECTION_SOUTH) {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_SOUTH;
-                WorldSystem::goDown(entity, aiMove);
+            if (aiMove == 0) {
+                if (motion.lastDirection == DIRECTION_NORTH) {
+                    ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_NORTH;
+                    WorldSystem::goUp(entity, aiMove);
+                }
+                else if (motion.lastDirection == DIRECTION_SOUTH) {
+                    ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_SOUTH;
+                    WorldSystem::goDown(entity, aiMove);
+                }
+                else if (motion.lastDirection == DIRECTION_EAST) {
+                    ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_EAST;
+                    WorldSystem::goRight(entity, aiMove);
+                }
+                else {
+                    ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_WEST;
+                    WorldSystem::goLeft(entity, aiMove);
+                }
             }
-            else if (motion.lastDirection == DIRECTION_EAST) {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_EAST;
-                WorldSystem::goRight(entity, aiMove);
-            }
-            else {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_WEST;
-                WorldSystem::goLeft(entity, aiMove);
-            }
-        }
+        //}
         //std::cout << "returning Failure" << std::endl;
         return BTState::Failure;
     }
@@ -561,7 +574,7 @@ BTState LookForSnail::process(ECS::Entity e) {
         if (xAiPos - 1 == xLoc && yAiPos == yLoc) {
             return BTState::Success;
         }
-        else if (xAiPos + 1 == xPos && yAiPos == yPos) {
+        else if (xAiPos + 1 == xLoc && yAiPos == yLoc) {
             return BTState::Success;
         }
     }
@@ -739,5 +752,6 @@ std::shared_ptr<BTNode> BTNode::createSubclassNode(NodeType const& type)
 }
 
 bool AISystem::aiMoved = false;
+bool AISystem::fire = true;
 std::string AISystem::aiPathFindingAlgorithm = "BFS";
 //std::vector<vec2> birdPath = AISystem::getBirdPath();

@@ -56,6 +56,7 @@ ECS::Entity Bird::createBird(Motion motion, ECS::Entity entity)
 
     ECS::registry<Bird>.emplace(entity);
     ECS::registry<Enemy>.emplace(entity);
+    ECS::registry<Invincible>.emplace(entity);
     ECS::registry<DirectionInput>.emplace(entity);
 
     return entity;

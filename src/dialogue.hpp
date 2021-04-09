@@ -23,13 +23,13 @@ public:
 	void step(float elapsed_ms);
 
 	// sets new dialogue (sets active flag)
-	void setDialogue(std::string dialogue);
+	void setDialogue(std::string dialogue, int offset);
 	// clears old dialogue (clears active flag)
 	void clearDialogue();
 	// updates and displays current page
 	void displayCurrent(float elapsed_ms);
 	// moves to next page of dialogue
-	void nextPage();
+	void nextPage(int offset);
 
 private:
 	bool isActive;
@@ -44,8 +44,8 @@ private:
 	// line-wraps dialogue and splits into pages, adding to the dialogue queue
 	void wrapDialogue(std::string dialogue);
 
-	void createTextLines();
-	void createTextBox();
+	void createTextLines(int offset);
+	void createTextBox(int offset);
 
 	void clearDialogueEntities();
 };

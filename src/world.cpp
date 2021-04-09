@@ -35,6 +35,20 @@
 // Game configuration
 const size_t PROJECTILE_PREVIEW_DELAY_MS = 100; // frequency of projectile previews
 
+static std::vector<std::pair<int, std::string> > tutorial_messages = 
+{ {200, "Hello, and welcome to A Snail's Pace! This is a turn-based game. Your objective is to make it to the end of each level without dying. Use WASD to move. Each move consumes one turn. If you die, you will respawn at the beginning of the level. Press any key to continue."},
+  {200, "In front of you is a spider. Left click to fire a projectile before it reaches you. Spiders kill you on contact. Hold the left mouse button to preview the trajectory. Shooting also consumes your turn."},
+  {200, "You will drown in water. Climb the vines instead. Once at the top, stick upside-down to the wall by pressing W."},
+  {300, "By now, you've seen the camera move every few turns. You will die if you fall behind. The window title at the top displays when the camera will next move." },
+  {300, "To fall back down to the ground, press SPACE." },
+  {200, "A few tiles ahead, there is a slug. Like spiders, slugs will kill you on contact. However, they also fire projectiles. Dodge them or destroy them with your own!"},
+  {200, "This is an NPC. To interact with them, press E. To advance the interaction, press any key. To stop interacting, press Q." },
+  {200, "Above you is a collectible. You can't reach this one, but stay on the lookout so you can look extra fly!"},
+  {200, "Nice job. You're almost at the end of the tutorial! If you ever forget the controls, you can press C to display them."} };
+
+static std::vector< std::vector< bool > > first_run;
+static int msg_index = 0;
+
 // Create the fish world
 // Note, this has a lot of OpenGL specific things, could be moved to the renderer; but it also defines the callbacks to the mouse and keyboard. That is why it is called here.
 WorldSystem::WorldSystem(ivec2 window_size_px) :
@@ -83,21 +97,41 @@ WorldSystem::WorldSystem(ivec2 window_size_px) :
     auto& turn = ECS::registry<Turn>.emplace(turnEntity);
     turn.type = PLAYER_WAITING;
 
-
-	// Playing background music indefinitely
 	init_audio();
-	Mix_PlayMusic(background_music, -1);
+    Mix_PlayMusic(menu_music, -1);
 	std::cout << "Loaded music\n";
 }
 
 WorldSystem::~WorldSystem() {
     // Destroy music components
+    if (menu_music != nullptr)
+        Mix_FreeMusic(menu_music);
     if (background_music != nullptr)
         Mix_FreeMusic(background_music);
-    if (salmon_dead_sound != nullptr)
-        Mix_FreeChunk(salmon_dead_sound);
-    if (salmon_eat_sound != nullptr)
-        Mix_FreeChunk(salmon_eat_sound);
+    if (level_complete_sound != nullptr)
+        Mix_FreeChunk(level_complete_sound);
+    if (snail_dead_sound != nullptr)
+        Mix_FreeChunk(snail_dead_sound);
+    if (enemy_dead_sound != nullptr)
+        Mix_FreeChunk(enemy_dead_sound);
+    if (enemy_nope_sound != nullptr)
+        Mix_FreeChunk(enemy_nope_sound);
+    if (superspider_spawn_sound != nullptr)
+        Mix_FreeChunk(superspider_spawn_sound);
+    if (snail_fall_sound != nullptr)
+        Mix_FreeChunk(snail_fall_sound);
+    if (snail_move_sound != nullptr)
+        Mix_FreeChunk(snail_move_sound);
+    if (splash_sound != nullptr)
+        Mix_FreeChunk(splash_sound);
+    if (projectile_fire_sound != nullptr)
+        Mix_FreeChunk(projectile_fire_sound);
+    if (projectile_break_sound != nullptr)
+        Mix_FreeChunk(projectile_break_sound);
+    if (dialogue_sound != nullptr)
+        Mix_FreeChunk(dialogue_sound);
+    if (collectible_sound != nullptr)
+        Mix_FreeChunk(collectible_sound);
     Mix_CloseAudio();
 
     SDL_Quit();
@@ -121,15 +155,23 @@ void WorldSystem::init_audio()
     if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) == -1)
         throw std::runtime_error("Failed to open audio device");
 
-    background_music = Mix_LoadMUS(audio_path("music.wav").c_str());
-    salmon_dead_sound = Mix_LoadWAV(audio_path("salmon_dead.wav").c_str());
-    salmon_eat_sound = Mix_LoadWAV(audio_path("salmon_eat.wav").c_str());
+    menu_music = Mix_LoadMUS(audio_path("adobeshop.mid").c_str());
+    background_music = Mix_LoadMUS(audio_path("Arcade - Battle Network.mid").c_str());
+    level_complete_sound = Mix_LoadWAV(audio_path("Victory.wav").c_str());
+    snail_dead_sound = Mix_LoadWAV(audio_path("417486__mentoslat__8-bit-death-sound.wav").c_str());
+    enemy_dead_sound = Mix_LoadWAV(audio_path("523216__gemesil__death-scream.wav").c_str());
+    enemy_nope_sound = Mix_LoadWAV(audio_path("439043__javapimp__lexie-nope.wav").c_str());
+    superspider_spawn_sound = Mix_LoadWAV(audio_path("341240__sharesynth__powerup03.wav").c_str());
+    snail_move_sound = Mix_LoadWAV(audio_path("240776__f4ngy__card-flip.wav").c_str());
+    snail_fall_sound = Mix_LoadWAV(audio_path("350906__cabled-mess__jump-c-04.wav").c_str());
+    splash_sound = Mix_LoadWAV(audio_path("110393__soundscalpel-com__water-splash.wav").c_str());
+    projectile_fire_sound = Mix_LoadWAV(audio_path("323741__reitanna__mouth-pop.wav").c_str());
+    projectile_break_sound = Mix_LoadWAV(audio_path("443328__effectator__quick-clack.wav").c_str());
+    dialogue_sound = Mix_LoadWAV(audio_path("431891__syberic__aha.wav").c_str());
+    collectible_sound = Mix_LoadWAV(audio_path("428663__jomse__pickupbook4.wav").c_str());
 
-    if (background_music == nullptr || salmon_dead_sound == nullptr || salmon_eat_sound == nullptr)
-        throw std::runtime_error("Failed to load sounds make sure the data directory is present: " +
-            audio_path("music.wav") +
-            audio_path("salmon_dead.wav") +
-            audio_path("salmon_eat.wav"));
+    if (menu_music == nullptr || background_music == nullptr || level_complete_sound == nullptr || snail_dead_sound == nullptr || enemy_dead_sound == nullptr || enemy_nope_sound == nullptr || superspider_spawn_sound == nullptr || snail_move_sound == nullptr || snail_fall_sound == nullptr || splash_sound == nullptr || projectile_fire_sound == nullptr || projectile_break_sound == nullptr || dialogue_sound == nullptr || collectible_sound == nullptr)
+        throw std::runtime_error("Failed to load sounds; make sure the data directory is present");
 
     Volume::set(LoadSaveSystem::getSavedVolume());
 }
@@ -169,10 +211,12 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     int yCoord = static_cast<int>(snailMotion.position.y / scale);
     ivec2 endCoordinates = TileSystem::getEndCoordinates();
 
+
     if (ECS::registry<Turn>.components[0].type == PLAYER_WAITING
             && xCoord == endCoordinates.x && yCoord == endCoordinates.y) {
         running = false;
         ControlsOverlay::removeControlsOverlay();
+        Mix_PlayChannel(-1, level_complete_sound, 0);
         notify(Event(Event::LEVEL_COMPLETE));
     }
 
@@ -267,6 +311,17 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 
 	if (turnType == PLAYER_WAITING)
     {
+        auto tiles = TileSystem::getTiles();
+        if (yCoord < tiles.size()) {
+            Tile& t = tiles[yCoord][xCoord];
+            if (t.type == MESSAGE && first_run[yCoord][xCoord]) {
+                auto offset = tutorial_messages[msg_index].first;
+                auto message = tutorial_messages[msg_index].second;
+                notify(Event(Event::START_DIALOGUE, message, offset));
+                msg_index++;
+                first_run[yCoord][xCoord] = false;
+            }
+        }
 	    if (snail_move <= 0)
         {
             for (auto& entity : ECS::registry<Fish>.entities) {
@@ -383,8 +438,8 @@ void WorldSystem::restart(int newLevel, bool fromSave)
     // Reset Turn
     ECS::registry<Turn>.components[0].type = PLAYER_WAITING;
 
-    // for the first level, prompt controls overlay
-    if (level == 0 && deaths == 0)
+    // for the first attempt of any level, prompt controls overlay
+    if (deaths == 0)
         ControlsOverlay::addControlsPrompt();
 
     AISystem::aiMoved = false;
@@ -415,6 +470,7 @@ void WorldSystem::onNotify(Event event) {
     if (event.type == Event::UNPAUSE)
     {
         setGLFWCallbacks();
+        Mix_ResumeMusic();
         ControlsOverlay::addControlsOverlayIfOn();
         notify(Event(Event::RESUME_DIALOGUE));
         running = true;
@@ -443,9 +499,8 @@ void WorldSystem::onNotify(Event event) {
         if (ECS::registry<Snail>.has(event.entity))
         {
             // Check collisions that result in death
-            if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<WaterTile>.has(event.other_entity)
-                || ECS::registry<Slug>.has(event.other_entity) || ECS::registry<SlugProjectile>.has(event.other_entity)
-                || ECS::registry<Fish>.has(event.other_entity))
+            if (ECS::registry<Enemy>.has(event.other_entity) || ECS::registry<WaterTile>.has(event.other_entity)
+                || ECS::registry<SlugProjectile>.has(event.other_entity))
             {
                 // Initiate death unless already dying
                 if (!ECS::registry<DeathTimer>.has(event.entity))
@@ -459,6 +514,7 @@ void WorldSystem::onNotify(Event event) {
                 ECS::registry<Inventory>.components[0].collectibles.insert(id);
                 // Equip collectible (creates new entity)
                 Collectible::equip(event.entity, id);
+                Mix_PlayChannel(-1, collectible_sound, 0);
                 // Remove the collectible from the map
                 ECS::ContainerInterface::remove_all_components_of(event.other_entity);
             }
@@ -470,11 +526,18 @@ void WorldSystem::onNotify(Event event) {
             // Don't collide with a preview projectile (ie. all enemies should fall under here)
             if (!ECS::registry<SnailProjectile::Preview>.has(event.entity))
             {
-                // Checking Projectile - Spider collisions
-                if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<Slug>.has(event.other_entity) 
-                    || ECS::registry<SlugProjectile>.has(event.other_entity))
+                // Checking Projectile - Enemy / Enemy Projectile collisions
+                if (ECS::registry<Invincible>.has(event.other_entity))
                 {
-                    // tile no longer occupied by spider
+                    Mix_PlayChannel(-1, enemy_nope_sound, 0);
+                    // remove the projectile
+                    ECS::ContainerInterface::remove_all_components_of(event.entity);
+                }
+                else if (ECS::registry<Enemy>.has(event.other_entity))
+                {
+                    Mix_PlayChannel(-1, enemy_dead_sound, 0);
+
+                    // tile no longer occupied by enemy
                     float scale = TileSystem::getScale();
                     auto& motion = ECS::registry<Motion>.get(event.other_entity);
                     int xCoord = static_cast<int>(motion.position.x / scale);
@@ -483,15 +546,44 @@ void WorldSystem::onNotify(Event event) {
                     t.removeOccupyingEntity();
                     bool wasSpider = ECS::registry<Spider>.has(event.other_entity);
                     enemies_killed++;
-                    ECS::Entity expoldingSpider;
+                    ECS::Entity explodingSpider;
                     if (wasSpider) {
-                        Spider::createExplodingSpider(motion, expoldingSpider);
+                        Spider::createExplodingSpider(motion, explodingSpider);
                     }
+                    // Remove the enemy but not the projectile
                     ECS::ContainerInterface::remove_all_components_of(event.other_entity);
-                    // Remove the spider but not the projectile
+                }
+                else if (ECS::registry<SlugProjectile>.has(event.other_entity))
+                {
+                    Mix_PlayChannel(-1, projectile_break_sound, 0);
+                    // remove the enemy projectile
+                    ECS::ContainerInterface::remove_all_components_of(event.other_entity);
                 }
             }
         }
+        //spider to spider collision creates super spider
+        if (ECS::registry<Spider>.has(event.entity)) {
+            if (ECS::registry<Spider>.has(event.other_entity)) {
+                std::cout << "2 spiders in the same tile" << std::endl;
+                Mix_PlayChannel(-1, superspider_spawn_sound, 0);
+                float scale = TileSystem::getScale();
+                auto& motion1 = ECS::registry<Motion>.get(event.entity);
+                int xCoord = static_cast<int>(motion1.position.x / scale);
+                int yCoord = static_cast<int>(motion1.position.y / scale);
+                Tile& t = TileSystem::getTiles()[yCoord][xCoord];
+                // maybe I need 2 calls to remove both of them?
+                //t.removeOccupyingEntity();
+                ECS::Entity superSpider;
+                vec2 pos = { t.x, t.y };
+                t.removeOccupyingEntity();
+                t.removeOccupyingEntity();
+                ECS::ContainerInterface::remove_all_components_of(event.entity);
+                ECS::ContainerInterface::remove_all_components_of(event.other_entity);
+                SuperSpider::createSuperSpider(pos, superSpider);
+                t.addOccupyingEntity();
+            }
+        }
+
     }
     else if (event.type == Event::LOAD_SAVE)
     {
@@ -519,11 +611,27 @@ void WorldSystem::onNotify(Event event) {
         assert(event.number >= 0 && event.number < levels.size());
         level = event.number;
 
+        // Play background music
+        Mix_PlayMusic(background_music, -1);
+
         restart(level);
+
+        // if selecting tutorial from level menu reset messages
+        if (level == 0) {
+            msg_index = 0;
+            auto tiles = TileSystem::getTiles();
+            first_run = std::vector< std::vector< bool > >(tiles.size(), std::vector<bool>(tiles[0].size(), true));
+        }
+        
     } else if (event.type == Event::SPLASH) {
         if((event.entity.id != WaterTile::splashEntityID) && (ECS::registry<WaterTile>.has(event.entity))) {
+            Mix_PlayChannel(-1, splash_sound, 0);
             WaterTile::onNotify(Event::SPLASH, event.entity);
         }
+    }
+    else if (event.type == Event::MENU_START)
+    {
+        Mix_PlayMusic(menu_music, -1);
     }
 }
 
@@ -785,7 +893,11 @@ void WorldSystem::goRight(ECS::Entity& entity, int& moves) {
     auto& motion = ECS::registry<Motion>.get(entity);
     int xCoord = static_cast<int>(motion.position.x / scale);
     int yCoord = static_cast<int>(motion.position.y / scale);
-    if (xCoord + 1 > tiles[yCoord].size() - 1) {
+    auto& camera = ECS::registry<Camera>.entities[0];
+    vec2 cameraOffset = ECS::registry<Motion>.get(camera).position;
+    int cameraOffsetX = cameraOffset.x / TileSystem::getScale();
+    int cameraRight = (window_width / scale) + cameraOffsetX;
+    if (xCoord + 1 > tiles[yCoord].size() - 1 || xCoord + 1 >= cameraRight) {
         return;
     }
     Tile currTile = tiles[yCoord][xCoord];
@@ -1150,6 +1262,16 @@ void WorldSystem::on_key(int key, int, int action, int mod)
     {
         // remove prompt on key press
         ControlsOverlay::removeControlsPrompt();
+        
+        // tutorial messages
+        auto& snailMotion = ECS::registry<Motion>.get(player_snail);
+        float scale = TileSystem::getScale();
+        int xCoord = static_cast<int>(snailMotion.position.x / scale);
+        int yCoord = static_cast<int>(snailMotion.position.y / scale);
+        Tile& t = TileSystem::getTiles()[yCoord][xCoord];
+        if (t.type == MESSAGE) {
+            notify(Event(Event::END_DIALOGUE));
+        }
 
         bool shouldReturn = true;
 
@@ -1162,6 +1284,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
                 left_mouse_pressed = false;
                 SnailProjectile::Preview::removeCurrent();
                 ControlsOverlay::removeControlsOverlay();
+                Mix_PauseMusic();
                 notify(Event(Event::PAUSE));
                 break;
             }
@@ -1205,21 +1328,26 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 			case GLFW_KEY_W:
                     ECS::registry<DirectionInput>.get(player_snail).direction = DIRECTION_NORTH;
                     goUp(player_snail, snail_move);
+                    if (snail_move == 0) Mix_PlayChannel(-1, snail_move_sound, 0);
 				    break;
 			case GLFW_KEY_S:
                     ECS::registry<DirectionInput>.get(player_snail).direction = DIRECTION_SOUTH;
                     goDown(player_snail, snail_move);
+                    if (snail_move == 0) Mix_PlayChannel(-1, snail_move_sound, 0);
                     break;
 			case GLFW_KEY_D:
                     ECS::registry<DirectionInput>.get(player_snail).direction = DIRECTION_EAST;
                     goRight(player_snail, snail_move);
+                    if (snail_move == 0) Mix_PlayChannel(-1, snail_move_sound, 0);
                     break;
 			case GLFW_KEY_A:
                     ECS::registry<DirectionInput>.get(player_snail).direction = DIRECTION_WEST;
                     goLeft(player_snail, snail_move);
+                    if (snail_move == 0) Mix_PlayChannel(-1, snail_move_sound, 0);
 				    break;
             case GLFW_KEY_SPACE:
                     fallDown(player_snail, snail_move);
+                    if (snail_move == 0) Mix_PlayChannel(-1, snail_fall_sound, 0);
                     break;
             case GLFW_KEY_E:
                 Motion& playerMotion = ECS::registry<Motion>.get(player_snail);
@@ -1231,6 +1359,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
                     {
                         encountered_npc = npcEntity;
                         ECS::registry<NPC>.get(encountered_npc).beginEncounter();
+                        Mix_PlayChannel(-1, dialogue_sound, 0);
                         ECS::registry<Turn>.components[0].type = NPC_ENCOUNTER;
                         break; // assuming only one NPC nearby at a time
                     }
@@ -1252,7 +1381,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
                 break;
             }
         }
-	}
+    }
 }
 
 void WorldSystem::on_mouse_move(vec2 /*mouse_pos*/)
@@ -1265,7 +1394,19 @@ void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
 {
     // remove prompt on mouse click
     if (action == GLFW_PRESS)
+    {
         ControlsOverlay::removeControlsPrompt();
+
+        // tutorial messages
+        auto& snailMotion = ECS::registry<Motion>.get(player_snail);
+        float scale = TileSystem::getScale();
+        int xCoord = static_cast<int>(snailMotion.position.x / scale);
+        int yCoord = static_cast<int>(snailMotion.position.y / scale);
+        Tile& t = TileSystem::getTiles()[yCoord][xCoord];
+        if (t.type == MESSAGE) {
+            notify(Event(Event::END_DIALOGUE));
+        }
+    }
 
     TurnType& turnType = ECS::registry<Turn>.components[0].type;
     if ((turnType == PLAYER_WAITING) && (button == GLFW_MOUSE_BUTTON_RIGHT) && (action == GLFW_RELEASE))
@@ -1298,6 +1439,8 @@ void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
                 projectiles_fired++;
                 shootProjectile(mouse_pos);
                 SnailProjectile::Preview::removeCurrent();
+
+                if (snail_move == 0) Mix_PlayChannel(-1, projectile_fire_sound, 0);
             }
             left_mouse_pressed = false;
         }
@@ -1417,10 +1560,13 @@ void WorldSystem::die()
 {
     // scream, reset timer, increment deaths, delete save file
     ECS::registry<DeathTimer>.emplace(player_snail);
-    Mix_PlayChannel(-1, salmon_dead_sound, 0);
+    Mix_PlayChannel(-1, snail_dead_sound, 0);
 
     deaths++;
 
     // no redos sorry :(
     LoadSaveSystem::deleteSaveFile();
 }
+
+int WorldSystem::window_width = 1200;
+
