@@ -79,21 +79,14 @@ void RenderSystem::drawTexturedMeshForParticles(ECS::Entity entity, vec2 window_
     glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * element.particles.size(), &translations[0], GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    float quadVertices[] = {
-        -0.05f,  0.05f,  1.0f, 1.0f, 1.0f,
-         0.05f, -0.05f,  1.0f, 1.0f, 1.0f,
-        -0.05f, -0.05f,  1.0f, 1.0f, 1.0f,
-
-        -0.05f,  0.05f,  1.0f, 1.0f, 1.0f,
-         0.05f, -0.05f,  1.0f, 1.0f, 1.0f,
-         0.05f,  0.05f,  1.0f, 1.0f, 1.0f
-    };
+//    float quadVertices[30] = ;
+    
     unsigned int quadVAO, quadVBO;
     glGenVertexArrays(1, &quadVAO);
     glGenBuffers(1, &quadVBO);
     glBindVertexArray(quadVAO);
     glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(randomBoolean ? quadVerticesSnow : quadVerticesRain), randomBoolean ? quadVerticesSnow : quadVerticesRain, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
@@ -415,3 +408,4 @@ bool renderCmp(ECS::Entity a, ECS::Entity b)
 
 	return a_bucket > b_bucket;
 }
+bool RenderSystem::randomBoolean = RenderSystem::randomBool();

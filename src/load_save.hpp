@@ -85,6 +85,8 @@ public:
 
     static char constexpr PROJECTILE_KEY[] = "projectiles";
     static char constexpr PROJECTILE_TYPE_KEY[] = "type";
+    static char constexpr PROJECTILE_MOVED_KEY[] = "moved";
+    static char constexpr PROJECTILE_ORIG_SCALE[] = "orig_scale";
 
     static char constexpr CHARACTER_X_POS_KEY[] = "x";
     static char constexpr CHARACTER_Y_POS_KEY[] = "y";

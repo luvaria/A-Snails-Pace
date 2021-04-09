@@ -3,6 +3,19 @@
 #include "render.hpp"
 #include "world.hpp"
 
+void Projectile::writeToJson(json &toSave)
+{
+    toSave[LoadSaveSystem::PROJECTILE_MOVED_KEY] = moved;
+    toSave[LoadSaveSystem::PROJECTILE_ORIG_SCALE]["x"] = origScale.x;
+    toSave[LoadSaveSystem::PROJECTILE_ORIG_SCALE]["y"] = origScale.y;
+}
+
+void Projectile::setFromJson(const json &saved)
+{
+    moved = saved[LoadSaveSystem::PROJECTILE_MOVED_KEY];
+    origScale = { saved[LoadSaveSystem::PROJECTILE_ORIG_SCALE]["x"], saved[LoadSaveSystem::PROJECTILE_ORIG_SCALE]["y"] };
+}
+
 ECS::Entity SnailProjectile::createProjectile(vec2 position, vec2 velocity, bool preview /* = false */)
 {
     // Initialize the motion
@@ -117,13 +130,13 @@ ECS::Entity SlugProjectile::createProjectile(Motion motion)
     ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::PROJECTILE);
     ECS::registry<MinShadedMeshRef>.emplace(entity, resource_min, RenderBucket::PROJECTILE);
 
-
-    ECS::registry<Projectile>.emplace(entity);
+    auto& proj = ECS::registry<Projectile>.emplace(entity);
+    proj.origScale = motion.scale;
     ECS::registry<SlugProjectile>.emplace(entity);
-
 
     return entity;
 }
-
+int Projectile::snailProjectileMaxMoves = 2;
+int Projectile::aiProjectileMaxMoves = 2;
 
 

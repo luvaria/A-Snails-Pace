@@ -3,8 +3,12 @@
   "description": "Third Level",
   "scale": 100,
   "direction": "right",
-  "turnsPerCamera": 2,
+  "background": "desert",
+  "weather": "rain",
+  "turnsPerCamera": 5,
   "AI-PathFinding-Algorithm": "Astar",
+  "snailProjectileMaxMoves" : 3,
+  "aiProjectileMaxMoves" : 5,
   "endCoordinates": {
     "x": 30,
     "y": 6
@@ -14,7 +18,7 @@
     "                               ",
     "                      XXXXXXXX ",
     "             XXXX     V     V  ",
-    " XXXXXXXXXXX  V    XX V     V  ",
+    "  XXXXXXXXXX  V    XX V     V  ",
     "   V          V    V XXWWWXXXX ",
     "   V          V    V  X        ",
     "XXXXWWWWWWWWXXXXXXXXXXXXXXXXXXX"

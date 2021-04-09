@@ -12,6 +12,7 @@
 #include "tiles/water.hpp"
 #include "tiles/wall.hpp"
 #include "menus/level_select.hpp"
+#include "parallax_background.hpp"
 #include "load_save.hpp"
 #include "projectile.hpp"
 
@@ -31,7 +32,25 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset, bool from
 {
 	std::ifstream i(levels_path(levels[levelIndex]));
 	json level = json::parse(i);
+    std::string bgName = "mountain";
+    try {
+        bgName = level["background"];
+    } catch (...) {}
+    std::string weatherName = "snow";
+    try {
+        weatherName = level["weather"];
+    } catch (...) {}
+    try {
+        Projectile::aiProjectileMaxMoves = level["aiProjectileMaxMoves"];
+    } catch (...) {Projectile::aiProjectileMaxMoves = 2;}
+    try {
+        Projectile::snailProjectileMaxMoves = level["snailProjectileMaxMoves"];
+    } catch (...) {Projectile::snailProjectileMaxMoves = 2;}
+    
+    notify(Event(Event::LOAD_BG, bgName));
 
+    RenderSystem::randomBoolean = weatherName=="snow";
+    
 	std::string levelName = level["name"];
 
 	AISystem::aiPathFindingAlgorithm = level["AI-PathFinding-Algorithm"];
@@ -333,20 +352,22 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset, bool from
         for (auto& projectile : saved[LoadSaveSystem::PROJECTILE_KEY])
         {
             Motion motion = LoadSaveSystem::makeMotionFromJson(projectile, false);
+            ECS::Entity entity;
             switch (hashit(projectile[LoadSaveSystem::PROJECTILE_TYPE_KEY]))
             {
                 case eSnail:
-                    SnailProjectile::createProjectile(motion);
+                    entity = SnailProjectile::createProjectile(motion);
                     break;
                 case eSpider:
                     throw std::runtime_error("somehow loaded a spider projectile???");
                     break;
                 case eSlug:
-                    SlugProjectile::createProjectile(motion);
+                    entity = SlugProjectile::createProjectile(motion);
                     break;
                 default:
                     throw std::runtime_error("failed to load projectile type: " + std::string(projectile[LoadSaveSystem::PROJECTILE_TYPE_KEY]));
             }
+            ECS::registry<Projectile>.get(entity).setFromJson(projectile);
         }
     }
 
