@@ -1170,6 +1170,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
         // remove prompt on key press
         ControlsOverlay::removeControlsPrompt();
         
+        // tutorial messages
         auto& snailMotion = ECS::registry<Motion>.get(player_snail);
         float scale = TileSystem::getScale();
         int xCoord = static_cast<int>(snailMotion.position.x / scale);
@@ -1293,7 +1294,19 @@ void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
 {
     // remove prompt on mouse click
     if (action == GLFW_PRESS)
+    {
         ControlsOverlay::removeControlsPrompt();
+
+        // tutorial messages
+        auto& snailMotion = ECS::registry<Motion>.get(player_snail);
+        float scale = TileSystem::getScale();
+        int xCoord = static_cast<int>(snailMotion.position.x / scale);
+        int yCoord = static_cast<int>(snailMotion.position.y / scale);
+        Tile& t = TileSystem::getTiles()[yCoord][xCoord];
+        if (t.type == MESSAGE) {
+            notify(Event(Event::END_DIALOGUE));
+        }
+    }
 
     TurnType& turnType = ECS::registry<Turn>.components[0].type;
     if ((turnType == PLAYER_WAITING) && (button == GLFW_MOUSE_BUTTON_RIGHT) && (action == GLFW_RELEASE))
