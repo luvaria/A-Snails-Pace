@@ -24,6 +24,7 @@
 #include "subject.hpp"
 #include "collectible.hpp"
 #include "particle.hpp"
+#include "load_save.hpp"
 
 // stlib
 #include <cassert>
@@ -129,6 +130,8 @@ void WorldSystem::init_audio()
             audio_path("music.wav") +
             audio_path("salmon_dead.wav") +
             audio_path("salmon_eat.wav"));
+
+    Volume::set(LoadSaveSystem::getSavedVolume());
 }
 
 // Update our game world

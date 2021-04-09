@@ -195,7 +195,7 @@ void StartMenu::loadEntities()
 	ECS::registry<StartMenuTag>.emplace(volumeSliderEntity);
 
 	// slider feedback
-	float curVol = static_cast<float>(max(Mix_Volume(-1, -1), Mix_VolumeMusic(-1))) / MIX_MAX_VOLUME;
+	float curVol = Volume::getCur();
 	ECS::Entity volumeIndicatorEntity = ECS::Entity();
 
 	std::string indicatorKey = "volume_indicator";
@@ -374,8 +374,6 @@ void StartMenu::selectedKeyEvent()
 		// perform action for button being hovered over (and pressed)
 		if (button.selected && !button.disabled)
 		{
-			double volumeRatio = 0;
-
 			switch (button.event)
 			{
 			case ButtonEventType::START_GAME:
@@ -436,6 +434,5 @@ void StartMenu::setVolume(ECS::Entity buttonEntity, double volumeRatio)
 	indicatorMotion.scale.x = volumeRatio * 100;
 	indicatorMotion.position = { 50 + indicatorMotion.scale.x / 2, 50 };
 
-	Mix_Volume(-1, volumeRatio * MIX_MAX_VOLUME);
-	Mix_VolumeMusic(volumeRatio * MIX_MAX_VOLUME);
+	Volume::set(volumeRatio);
 }

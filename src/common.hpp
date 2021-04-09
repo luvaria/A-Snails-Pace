@@ -18,6 +18,10 @@
 #include <glm/ext/vector_int2.hpp>  // ivec2
 #include <glm/vec3.hpp>             // vec3
 #include <glm/mat3x3.hpp>           // mat3
+
+// sound
+#include <SDL_mixer.h>
+
 using namespace glm;
 static const float PI = 3.14159265359f;
 
@@ -114,6 +118,12 @@ struct Inventory
     CollectId equipped = -1;
     int points = 0;
     void clear() { collectibles.clear(); equipped = -1; points = 0; };
+};
+
+struct Volume
+{
+    static double getCur();
+    static void set(double volumeRatio);
 };
 
 // collectible equipped; ignore collisions
