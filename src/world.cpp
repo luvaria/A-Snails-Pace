@@ -496,6 +496,7 @@ void WorldSystem::onNotify(Event event) {
                 ECS::Entity superSpider;
                 vec2 pos = { t.x, t.y };
                 t.removeOccupyingEntity();
+                t.removeOccupyingEntity();
                 ECS::ContainerInterface::remove_all_components_of(event.entity);
                 ECS::ContainerInterface::remove_all_components_of(event.other_entity);
                 SuperSpider::createSuperSpider(pos, superSpider);

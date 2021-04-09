@@ -522,7 +522,8 @@ void PhysicsSystem::stepToDestination(ECS::Entity entity, float step_seconds)
     if (destReg.has(entity))
     {
 		// updated to fit in fish
-		bool isSnailOrSpider = (ECS::registry<Snail>.has(entity) || ECS::registry<Spider>.has(entity) || ECS::registry<Fish>.has(entity));
+		bool isSnailOrSpider = (ECS::registry<Snail>.has(entity) || ECS::registry<Spider>.has(entity) || ECS::registry<Fish>.has(entity)
+			|| ECS::registry<Slug>.has(entity) || ECS::registry<SuperSpider>.has(entity));
         auto& dest = destReg.get(entity);
 		vec2 newPos = motion.position + (motion.velocity * step_seconds);
 		if ((dot(motion.position - newPos, dest.position - newPos) > 0) || (dest.position == newPos)) 
