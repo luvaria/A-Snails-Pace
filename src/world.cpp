@@ -474,6 +474,7 @@ void WorldSystem::onNotify(Event event) {
         //spider to spider collision creates super spider
         if (ECS::registry<Spider>.has(event.entity)) {
             if (ECS::registry<Spider>.has(event.other_entity)) {
+                std::cout << "2 spiders in the same tile" << std::endl;
                 float scale = TileSystem::getScale();
                 auto& motion1 = ECS::registry<Motion>.get(event.entity);
                 auto& motion2 = ECS::registry<Motion>.get(event.other_entity);
@@ -481,14 +482,14 @@ void WorldSystem::onNotify(Event event) {
                 int yCoord = static_cast<int>(motion1.position.y / scale);
                 Tile& t = TileSystem::getTiles()[yCoord][xCoord];
                 // maybe I need 2 calls to remove both of them?
-                t.removeOccupyingEntity();
-                t.removeOccupyingEntity();
+                //t.removeOccupyingEntity();
                 ECS::Entity superSpider;
                 vec2 pos = { t.x, t.y };
-                t.addOccupyingEntity();
-                SuperSpider::createSuperSpider(pos, superSpider);
+                t.removeOccupyingEntity();
                 ECS::ContainerInterface::remove_all_components_of(event.entity);
                 ECS::ContainerInterface::remove_all_components_of(event.other_entity);
+                SuperSpider::createSuperSpider(pos, superSpider);
+                t.addOccupyingEntity();
             }
         }
 
@@ -742,7 +743,12 @@ void WorldSystem::goRight(ECS::Entity& entity, int& moves) {
     auto& motion = ECS::registry<Motion>.get(entity);
     int xCoord = static_cast<int>(motion.position.x / scale);
     int yCoord = static_cast<int>(motion.position.y / scale);
-    if (xCoord + 1 > tiles[yCoord].size() - 1) {
+    auto& camera = ECS::registry<Camera>.entities[0];
+    vec2 cameraOffset = ECS::registry<Motion>.get(camera).position;
+    int cameraOffsetX = cameraOffset.x / TileSystem::getScale();
+    int window_size = window_width;
+    int cameraRight = (window_width / scale) + cameraOffsetX;
+    if (xCoord + 1 > tiles[yCoord].size() - 1 || xCoord + 1 >= cameraRight) {
         return;
     }
     Tile currTile = tiles[yCoord][xCoord];
@@ -1302,3 +1308,4 @@ void WorldSystem::stepNPC()
 }
 
 int WorldSystem::snailMoves = 0;
+int WorldSystem::window_width = 1200;
