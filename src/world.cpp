@@ -24,6 +24,7 @@
 #include "subject.hpp"
 #include "collectible.hpp"
 #include "particle.hpp"
+#include "load_save.hpp"
 
 // stlib
 #include <cassert>
@@ -154,6 +155,8 @@ void WorldSystem::init_audio()
 
     if (menu_music == nullptr || background_music == nullptr || level_complete_sound == nullptr || snail_dead_sound == nullptr || enemy_dead_sound == nullptr || enemy_nope_sound == nullptr || snail_move_sound == nullptr || snail_fall_sound == nullptr || splash_sound == nullptr || projectile_fire_sound == nullptr || projectile_break_sound == nullptr || dialogue_sound == nullptr || collectible_sound == nullptr)
         throw std::runtime_error("Failed to load sounds; make sure the data directory is present");
+
+    Volume::set(LoadSaveSystem::getSavedVolume());
 }
 
 // Update our game world
@@ -335,7 +338,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
         // changed from AI.size to Enemy.size
         if (((ECS::registry<Projectile>.size() != 0 && projectile_turn_over_time <= 0) 
             || (ECS::registry<Projectile>.size() == 0))
-            && (AISystem::aiMoved || (ECS::registry<Enemy>.size() == 0)))
+            && (AISystem::aiMoved || (ECS::registry<AI>.size() == 0)))
         {
             // In the following two cases, if true, all the enemies will have moved
             // Camera has to move
