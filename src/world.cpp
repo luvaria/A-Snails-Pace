@@ -98,6 +98,8 @@ WorldSystem::~WorldSystem() {
         Mix_FreeChunk(snail_dead_sound);
     if (snail_move_sound != nullptr)
         Mix_FreeChunk(snail_move_sound);
+    if (projectile_sound != nullptr)
+        Mix_FreeChunk(projectile_sound);
     Mix_CloseAudio();
 
     SDL_Quit();
@@ -126,8 +128,9 @@ void WorldSystem::init_audio()
     level_complete_sound = Mix_LoadWAV(audio_path("Victory.wav").c_str());
     snail_dead_sound = Mix_LoadWAV(audio_path("417486__mentoslat__8-bit-death-sound.wav").c_str());
     snail_move_sound = Mix_LoadWAV(audio_path("350906__cabled-mess__jump-c-04.wav").c_str());
+    projectile_sound = Mix_LoadWAV(audio_path("323741__reitanna__mouth-pop.wav").c_str());
 
-    if (menu_music == nullptr || background_music == nullptr || level_complete_sound == nullptr || snail_dead_sound == nullptr || snail_move_sound == nullptr)
+    if (menu_music == nullptr || background_music == nullptr || level_complete_sound == nullptr || snail_dead_sound == nullptr || snail_move_sound == nullptr || projectile_sound == nullptr)
         throw std::runtime_error("Failed to load sounds; make sure the data directory is present");
 }
 
@@ -1199,6 +1202,8 @@ void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
                 projectiles_fired++;
                 shootProjectile(mouse_pos);
                 SnailProjectile::Preview::removeCurrent();
+
+                if (snail_move == 0) Mix_PlayChannel(-1, projectile_sound, 0);
             }
             left_mouse_pressed = false;
         }

@@ -117,6 +117,7 @@ private:
 	Mix_Chunk* level_complete_sound;
 	Mix_Chunk* snail_dead_sound;
 	Mix_Chunk* snail_move_sound;
+	Mix_Chunk* projectile_sound;
 
 	// C++ random number generator
 	std::default_random_engine rng;
