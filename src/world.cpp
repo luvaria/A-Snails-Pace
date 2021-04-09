@@ -99,6 +99,8 @@ WorldSystem::~WorldSystem() {
         Mix_FreeChunk(snail_dead_sound);
     if (enemy_dead_sound != nullptr)
         Mix_FreeChunk(enemy_dead_sound);
+    if (enemy_nope_sound != nullptr)
+        Mix_FreeChunk(enemy_nope_sound);
     if (snail_fall_sound != nullptr)
         Mix_FreeChunk(snail_fall_sound);
     if (splash_sound != nullptr)
@@ -139,6 +141,7 @@ void WorldSystem::init_audio()
     level_complete_sound = Mix_LoadWAV(audio_path("Victory.wav").c_str());
     snail_dead_sound = Mix_LoadWAV(audio_path("417486__mentoslat__8-bit-death-sound.wav").c_str());
     enemy_dead_sound = Mix_LoadWAV(audio_path("523216__gemesil__death-scream.wav").c_str());
+    enemy_nope_sound = Mix_LoadWAV(audio_path("439043__javapimp__lexie-nope.wav").c_str());
     snail_fall_sound = Mix_LoadWAV(audio_path("350906__cabled-mess__jump-c-04.wav").c_str());
     splash_sound = Mix_LoadWAV(audio_path("110393__soundscalpel-com__water-splash.wav").c_str());
     projectile_fire_sound = Mix_LoadWAV(audio_path("323741__reitanna__mouth-pop.wav").c_str());
@@ -146,7 +149,7 @@ void WorldSystem::init_audio()
     dialogue_sound = Mix_LoadWAV(audio_path("431891__syberic__aha.wav").c_str());
     collectible_sound = Mix_LoadWAV(audio_path("428663__jomse__pickupbook4.wav").c_str());
 
-    if (menu_music == nullptr || background_music == nullptr || level_complete_sound == nullptr || snail_dead_sound == nullptr || enemy_dead_sound == nullptr || snail_fall_sound == nullptr || splash_sound == nullptr || projectile_fire_sound == nullptr || projectile_break_sound == nullptr || dialogue_sound == nullptr || collectible_sound == nullptr)
+    if (menu_music == nullptr || background_music == nullptr || level_complete_sound == nullptr || snail_dead_sound == nullptr || enemy_dead_sound == nullptr || enemy_nope_sound == nullptr || snail_fall_sound == nullptr || splash_sound == nullptr || projectile_fire_sound == nullptr || projectile_break_sound == nullptr || dialogue_sound == nullptr || collectible_sound == nullptr)
         throw std::runtime_error("Failed to load sounds; make sure the data directory is present");
 }
 
@@ -480,19 +483,18 @@ void WorldSystem::onNotify(Event event) {
             // Don't collide with a preview projectile (ie. all enemies should fall under here)
             if (!ECS::registry<SnailProjectile::Preview>.has(event.entity))
             {
-                // Checking Projectile - Spider collisions
-                if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<Slug>.has(event.other_entity) 
-                    || ECS::registry<SlugProjectile>.has(event.other_entity))
+                // Checking Projectile - Enemy / Enemy Projectile collisions
+                if (ECS::registry<Invincible>.has(event.other_entity))
                 {
-                    if (ECS::registry<Enemy>.has(event.other_entity))
-                    {
-                        Mix_PlayChannel(-1, enemy_dead_sound, 0);
-                    }
-                    else if (ECS::registry<Projectile>.has(event.other_entity))
-                    {
-                        Mix_PlayChannel(-1, projectile_break_sound, 0);
-                    }
-                    // tile no longer occupied by spider
+                    Mix_PlayChannel(-1, enemy_nope_sound, 0);
+                    // remove the projectile
+                    ECS::ContainerInterface::remove_all_components_of(event.entity);
+                }
+                else if (ECS::registry<Enemy>.has(event.other_entity))
+                {
+                    Mix_PlayChannel(-1, enemy_dead_sound, 0);
+
+                    // tile no longer occupied by enemy
                     float scale = TileSystem::getScale();
                     auto& motion = ECS::registry<Motion>.get(event.other_entity);
                     int xCoord = static_cast<int>(motion.position.x / scale);
@@ -501,12 +503,18 @@ void WorldSystem::onNotify(Event event) {
                     t.removeOccupyingEntity();
                     bool wasSpider = ECS::registry<Spider>.has(event.other_entity);
                     enemies_killed++;
-                    ECS::Entity expoldingSpider;
+                    ECS::Entity explodingSpider;
                     if (wasSpider) {
-                        Spider::createExplodingSpider(motion, expoldingSpider);
+                        Spider::createExplodingSpider(motion, explodingSpider);
                     }
+                    // Remove the enemy but not the projectile
                     ECS::ContainerInterface::remove_all_components_of(event.other_entity);
-                    // Remove the spider but not the projectile
+                }
+                else if (ECS::registry<SlugProjectile>.has(event.other_entity))
+                {
+                    Mix_PlayChannel(-1, projectile_break_sound, 0);
+                    // remove the enemy projectile
+                    ECS::ContainerInterface::remove_all_components_of(event.other_entity);
                 }
             }
         }

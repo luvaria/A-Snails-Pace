@@ -42,6 +42,7 @@ ECS::Entity Fish::createFish(vec2 position, ECS::Entity entity)
 
 	
 	ECS::registry<Enemy>.emplace(entity);
+	ECS::registry<Invincible>.emplace(entity);
 	ECS::registry<Fish>.emplace(entity);
 	ECS::registry<DirectionInput>.emplace(entity);
 

@@ -442,12 +442,12 @@ bool shouldCheckCollision(ECS::Entity entity_i, ECS::Entity entity_j)
 		        (!ECS::registry<NoCollide>.has(entity_i) && ECS::registry<Collectible>.has(entity_i)));
 
 	bool isValidSnailProjectileCollision_i = ECS::registry<SnailProjectile>.has(entity_i) &&
-		(ECS::registry<Spider>.has(entity_j) || ECS::registry<WallTile>.has(entity_j) || 
-			ECS::registry<Slug>.has(entity_j) || ECS::registry<SlugProjectile>.has(entity_j));
+		(ECS::registry<Enemy>.has(entity_j) || ECS::registry<WallTile>.has(entity_j) || 
+			ECS::registry<SlugProjectile>.has(entity_j));
 
 	bool isValidSnailProjectileCollision_j = ECS::registry<SnailProjectile>.has(entity_j) &&
-		(ECS::registry<Spider>.has(entity_i) || ECS::registry<WallTile>.has(entity_i) ||
-			ECS::registry<Slug>.has(entity_i) || ECS::registry<SlugProjectile>.has(entity_i));
+		(ECS::registry<Enemy>.has(entity_i) || ECS::registry<WallTile>.has(entity_i) ||
+			ECS::registry<SlugProjectile>.has(entity_i));
 
 	bool isValidSlugProjectileCollision_i = ECS::registry<SlugProjectile>.has(entity_i) &&
 		(ECS::registry<WallTile>.has(entity_j));

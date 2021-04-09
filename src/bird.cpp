@@ -44,6 +44,7 @@ ECS::Entity Bird::createBird(vec2 position, ECS::Entity entity)
 	//ECS::registry<AI>.emplace(entity);
 	ECS::registry<Bird>.emplace(entity);
 	ECS::registry<Enemy>.emplace(entity);
+	ECS::registry<Invincible>.emplace(entity);
 	ECS::registry<DirectionInput>.emplace(entity);
 
 	return entity;
