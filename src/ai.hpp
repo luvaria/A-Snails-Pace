@@ -12,6 +12,7 @@
 #include "common.hpp"
 #include "tiles/tiles.hpp"
 #include "tiny_ecs.hpp"
+#include "load_save.hpp"
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // DON'T WORRY ABOUT THIS CLASS UNTIL ASSIGNMENT 3
@@ -43,6 +44,11 @@ class BTNode {
         virtual ~BTNode() {};
         virtual void init(ECS::Entity e) {};
         virtual BTState process(ECS::Entity e) = 0;
+        virtual void writeToJson(json& toSave) = 0;
+        virtual void setFromJson(json const& saved) = 0;
+        virtual NodeType getNodeType() = 0;
+
+        static std::shared_ptr<BTNode> createSubclassNode(NodeType const& type);
 };
 
 struct AI {
@@ -53,8 +59,37 @@ struct AI {
 class BTSequence : public BTNode {
 public:
     BTSequence(std::vector<std::shared_ptr<BTNode>> children)
-        : m_index(0), m_children(std::move(children)) {
+        : m_index(0), m_children(std::move(children)) {}
 
+    void writeToJson(json &toSave) override
+    {
+        toSave[BTKeys::TYPE_KEY] = getNodeType();
+        toSave[BTKeys::INDEX_KEY] = m_index;
+        for (auto& node : m_children)
+        {
+            json childJson;
+            node->writeToJson(childJson);
+            toSave[BTKeys::CHILDREN_KEY].push_back(childJson);
+        }
+    }
+
+    void setFromJson(const json &saved) override
+    {
+        m_index = saved[BTKeys::INDEX_KEY];
+        if (saved.contains(BTKeys::CHILDREN_KEY))
+        {
+            for (json child : saved[BTKeys::CHILDREN_KEY])
+            {
+                std::shared_ptr<BTNode> childNode = createSubclassNode(child[BTKeys::TYPE_KEY]);
+                childNode->setFromJson(child);
+                m_children.push_back(childNode);
+            }
+        }
+    }
+
+    NodeType getNodeType() override
+    {
+        return BTKeys::NodeTypes::SEQUENCE_KEY;
     }
 
 private:
@@ -150,20 +185,46 @@ public:
         }
         
     }
-private: 
-    std::shared_ptr<BTNode> m_child1;
-    std::shared_ptr<BTNode> m_child2;
+
+    void writeToJson(json &toSave) override
+    {
+        toSave[BTKeys::TYPE_KEY] = getNodeType();
+        toSave[BTKeys::INDEX_KEY] = m_index;
+        for (auto& node : m_children)
+        {
+            json childJson;
+            node->writeToJson(childJson);
+            toSave[BTKeys::CHILDREN_KEY].push_back(childJson);
+        }
+    }
+
+    void setFromJson(const json &saved) override
+    {
+        m_index = saved[BTKeys::INDEX_KEY];
+        if (saved.contains(BTKeys::CHILDREN_KEY))
+        {
+            for (json child : saved[BTKeys::CHILDREN_KEY])
+            {
+                std::shared_ptr<BTNode> childNode = createSubclassNode(child[BTKeys::TYPE_KEY]);
+                childNode->setFromJson(child);
+                m_children.push_back(childNode);
+            }
+        }
+    }
+
+    NodeType getNodeType() override
+    {
+        return BTKeys::NodeTypes::SELECTOR_KEY;
+    }
+private:
     int m_index;
     std::vector<std::shared_ptr<BTNode>> m_children;
-    std::function<bool(ECS::Entity)> m_condition;
 };
 
 class RepeatForN : public BTNode {
 public:
     RepeatForN(std::shared_ptr<BTNode> child, int n) :
-    m_child(child), m_iterationsRemaining(n){
-
-    }
+    m_child(child), m_iterationsRemaining(n) {}
 
     virtual void init(ECS::Entity e) override {
         m_child->init(e);
@@ -192,6 +253,28 @@ public:
             return BTState::Success;
         }
     }
+
+    void writeToJson(json &toSave) override
+    {
+        toSave[BTKeys::TYPE_KEY] = getNodeType();
+        toSave[BTKeys::ITERATIONS_REMAINING_KEY] = m_iterationsRemaining;
+        json childJson;
+        m_child->writeToJson(childJson);
+        toSave[BTKeys::CHILD_KEY] = childJson;
+    }
+
+    void setFromJson(const json &saved) override
+    {
+        m_iterationsRemaining = saved[BTKeys::ITERATIONS_REMAINING_KEY];
+        m_child = createSubclassNode(saved[BTKeys::CHILD_KEY][BTKeys::TYPE_KEY]);
+        m_child->setFromJson(saved[BTKeys::CHILD_KEY]);
+    }
+
+    NodeType getNodeType() override
+    {
+        return BTKeys::NodeTypes::REPEAT_FOR_N_KEY;
+    }
+
 private:
     std::shared_ptr<BTNode> m_child;
     int m_iterationsRemaining;
@@ -199,28 +282,32 @@ private:
 
 class IsSnailInRange : public BTNode {
 public:
-    IsSnailInRange(){
-
-    }
-
-    void init(ECS::Entity e) override {
-    }
+    IsSnailInRange() {}
+    void init(ECS::Entity e) override {}
     BTState process(ECS::Entity e) override;
-private:
+    void writeToJson(json &toSave) override;
+    void setFromJson(const json &saved) override {};
+
+    NodeType getNodeType() override
+    {
+        return BTKeys::NodeTypes::SNAIL_IN_RANGE_KEY;
+    }
 };
 
 class LookForSnail : public BTNode {
 public: 
-    LookForSnail() noexcept {
+    LookForSnail() noexcept {}
+    LookForSnail(bool inRange) : m_inRange(inRange) {}
+    void writeToJson(json &toSave) override;
+    void setFromJson(const json &saved) override;
 
+    NodeType getNodeType() override
+    {
+        return BTKeys::NodeTypes::LOOK_FOR_SNAIL_KEY;
     }
-    LookForSnail(bool inRange) : m_inRange(inRange) {
 
-    }
 private:
-    void init(ECS::Entity e) override {
-
-    }
+    void init(ECS::Entity e) override {}
     BTState process(ECS::Entity e) override;
 
 private:
@@ -229,15 +316,17 @@ private:
 
 class FireXShots : public BTNode {
 public:
-    FireXShots() noexcept {
-    }
-    FireXShots(int skip) : m_Skip(skip) {
-
-    }
-    void init(ECS::Entity e) override {
-        
-    }
+    FireXShots() noexcept {}
+    FireXShots(int skip) : m_Skip(skip) {}
+    void init(ECS::Entity e) override {}
     BTState process(ECS::Entity e) override;
+    void writeToJson(json &toSave) override;
+    void setFromJson(const json &saved) override;
+
+    NodeType getNodeType() override
+    {
+        return BTKeys::NodeTypes::FIRE_X_SHOTS_KEY;
+    }
 private:
     int m_Skip;
 };
@@ -248,7 +337,43 @@ public:
     RandomSelector(float chance, std::shared_ptr<BTNode> option1, std::shared_ptr<BTNode> option2):
     m_child1(option1),
     m_child2(option2),
-    m_chance(chance) {
+    m_chance(chance) {}
+
+    void writeToJson(json &toSave) override
+    {
+        toSave[BTKeys::TYPE_KEY] = getNodeType();
+        toSave[BTKeys::CHANCE_KEY] = m_chance;
+
+        json child1Json;
+        m_child1->writeToJson(child1Json);
+        toSave[BTKeys::CHILD_1_KEY] = child1Json;
+
+        json child2Json;
+        m_child2->writeToJson(child2Json);
+        toSave[BTKeys::CHILD_2_KEY] = child2Json;
+
+        json chosenJson;
+        m_chosen->writeToJson(chosenJson);
+        toSave[BTKeys::CHOSEN_KEY] = chosenJson;
+    }
+
+    void setFromJson(const json &saved) override
+    {
+        m_chance = saved[BTKeys::CHANCE_KEY];
+
+        m_child1 = createSubclassNode(saved[BTKeys::CHILD_1_KEY][BTKeys::TYPE_KEY]);
+        m_child1->setFromJson(saved[BTKeys::CHILD_1_KEY]);
+
+        m_child2 = createSubclassNode(saved[BTKeys::CHILD_2_KEY][BTKeys::TYPE_KEY]);
+        m_child2->setFromJson(saved[BTKeys::CHILD_2_KEY]);
+
+        m_chosen = createSubclassNode(saved[BTKeys::CHOSEN_KEY][BTKeys::TYPE_KEY]);
+        m_chosen->setFromJson(saved[BTKeys::CHOSEN_KEY]);
+    }
+
+    NodeType getNodeType() override
+    {
+        return BTKeys::NodeTypes::RANDOM_SELECTOR;
     }
 private:
     void init(ECS::Entity e) override {
@@ -284,26 +409,32 @@ private:
 
 class PredictShot : public BTNode {
 public:
-    PredictShot() noexcept {
-        
-    }
-    void init(ECS::Entity e) override {
-
-    }
+    PredictShot() noexcept {}
+    void init(ECS::Entity e) override {}
     BTState process(ECS::Entity e) override;
+    void writeToJson(json &toSave) override;
+    void setFromJson(const json &saved) override {};
+
+    NodeType getNodeType() override
+    {
+        return BTKeys::NodeTypes::PREDICT_SHOT_KEY;
+    }
 private:
     //int m_Shots;
 };
 
 class GetToSnail : public BTNode {
 public:
-    GetToSnail() noexcept {
-
-    }
-    void init(ECS::Entity e) override {
-
-    }
+    GetToSnail() noexcept {}
+    void init(ECS::Entity e) override {}
     BTState process(ECS::Entity e) override;
+    void writeToJson(json &toSave) override;
+    void setFromJson(const json &saved) override {}
+
+    NodeType getNodeType() override
+    {
+        return BTKeys::NodeTypes::GET_TO_SNAIL_KEY;
+    }
 };
 
 

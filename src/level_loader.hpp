@@ -13,8 +13,9 @@ public:
 	static float previewScale;
 	static vec2 previewDimensions;
 
-	void loadLevel(int levelIndex, bool preview = false, vec2 offset = { 0, 0 });
+	void loadLevel(int levelIndex, bool preview = false, vec2 offset = { 0, 0 }, bool fromSave = false);
     void previewLevel(int levelIndex, vec2 offset);
+
 private:
 	// to allow switching on strings
 	// author: D.Shawley
@@ -24,7 +25,8 @@ private:
 		eSpider,
 		eSlug,
 		eFish,
-		eBird
+		eBird,
+        eSuperSpider
 	};
 	static string_code hashit(std::string const& inString);
 
