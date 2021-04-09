@@ -111,6 +111,11 @@ struct Enemy
 	// tag component for all enemies
 };
 
+struct Invincible
+{
+	// tag for unkillable enemies
+};
+
 typedef int CollectId;
 struct Inventory
 {

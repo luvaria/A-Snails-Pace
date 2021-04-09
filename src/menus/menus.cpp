@@ -143,6 +143,7 @@ void MenuSystem::onNotify(Event event)
 			toDelete.push(menu);
 		}
 		setup();
+		notify(event); // tell world to play menu music
 		openMenu(Event::START_MENU);
 		break;
 	case Event::NEXT_LEVEL:
