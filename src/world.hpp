@@ -73,6 +73,7 @@ public:
 
     static float constexpr k_move_seconds = 0.25f;
     static float constexpr k_projectile_turn_ms = 1000.f;
+	static int window_width;
 
 private:
 	// Input callback functions
