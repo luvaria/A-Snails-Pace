@@ -116,6 +116,7 @@ private:
 	Mix_Music* background_music;
 	Mix_Chunk* level_complete_sound;
 	Mix_Chunk* snail_dead_sound;
+	Mix_Chunk* enemy_dead_sound;
 	Mix_Chunk* snail_move_sound;
 	Mix_Chunk* projectile_sound;
 	Mix_Chunk* dialogue_sound;

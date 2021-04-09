@@ -96,6 +96,8 @@ WorldSystem::~WorldSystem() {
         Mix_FreeChunk(level_complete_sound);
     if (snail_dead_sound != nullptr)
         Mix_FreeChunk(snail_dead_sound);
+    if (enemy_dead_sound != nullptr)
+        Mix_FreeChunk(enemy_dead_sound);
     if (snail_move_sound != nullptr)
         Mix_FreeChunk(snail_move_sound);
     if (projectile_sound != nullptr)
@@ -131,12 +133,13 @@ void WorldSystem::init_audio()
     background_music = Mix_LoadMUS(audio_path("Arcade - Battle Network.mid").c_str());
     level_complete_sound = Mix_LoadWAV(audio_path("Victory.wav").c_str());
     snail_dead_sound = Mix_LoadWAV(audio_path("417486__mentoslat__8-bit-death-sound.wav").c_str());
+    enemy_dead_sound = Mix_LoadWAV(audio_path("523216__gemesil__death-scream.wav").c_str());
     snail_move_sound = Mix_LoadWAV(audio_path("350906__cabled-mess__jump-c-04.wav").c_str());
     projectile_sound = Mix_LoadWAV(audio_path("323741__reitanna__mouth-pop.wav").c_str());
     dialogue_sound = Mix_LoadWAV(audio_path("431891__syberic__aha.wav").c_str());
     collectible_sound = Mix_LoadWAV(audio_path("428663__jomse__pickupbook4.wav").c_str());
 
-    if (menu_music == nullptr || background_music == nullptr || level_complete_sound == nullptr || snail_dead_sound == nullptr || snail_move_sound == nullptr || projectile_sound == nullptr || dialogue_sound == nullptr || collectible_sound == nullptr)
+    if (menu_music == nullptr || background_music == nullptr || level_complete_sound == nullptr || snail_dead_sound == nullptr || enemy_dead_sound == nullptr || snail_move_sound == nullptr || projectile_sound == nullptr || dialogue_sound == nullptr || collectible_sound == nullptr)
         throw std::runtime_error("Failed to load sounds; make sure the data directory is present");
 }
 
@@ -462,6 +465,7 @@ void WorldSystem::onNotify(Event event) {
                 if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<Slug>.has(event.other_entity) 
                     || ECS::registry<SlugProjectile>.has(event.other_entity))
                 {
+                    Mix_PlayChannel(-1, enemy_dead_sound, 0);
                     // tile no longer occupied by spider
                     float scale = TileSystem::getScale();
                     auto& motion = ECS::registry<Motion>.get(event.other_entity);
