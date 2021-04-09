@@ -122,6 +122,7 @@ private:
 	Mix_Chunk* snail_fall_sound;
 	Mix_Chunk* splash_sound;
 	Mix_Chunk* projectile_sound;
+	Mix_Chunk* projectile_break_sound;
 	Mix_Chunk* dialogue_sound;
 	Mix_Chunk* collectible_sound;
 
