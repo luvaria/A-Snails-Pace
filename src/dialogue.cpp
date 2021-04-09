@@ -108,7 +108,7 @@ void DialogueSystem::onNotify(Event event)
 		setDialogue(event.dialogue, event.offset);
 		break;
 	case Event::NEXT_DIALOGUE:
-		nextPage(event.offset);
+		nextPage(0);
 		if (!isActive)
 		{
 			// tell NPC to move to next dialogue (pages exhausted)
