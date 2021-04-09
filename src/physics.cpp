@@ -433,20 +433,20 @@ bool shouldCheckCollision(ECS::Entity entity_i, ECS::Entity entity_j)
 
 	bool isValidSnailCollision_i = ECS::registry<Snail>.has(entity_i) &&
 		(ECS::registry<Spider>.has(entity_j) || ECS::registry<WaterTile>.has(entity_j) || ECS::registry<SlugProjectile>.has(entity_j) ||
-			ECS::registry<Slug>.has(entity_j) || ECS::registry<Fish>.has(entity_j) ||
+			ECS::registry<Slug>.has(entity_j) || ECS::registry<SuperSpider>.has(entity_j) || ECS::registry<Fish>.has(entity_j) ||
                 (!ECS::registry<NoCollide>.has(entity_j) && ECS::registry<Collectible>.has(entity_j)));
 
 	bool isValidSnailCollision_j = ECS::registry<Snail>.has(entity_j) &&
 		(ECS::registry<Spider>.has(entity_i) || ECS::registry<WaterTile>.has(entity_i) || ECS::registry<SlugProjectile>.has(entity_i) ||
-			ECS::registry<Slug>.has(entity_i) || ECS::registry<Fish>.has(entity_i) ||
+			ECS::registry<Slug>.has(entity_i) || ECS::registry<SuperSpider>.has(entity_i) || ECS::registry<Fish>.has(entity_i) ||
 		        (!ECS::registry<NoCollide>.has(entity_i) && ECS::registry<Collectible>.has(entity_i)));
 
 	bool isValidSnailProjectileCollision_i = ECS::registry<SnailProjectile>.has(entity_i) &&
-		(ECS::registry<Spider>.has(entity_j) || ECS::registry<WallTile>.has(entity_j) || 
+		(ECS::registry<Spider>.has(entity_j) || ECS::registry<WallTile>.has(entity_j) || ECS::registry<SuperSpider>.has(entity_j) ||
 			ECS::registry<Slug>.has(entity_j) || ECS::registry<SlugProjectile>.has(entity_j));
 
 	bool isValidSnailProjectileCollision_j = ECS::registry<SnailProjectile>.has(entity_j) &&
-		(ECS::registry<Spider>.has(entity_i) || ECS::registry<WallTile>.has(entity_i) ||
+		(ECS::registry<Spider>.has(entity_i) || ECS::registry<WallTile>.has(entity_i) || ECS::registry<SuperSpider>.has(entity_i) ||
 			ECS::registry<Slug>.has(entity_i) || ECS::registry<SlugProjectile>.has(entity_i));
 
 	bool isValidSlugProjectileCollision_i = ECS::registry<SlugProjectile>.has(entity_i) &&
@@ -522,7 +522,8 @@ void PhysicsSystem::stepToDestination(ECS::Entity entity, float step_seconds)
     if (destReg.has(entity))
     {
 		// updated to fit in fish
-		bool isSnailOrSpider = (ECS::registry<Snail>.has(entity) || ECS::registry<Spider>.has(entity) || ECS::registry<Fish>.has(entity));
+		bool isSnailOrSpider = (ECS::registry<Snail>.has(entity) || ECS::registry<Spider>.has(entity) || ECS::registry<Fish>.has(entity)
+			|| ECS::registry<Slug>.has(entity) || ECS::registry<SuperSpider>.has(entity));
         auto& dest = destReg.get(entity);
 		vec2 newPos = motion.position + (motion.velocity * step_seconds);
 		if ((dot(motion.position - newPos, dest.position - newPos) > 0) || (dest.position == newPos)) 
@@ -704,10 +705,13 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             vec2 velocity = motion.velocity;
             motion.position += velocity * step_seconds;
         }
+
+
     }
     // if snail is moving to its destination then nothing else should be! for now...
 	else if (turnType == PLAYER_UPDATE)
     {
+
         auto& snailEntity = ECS::registry<Snail>.entities[0];
 		if (ECS::registry<Destination>.has(snailEntity)) //don't want to do any stepping if we don't have a destination
 		{
@@ -723,6 +727,7 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 		ECS::Entity entity;
         auto& motion = ECS::registry<Motion>.get(snailEntity);
         Particle::createParticle(motion, entity);
+
     }
 	else if (turnType == ENEMY)
     {
@@ -755,6 +760,28 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 				stepToDestination(entity, step_seconds);
 			}
         }
+		if (ECS::registry<Destination>.components.size() == 0) {
+			// check if 2 spiders end turn in the same position
+			// this means that after the turn where to spiders clash, then they turn into a superspider
+			for (int i = 0; i < ECS::registry<Spider>.entities.size(); i++) {
+				for (int j = i + 1; j < ECS::registry<Spider>.entities.size(); j++) {
+					auto& motion1 = ECS::registry<Motion>.get(ECS::registry<Spider>.entities[i]);
+					auto& motion2 = ECS::registry<Motion>.get(ECS::registry<Spider>.entities[j]);
+					float scale = TileSystem::getScale();
+					int x1 = static_cast<float>(motion1.position.x / scale);
+					int y1 = static_cast<float>(motion1.position.y / scale);
+					int x2 = static_cast<float>(motion2.position.x / scale);
+					int y2 = static_cast<float>(motion2.position.y / scale);
+					if (x1 == x2 && y1 == y2) {
+						ECS::Entity e1 = ECS::registry<Spider>.entities[i];
+						ECS::Entity e2 = ECS::registry<Spider>.entities[j];
+						notify(Event(Event::COLLISION, e1, e2));
+						notify(Event(Event::COLLISION, e2, e1));
+					}
+				}
+			}
+		}
+
     }
 	else if (turnType == CAMERA)
     {
