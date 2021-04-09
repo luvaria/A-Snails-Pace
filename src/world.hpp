@@ -112,6 +112,7 @@ private:
     float projectile_turn_over_time;
 
 	// music references
+	Mix_Music* menu_music;
 	Mix_Music* background_music;
 	Mix_Chunk* level_complete_sound;
 	Mix_Chunk* snail_dead_sound;

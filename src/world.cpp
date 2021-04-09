@@ -82,11 +82,14 @@ WorldSystem::WorldSystem(ivec2 window_size_px) :
     turn.type = PLAYER_WAITING;
 
 	init_audio();
+    Mix_PlayMusic(menu_music, -1);
 	std::cout << "Loaded music\n";
 }
 
 WorldSystem::~WorldSystem() {
     // Destroy music components
+    if (menu_music != nullptr)
+        Mix_FreeMusic(menu_music);
     if (background_music != nullptr)
         Mix_FreeMusic(background_music);
     if (level_complete_sound != nullptr)
@@ -118,17 +121,14 @@ void WorldSystem::init_audio()
     if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) == -1)
         throw std::runtime_error("Failed to open audio device");
 
+    menu_music = Mix_LoadMUS(audio_path("adobeshop.mid").c_str());
     background_music = Mix_LoadMUS(audio_path("Arcade - Battle Network.mid").c_str());
     level_complete_sound = Mix_LoadWAV(audio_path("Victory.wav").c_str());
     snail_dead_sound = Mix_LoadWAV(audio_path("417486__mentoslat__8-bit-death-sound.wav").c_str());
     snail_move_sound = Mix_LoadWAV(audio_path("350906__cabled-mess__jump-c-04.wav").c_str());
 
-    if (background_music == nullptr || level_complete_sound == nullptr || snail_dead_sound == nullptr || snail_move_sound == nullptr)
-        throw std::runtime_error("Failed to load sounds make sure the data directory is present: " +
-            audio_path("Arcade - Battle Network.mid") +
-            audio_path("Victory.wav") +
-            audio_path("417486__mentoslat__8-bit-death-sound.wav") + 
-            audio_path("350906__cabled-mess__jump-c-04.wav"));
+    if (menu_music == nullptr || background_music == nullptr || level_complete_sound == nullptr || snail_dead_sound == nullptr || snail_move_sound == nullptr)
+        throw std::runtime_error("Failed to load sounds; make sure the data directory is present");
 }
 
 // Update our game world
@@ -493,6 +493,10 @@ void WorldSystem::onNotify(Event event) {
         if((event.entity.id != WaterTile::splashEntityID) && (ECS::registry<WaterTile>.has(event.entity))) {
             WaterTile::onNotify(Event::SPLASH, event.entity);
         }
+    }
+    else if (event.type == Event::MENU_START)
+    {
+        Mix_PlayMusic(menu_music, -1);
     }
 }
 

@@ -20,6 +20,7 @@ WaterSplash [sprite]: https://pimen.itch.io/magical-water-effect
 WaterTile [sprite]:  https://bayat.itch.io/platform-game-assets/download/eyJleHBpcmVzIjoxNjE2MjQ3MDM1LCJpZCI6MTI4MTM0fQ%3d%3d.wjjmusmz54NOyqViZXG64sZOg%2bc%3d
 
 ### Audio assets
-Background music: "Arcade - Battle Network" by [TheoAllen on itch.io](https://theoallen.itch.io/theos-bgm-collection)
+Menu music: "adobeshop" by [Rin on itch.io](https://pluslerin.itch.io/retro-rpg-bgms)
+Level music: "Arcade - Battle Network" by [TheoAllen on itch.io](https://theoallen.itch.io/theos-bgm-collection)
 Death sound: "8 bit Death sound" by [MentosLat on freesound.org](https://freesound.org/people/MentosLat/sounds/417486/)
 Fall sound: "Jump (Retro video game SFX)" by [cabled_mess on freesound.org](https://freesound.org/people/cabled_mess/sounds/350906/)
