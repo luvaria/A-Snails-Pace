@@ -5,6 +5,19 @@
 	</summary>
 	<npcs>
 		<npc name="OtherSnail">
+			<encounter level_name="Tutorial">
+				<dialogue dID="0">
+					<lines>
+						<line>I call this move, the dissapearing snail.</line>
+					</lines>
+				</dialogue>
+				<dialogue dID="1">
+					<lines>
+						<line>Hello, I am an NPC, how are you today?</line>
+						<line>I dont have much to say so I'll stop speaking now. If you pester me again with E, I will dissapear.</line>
+					</lines>
+				</dialogue>
+			</encounter>
 			<encounter level_name="Level 1">
 				<dialogue dID="0">
 					<lines>
