@@ -74,28 +74,6 @@ void StartMenu::loadEntities()
 	auto& texmesh = *ECS::registry<ShadedMeshRef>.get(snail).reference_to_cache;
 	texmesh.texture.color = { 1, 1, 1 };
 
-	// decorative tiles
-	// assuming 1200 x 800
-	float scale = TileSystem::getScale();
-	// bottom platform
-	for (int x = 0; x < 12; x++)
-	{
-		ECS::Entity wall = WallTile::createWallTile({ (x + 0.5f) * scale, 7.5f * scale });
-		ECS::registry<StartMenuTag>.emplace(wall);
-	}
-	// vines
-	for (int x = 0; x < 12; x++)
-	{
-		if (x == 0 || x == 1 || x == 10 || x == 11)
-		{
-			for (int y = 1; y < 7; y++)
-			{
-				ECS::Entity vine = VineTile::createVineTile({ (x + 0.5f) * scale, (y + 0.5f) * scale });
-				ECS::registry<StartMenuTag>.emplace(vine);
-			}
-		}
-	}
-
 	const auto ABEEZEE_REGULAR = Font::load(ABEEZEE_REGULAR_PATH);
 	const auto VIGA_REGULAR = Font::load(VIGA_REGULAR_PATH);
 
@@ -217,7 +195,7 @@ void StartMenu::loadEntities()
 	ECS::registry<StartMenuTag>.emplace(volumeSliderEntity);
 
 	// slider feedback
-	float curVol = static_cast<float>(max(Mix_Volume(-1, -1), Mix_VolumeMusic(-1))) / MIX_MAX_VOLUME;
+	float curVol = Volume::getCur();
 	ECS::Entity volumeIndicatorEntity = ECS::Entity();
 
 	std::string indicatorKey = "volume_indicator";
@@ -396,8 +374,6 @@ void StartMenu::selectedKeyEvent()
 		// perform action for button being hovered over (and pressed)
 		if (button.selected && !button.disabled)
 		{
-			double volumeRatio = 0;
-
 			switch (button.event)
 			{
 			case ButtonEventType::START_GAME:
@@ -467,6 +443,5 @@ void StartMenu::setVolume(ECS::Entity buttonEntity, double volumeRatio)
 	indicatorMotion.scale.x = volumeRatio * 100;
 	indicatorMotion.position = { 50 + indicatorMotion.scale.x / 2, 50 };
 
-	Mix_Volume(-1, volumeRatio * MIX_MAX_VOLUME);
-	Mix_VolumeMusic(volumeRatio * MIX_MAX_VOLUME);
+	Volume::set(volumeRatio);
 }

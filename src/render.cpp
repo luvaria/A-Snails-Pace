@@ -35,6 +35,87 @@ void RenderSystem::HandleFrameSwitchTiming(ECS::Entity entity, float elapsed_ms)
 	}
 }
 
+void RenderSystem::drawTexturedMeshForParticles(ECS::Entity entity, vec2 window_size_in_game_units, const mat3& projection, float elapsed_ms)
+{
+    auto& motion = ECS::registry<Motion>.get(entity);
+    auto& texmesh = *ECS::registry<ShadedMeshRef>.get(entity).reference_to_cache;
+    
+    Transform transform;
+    transform.translate(motion.position);
+    transform.scale({25, 25});
+    
+    // Setting shaders
+    glUseProgram(texmesh.effect.program);
+    glBindVertexArray(texmesh.mesh.vao);
+    gl_has_errors();
+
+    // Enabling alpha channel for textures
+    glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_DEPTH_TEST);
+    gl_has_errors();
+
+    GLint transform_uloc = glGetUniformLocation(texmesh.effect.program, "transform");
+    GLint projection_uloc = glGetUniformLocation(texmesh.effect.program, "projection");
+    gl_has_errors();
+    
+    int index = 0;
+    auto element = ECS::registry<WeatherParentParticle>.get(entity);
+    std::vector<glm::vec2> translations;
+    for (int y = 0; y < element.particles.size(); y++)
+    {
+        Motion& m = ECS::registry<Motion>.get(element.particles[y]);
+        glm::vec2 translation;
+        translation.x = (motion.position.x - m.position.x)/15.f;
+        translation.y = abs(motion.position.y - m.position.y)/15.f;
+        translations.push_back(translation);
+    }
+    
+    if(translations.size() == 0) {
+        return;
+    }
+
+    unsigned int instanceVBO;
+    glGenBuffers(1, &instanceVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * element.particles.size(), &translations[0], GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    float quadVertices[] = {
+        -0.05f,  0.05f,  1.0f, 1.0f, 1.0f,
+         0.05f, -0.05f,  1.0f, 1.0f, 1.0f,
+        -0.05f, -0.05f,  1.0f, 1.0f, 1.0f,
+
+        -0.05f,  0.05f,  1.0f, 1.0f, 1.0f,
+         0.05f, -0.05f,  1.0f, 1.0f, 1.0f,
+         0.05f,  0.05f,  1.0f, 1.0f, 1.0f
+    };
+    unsigned int quadVAO, quadVBO;
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
+    // also set instance data
+    glEnableVertexAttribArray(2);
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO); // this attribute comes from a different vertex buffer
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glVertexAttribDivisor(2, 1); // tell OpenGL this is an instanced vertex attribute.
+    
+    glUniformMatrix3fv(transform_uloc, 1, GL_FALSE, (float*)&transform.mat);
+    glUniformMatrix3fv(projection_uloc, 1, GL_FALSE, (float*)&projection);
+    gl_has_errors();
+
+    glBindVertexArray(quadVAO);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, element.particles.size()); // 100 triangles of 6 vertices each
+    glBindVertexArray(0);
+
+}
+
 void RenderSystem::drawTexturedMesh(ECS::Entity entity, const mat3& projection, float elapsed_ms)
 {
 	auto& motion = ECS::registry<Motion>.get(entity);
@@ -74,9 +155,7 @@ void RenderSystem::drawTexturedMesh(ECS::Entity entity, const mat3& projection, 
         GLint centerPointY = glGetUniformLocation(texmesh.effect.program, "centerPointY");
         glUniform1f(centerPointY, static_cast<float>(motion.position.y ));
     }
-   
-//    GLuint time_uloc       = glGetUniformLocation(screen_sprite.effect.program, "time");
-//    glUniform1f(time_uloc, static_cast<float>(glfwGetTime() * 10.0f));
+    
     gl_has_errors();
     
 	// Setting vertex and index buffers
@@ -93,8 +172,7 @@ void RenderSystem::drawTexturedMesh(ECS::Entity entity, const mat3& projection, 
 		glEnableVertexAttribArray(in_position_loc);
 		glVertexAttribPointer(in_position_loc, 3, GL_FLOAT, GL_FALSE, sizeof(TexturedVertex), reinterpret_cast<void*>(0));
 		glEnableVertexAttribArray(in_texcoord_loc);
-		glVertexAttribPointer(in_texcoord_loc, 2, GL_FLOAT, GL_FALSE, sizeof(TexturedVertex), reinterpret_cast<void*>(sizeof(vec3))); // note the stride to skip the preceeding vertex position
-		// Enabling and binding texture to slot 0
+		glVertexAttribPointer(in_texcoord_loc, 2, GL_FLOAT, GL_FALSE, sizeof(TexturedVertex), reinterpret_cast<void*>(sizeof(vec3))); //
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texmesh.texture.texture_id);
 	}
@@ -254,6 +332,9 @@ void RenderSystem::draw(vec2 window_size_in_game_units, float elapsed_ms)
 			drawTexturedMesh(entity, overlay_projection_2D, elapsed_ms);
 		else if (ECS::registry<Parallax>.has(entity))
 			drawTexturedMesh(entity, projection2D(window_size_in_game_units, cameraOffset / static_cast<float>(ECS::registry<Parallax>.get(entity).layer)), elapsed_ms);
+        else if (ECS::registry<WeatherParentParticle>.has(entity)) {
+            drawTexturedMeshForParticles(entity, window_size_in_game_units, projection_2D, elapsed_ms);
+        }
 		else
 			drawTexturedMesh(entity, projection_2D, elapsed_ms);
 

@@ -61,6 +61,7 @@ public:
 
     static char constexpr EQUIPPED_KEY[] = "equipped";
     static char constexpr POINTS_KEY[] = "points";
+    static char constexpr VOLUME_KEY[] = "volume";
 
     /* level save constants */
     static char constexpr LEVEL_DIR[] = "level/";
@@ -92,6 +93,7 @@ public:
     static char constexpr COLLECTIBLE_KEY[] = "collectibles";
 
 
+    static double getSavedVolume();
     static void loadPlayerFile();
     static void writePlayerFile();
 

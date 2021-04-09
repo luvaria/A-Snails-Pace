@@ -20,3 +20,14 @@ void Transform::translate(vec2 offset)
 	mat3 T = { { 1.f, 0.f, 0.f },{ 0.f, 1.f, 0.f },{ offset.x, offset.y, 1.f } };
 	mat = mat * T;
 }
+
+double Volume::getCur()
+{
+    return static_cast<double>(max(Mix_Volume(-1, -1), Mix_VolumeMusic(-1))) / MIX_MAX_VOLUME;
+}
+
+void Volume::set(double volumeRatio)
+{
+    Mix_Volume(-1, volumeRatio * MIX_MAX_VOLUME);
+    Mix_VolumeMusic(volumeRatio * MIX_MAX_VOLUME);
+}

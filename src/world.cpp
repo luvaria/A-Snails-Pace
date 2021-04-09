@@ -7,6 +7,7 @@
 #include "projectile.hpp"
 #include "ai.hpp"
 #include "bird.hpp"
+#include "fish.hpp"
 #include "tiles/wall.hpp"
 #include "tiles/water.hpp"
 #include "tiles/vine.hpp"
@@ -24,6 +25,7 @@
 #include "subject.hpp"
 #include "collectible.hpp"
 #include "particle.hpp"
+#include "load_save.hpp"
 
 // stlib
 #include <cassert>
@@ -128,6 +130,8 @@ void WorldSystem::init_audio()
             audio_path("music.wav") +
             audio_path("salmon_dead.wav") +
             audio_path("salmon_eat.wav"));
+
+    Volume::set(LoadSaveSystem::getSavedVolume());
 }
 
 // Update our game world
@@ -245,8 +249,8 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
         } else if (ECS::registry<Particle>.has(entity) || ECS::registry<Spider>.has(entity)){
             auto& motion = ECS::registry<Motion>.get(entity);
             bool isParticle = ECS::registry<Particle>.has(entity);
-            bool isWeatherParticle = ECS::registry<WeatherParticle>.has(entity);
-            if(isParticle) {
+            bool isWeatherParticle = ECS::registry<WeatherParticle>.has(entity) || ECS::registry<WeatherParentParticle>.has(entity);
+            if(isParticle || isWeatherParticle) {
                 motion.scale *= (isWeatherParticle) ? (1-(step_seconds/8)) : (1+(step_seconds/3));
                 motion.angle *= (isWeatherParticle) ? (1+(step_seconds)) : 1;
             }
@@ -254,9 +258,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             counter.counter_ms -= elapsed_ms;
             if (counter.counter_ms < 0)
             {
-                if(isWeatherParticle && offScreen(motion.position, window_size_in_game_units, cameraOffset)) {
-                    ECS::ContainerInterface::remove_all_components_of(entity);
-                } else {
+                if(!isWeatherParticle) {
                     ECS::ContainerInterface::remove_all_components_of(entity);
                 }
             }
@@ -267,6 +269,10 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     {
 	    if (snail_move <= 0)
         {
+            for (auto& entity : ECS::registry<Fish>.entities) {
+                auto& move = ECS::registry<Move>.get(entity);
+                move.hasMoved = false;
+            }
 	        turnType = PLAYER_UPDATE;
         }
     }
@@ -288,6 +294,11 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     }
 	else if (turnType == ENEMY)
     {
+        int move = 1;
+        for (auto& entity : ECS::registry<Fish>.entities) {
+            fishMove(entity, move);
+        }
+
 	    // this works out so that the projectiles move a set amount of time per enemy turn
 	    if (ECS::registry<Projectile>.size() != 0)
         {
@@ -296,9 +307,10 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 
         
         // projectile done moving or no projectiles AND AI path calculated or AI all dead
+        // changed from AI.size to Enemy.size
         if (((ECS::registry<Projectile>.size() != 0 && projectile_turn_over_time <= 0) 
             || (ECS::registry<Projectile>.size() == 0))
-            && (AISystem::aiMoved || (ECS::registry<AI>.size() == 0)))
+            && (AISystem::aiMoved || (ECS::registry<Enemy>.size() == 0)))
         {
             // In the following two cases, if true, all the enemies will have moved
             // Camera has to move
@@ -314,6 +326,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
                 saveGame();
             }
         }
+
     }
 	else if (turnType == CAMERA)
     {
@@ -431,7 +444,8 @@ void WorldSystem::onNotify(Event event) {
         {
             // Check collisions that result in death
             if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<WaterTile>.has(event.other_entity)
-                || ECS::registry<Slug>.has(event.other_entity) || ECS::registry<SlugProjectile>.has(event.other_entity))
+                || ECS::registry<Slug>.has(event.other_entity) || ECS::registry<SlugProjectile>.has(event.other_entity)
+                || ECS::registry<Fish>.has(event.other_entity))
             {
                 // Initiate death unless already dying
                 if (!ECS::registry<DeathTimer>.has(event.entity))
@@ -552,6 +566,14 @@ bool WorldSystem::offScreen(vec2 const& pos, vec2 window_size_in_game_units, vec
         || offsetPos.y < 0.f || offsetPos.y > window_size_in_game_units.y);
 }
 
+bool WorldSystem::offScreenExceptNegativeYWithBuffer(vec2 const& pos, vec2 window_size_in_game_units, vec2 cameraOffset, int buffer)
+{
+    vec2 offsetPos = { pos.x - cameraOffset.x, pos.y - cameraOffset.y };
+    if(offsetPos.x > window_size_in_game_units.x) {
+        // haha
+    }
+    return (offsetPos.x + buffer < 0.f || offsetPos.x - buffer > window_size_in_game_units.x || offsetPos.y > window_size_in_game_units.y);
+}
 
 void WorldSystem::doX(Motion& motion, Tile& currTile, Tile& nextTile, int defaultDirection) {
     if (currTile.x == nextTile.x) {
@@ -1067,6 +1089,56 @@ void WorldSystem::fallDown(ECS::Entity& entity, int& moves) {
         moves--;
     }
     return;
+}
+
+void WorldSystem::fishMove(ECS::Entity& entity, int& moves) {
+    float scale = TileSystem::getScale();
+    auto& tiles = TileSystem::getTiles();
+
+    //if fish is going up
+
+    auto& motion = ECS::registry<Motion>.get(entity);
+    int xCoord = static_cast<int>(motion.position.x / scale);
+    int yCoord = static_cast<int>(motion.position.y / scale);
+    auto& move = ECS::registry<Move>.get(entity);
+    if (move.hasMoved == false) {
+        if (move.direction == true) {
+            if (yCoord - 1 < 0) {
+                return;
+            }
+            Tile upDest = tiles[yCoord - 1][xCoord];
+            if (upDest.type == WALL) {
+                move.direction = false;
+                move.hasMoved = true;
+                return;
+            }
+            Destination& dest = ECS::registry<Destination>.has(entity) ? ECS::registry<Destination>.get(entity) : ECS::registry<Destination>.emplace(entity);
+            dest.position = { upDest.x, upDest.y };
+            motion.velocity = (dest.position - motion.position) / k_move_seconds;
+            moves--;
+            move.hasMoved = true;
+            return;
+        }
+        else {
+            if (yCoord + 1 == tiles.size()) {
+                move.direction = true;
+                return;
+            }
+            Tile downDest = tiles[yCoord + 1][xCoord];
+            if (downDest.type == WATER) {
+                move.direction = true;
+            }
+            Destination& dest = ECS::registry<Destination>.has(entity) ? ECS::registry<Destination>.get(entity) : ECS::registry<Destination>.emplace(entity);
+            dest.position = { downDest.x, downDest.y };
+            motion.velocity = (dest.position - motion.position) / k_move_seconds;
+            moves--;
+            move.hasMoved = true;
+            return;
+        }
+    }
+    else {
+        return;
+    }
 }
 
 
