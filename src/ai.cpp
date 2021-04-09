@@ -47,11 +47,34 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             }
             
             
+
+
             aiMovedThisStep = true;
+        }
+        for (auto& entity : ECS::registry<Bird>.entities) {
+            
+            auto& fire = ECS::registry<Fire>.get(entity);
+            if (fire.fired == true) {
+                fire.fired = false;
+                projectileShoot(entity);
+            }
+            
         }
 
         if (aiMovedThisStep) {
             aiMoved = true;
+        }
+
+
+    }
+
+    if (ECS::registry<Turn>.components[0].type == PLAYER_WAITING) {
+        // add super spider to this arrangement
+        //fire = true;
+        for (int i = 0; i < ECS::registry<Fire>.components.size(); i++) {
+            auto& entity = ECS::registry<Fire>.entities[i];
+            auto& fired = ECS::registry<Fire>.components[i].fired;
+            fired = true;
         }
     }
     if (ECS::registry<Turn>.components[0].type == PLAYER_WAITING) {
@@ -105,6 +128,7 @@ std::vector<vec2> AISystem::shortestPathAStar(vec2 start, vec2 goal, std::string
   return startFrontier;
 }
   
+
 void AISystem::sortQueue(std::deque<std::vector<vec2>> &frontier, vec2 destCoord)
 {
     std::vector<std::vector<vec2>> list;
@@ -415,7 +439,35 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
 
 }
 
-void AISystem::superSpiderShoot(ECS::Entity& e) {
+void AISystem::projectileShoot(ECS::Entity& e) {
+
+    // range of bird firing, don't want him to fire if he is off the screen.
+    if (ECS::registry<Bird>.has(e) == true) {
+        auto& snailEntity = ECS::registry<Snail>.entities[0];
+        float scale = TileSystem::getScale();
+
+        vec2 snailPos = ECS::registry<Motion>.get(snailEntity).position;
+        int xPos = (snailPos[0] - (0.5 * scale)) / scale;
+        int yPos = (snailPos[1] - (0.5 * scale)) / scale;
+        vec2 snailCoord = { yPos, xPos };
+
+        auto tiles = TileSystem::getTiles();
+        auto& motion = ECS::registry<Motion>.get(e);
+        vec2 aiPos = motion.position;
+        int xAiPos = (aiPos.x - (0.5 * scale)) / scale;
+        int yAiPos = (aiPos.y - (0.5 * scale)) / scale;
+        vec2 aiCoord = { yAiPos, xAiPos };
+
+        if (xAiPos - 5 > xPos) {
+            return;
+        }
+        if (xAiPos + 4 < xPos) {
+            return;
+        }
+        
+    }
+
+
     vec2 spiderPosition = ECS::registry<Motion>.get(e).position;
 
     auto& snailEntity = ECS::registry<Snail>.entities[0];
@@ -618,6 +670,7 @@ BTState FireXShots::process(ECS::Entity e) {
         // implement a version of this for the slug
         SlugProjectile::createProjectile(projectilePosition, projectileVelocity);
     }
+
    
     return BTState::Success;
     
