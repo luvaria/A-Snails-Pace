@@ -26,3 +26,4 @@ Death sound: "8 bit Death sound" by [MentosLat on freesound.org](https://freesou
 Projectile firing sound: "mouth pop" by [Reitanna on freesound.org](https://freesound.org/people/Reitanna/sounds/323741/)
 Fall sound: "Jump (Retro video game SFX)" by [cabled_mess on freesound.org](https://freesound.org/people/cabled_mess/sounds/350906/)
 Dialogue sound: "aha" by [syberic on freesound.org](https://freesound.org/people/syberic/sounds/431891/)
+Collectible pickup sound: "PickupBook4" by [jomse on freesound.org](https://freesound.org/people/jomse/sounds/428663/)

@@ -102,6 +102,8 @@ WorldSystem::~WorldSystem() {
         Mix_FreeChunk(projectile_sound);
     if (dialogue_sound != nullptr)
         Mix_FreeChunk(dialogue_sound);
+    if (collectible_sound != nullptr)
+        Mix_FreeChunk(collectible_sound);
     Mix_CloseAudio();
 
     SDL_Quit();
@@ -132,8 +134,9 @@ void WorldSystem::init_audio()
     snail_move_sound = Mix_LoadWAV(audio_path("350906__cabled-mess__jump-c-04.wav").c_str());
     projectile_sound = Mix_LoadWAV(audio_path("323741__reitanna__mouth-pop.wav").c_str());
     dialogue_sound = Mix_LoadWAV(audio_path("431891__syberic__aha.wav").c_str());
+    collectible_sound = Mix_LoadWAV(audio_path("428663__jomse__pickupbook4.wav").c_str());
 
-    if (menu_music == nullptr || background_music == nullptr || level_complete_sound == nullptr || snail_dead_sound == nullptr || snail_move_sound == nullptr || projectile_sound == nullptr || dialogue_sound == nullptr)
+    if (menu_music == nullptr || background_music == nullptr || level_complete_sound == nullptr || snail_dead_sound == nullptr || snail_move_sound == nullptr || projectile_sound == nullptr || dialogue_sound == nullptr || collectible_sound == nullptr)
         throw std::runtime_error("Failed to load sounds; make sure the data directory is present");
 }
 
@@ -443,6 +446,7 @@ void WorldSystem::onNotify(Event event) {
                 ECS::registry<Inventory>.components[0].collectibles.insert(id);
                 // Equip collectible (creates new entity)
                 Collectible::equip(event.entity, id);
+                Mix_PlayChannel(-1, collectible_sound, 0);
                 // Remove the collectible from the map
                 ECS::ContainerInterface::remove_all_components_of(event.other_entity);
             }

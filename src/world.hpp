@@ -119,6 +119,7 @@ private:
 	Mix_Chunk* snail_move_sound;
 	Mix_Chunk* projectile_sound;
 	Mix_Chunk* dialogue_sound;
+	Mix_Chunk* collectible_sound;
 
 	// C++ random number generator
 	std::default_random_engine rng;
