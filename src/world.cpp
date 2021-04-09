@@ -414,8 +414,8 @@ void WorldSystem::restart(int newLevel)
     // Reset Turn
     ECS::registry<Turn>.components[0].type = PLAYER_WAITING;
 
-    // for the first level, prompt controls overlay
-    if (level == 0 && deaths == 0)
+    // for the first attempt of any level, prompt controls overlay
+    if (deaths == 0)
         ControlsOverlay::addControlsPrompt();
 
 	snail_move = 1;
