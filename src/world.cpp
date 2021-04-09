@@ -1218,7 +1218,7 @@ void WorldSystem::fishMove(ECS::Entity& entity, int& moves) {
 void WorldSystem::on_key(int key, int, int action, int mod)
 {
 
-    if (ECS::registry<DeathTimer>.has(ECS::registry<Snail>.entities[0])) {
+    if (ECS::registry<DeathTimer>.has(player_snail)) {
         return;
     }
 
