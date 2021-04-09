@@ -1288,6 +1288,10 @@ void WorldSystem::fishMove(ECS::Entity& entity, int& moves) {
 // Check out https://www.glfw.org/docs/3.3/input_guide.html
 void WorldSystem::on_key(int key, int, int action, int mod)
 {
+    if (ECS::registry<DeathTimer>.has(player_snail)) {
+        return;
+    }
+
     if (action == GLFW_PRESS)
     {
         // remove prompt on key press
@@ -1422,6 +1426,10 @@ void WorldSystem::on_mouse_move(vec2 /*mouse_pos*/)
 
 void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
 {
+    if (ECS::registry<DeathTimer>.has(player_snail)) {
+        return;
+    }
+
     // remove prompt on mouse click
     if (action == GLFW_PRESS)
     {
