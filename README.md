@@ -27,6 +27,7 @@ Enemy death sound: "Death Scream" by [Gemesil on freesound.org](https://freesoun
 Unkillable enemy "nope": "Nope" by [javapimp on freesound.org](https://freesound.org/people/javapimp/sounds/439043/)
 Projectile firing sound: "mouth pop" by [Reitanna on freesound.org](https://freesound.org/people/Reitanna/sounds/323741/)
 Projectile breaking sound: "Quick Clack" by [effectator on freesound.org](https://freesound.org/people/effectator/sounds/443328/)
+Snail move sound: edited from "Card Flip" by [f4ngy on freesound.org](https://freesound.org/people/f4ngy/sounds/240776/)
 Fall sound: "Jump (Retro video game SFX)" by [cabled_mess on freesound.org](https://freesound.org/people/cabled_mess/sounds/350906/)
 Splash sound: "water_splash" by [soundscalpel.com on freesound.org](https://freesound.org/people/soundscalpel.com/sounds/110393/)
 Dialogue sound: "aha" by [syberic on freesound.org](https://freesound.org/people/syberic/sounds/431891/)
