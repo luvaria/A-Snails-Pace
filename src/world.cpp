@@ -481,7 +481,10 @@ void WorldSystem::onNotify(Event event) {
                 if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<Slug>.has(event.other_entity) 
                     || ECS::registry<SlugProjectile>.has(event.other_entity))
                 {
-                    Mix_PlayChannel(-1, enemy_dead_sound, 0);
+                    if (ECS::registry<Enemy>.has(event.other_entity))
+                    {
+                        Mix_PlayChannel(-1, enemy_dead_sound, 0);
+                    }
                     // tile no longer occupied by spider
                     float scale = TileSystem::getScale();
                     auto& motion = ECS::registry<Motion>.get(event.other_entity);
