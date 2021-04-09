@@ -895,6 +895,7 @@ void WorldSystem::goLeft(ECS::Entity &entity, int &moves)
             }
         }
         nextTile = nextTile.type == WALL || leftTile.type == VINE ? leftTile : nextTile;
+        if (nextTile.type == INACCESSIBLE) return;
         changeDirection(motion, currTile, nextTile, DIRECTION_WEST, entity);
     }
     else if (abs(motion.angle) == PI / 2 && leftTile.type == VINE && currTile.type == VINE) {
@@ -983,6 +984,7 @@ void WorldSystem::goRight(ECS::Entity& entity, int& moves) {
             }
         }
         nextTile = nextTile.type == WALL || rightTile.type == VINE ? rightTile : nextTile;
+        if (nextTile.type == INACCESSIBLE) return;
         changeDirection(motion, currTile, nextTile, DIRECTION_EAST, entity);
     }
     else if (abs(motion.angle) == PI / 2 && rightTile.type == VINE && currTile.type == VINE) {
@@ -1081,6 +1083,7 @@ void WorldSystem::goUp(ECS::Entity& entity, int& moves) {
             }
         }
         nextTile = nextTile.type == WALL || upTile.type == VINE ? upTile : nextTile;
+        if (nextTile.type == INACCESSIBLE) return;
         changeDirection(motion, currTile, nextTile, DIRECTION_NORTH, entity);
     }
 
@@ -1168,6 +1171,7 @@ void WorldSystem::goDown(ECS::Entity& entity, int& moves) {
              }
         }
         nextTile = nextTile.type == WALL || downTile.type == VINE ? downTile : nextTile;
+        if (nextTile.type == INACCESSIBLE) return;
         changeDirection(motion, currTile, nextTile, DIRECTION_SOUTH, entity);
     }
     
