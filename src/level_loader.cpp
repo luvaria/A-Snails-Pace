@@ -4,6 +4,8 @@
 #include "npc.hpp"
 #include "spider.hpp"
 #include "slug.hpp"
+#include "bird.hpp"
+#include "fish.hpp"
 #include "ai.hpp"
 #include "collectible.hpp"
 #include "tiles/vine.hpp"
@@ -188,6 +190,28 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 				Slug::createSlug({ tile.x, tile.y }, createTaggedEntity(preview));
 			}
 			break;
+		case eFish:
+			for (auto& fish : it.value())
+			{
+				ivec2 fishPos = { fish["x"], fish["y"] };
+				if (preview && (xNotInPreviewArea(fishPos.x, previewOrigin) || yNotInPreviewArea(fishPos.y, previewOrigin)))
+					continue;
+				Tile& tile = tiles[fish["y"]][fish["x"]];
+				tile.addOccupyingEntity();
+				Fish::createFish({ tile.x, tile.y }, createTaggedEntity(preview));
+			}
+			break;
+		case eBird:
+			for (auto& bird : it.value())
+			{
+				ivec2 birdPos = { bird["x"], bird["y"] };
+				if (preview && (xNotInPreviewArea(birdPos.x, previewOrigin) || yNotInPreviewArea(birdPos.y, previewOrigin)))
+					continue;
+				Tile& tile = tiles[bird["y"]][bird["x"]];
+				tile.addOccupyingEntity();
+				Bird::createBird({ tile.x, tile.y }, createTaggedEntity(preview));
+			}
+			break;
 		default:
 			throw std::runtime_error("Failed to spawn character " + it.key());
 			break;
@@ -206,6 +230,7 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
     }
 
 	TileSystem::vec2Map& tileMovesMap = TileSystem::getAllTileMovesMap();
+    tileMovesMap.clear();
 	int y = 0;
 	for (auto& rows : tiles) // Iterating over rows
 	{
@@ -252,6 +277,8 @@ LevelLoader::string_code LevelLoader::hashit(std::string const& inString) {
 	if (inString == "snail") return eSnail;
 	if (inString == "spider") return eSpider;
 	if (inString == "slug") return eSlug;
+	if (inString == "fish") return eFish;
+	if (inString == "bird") return eBird;
 	throw std::runtime_error("No hash found for " + inString);
 }
 

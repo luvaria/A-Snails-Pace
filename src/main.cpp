@@ -43,7 +43,7 @@ int main()
 	PhysicsSystem physics;
 	AISystem ai;
 	BackgroundSystem bg(window_size_in_game_units);
-
+	WorldSystem::window_width = window_size_in_px.x;
 	// Set all states to default
 	TileSystem::setScale(100.f);
 	menus.setup();
