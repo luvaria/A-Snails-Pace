@@ -3,6 +3,8 @@
   "description": "First non demo level, slightly more challenging",
   "scale": 100,
   "direction": "right",
+  "background": "forest",
+  "weather": "rain",
   "turnsPerCamera": 8,
   "AI-PathFinding-Algorithm": "BFS",
   "endCoordinates": {"x" : 19 , "y" : 6 },

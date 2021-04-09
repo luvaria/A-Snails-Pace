@@ -5,7 +5,7 @@
   "direction": "right",
   "turnsPerCamera": 5,
   "AI-PathFinding-Algorithm": "Astar",
-  "background": "forest",
+  "background": "desert",
   "weather": "rain",
   "endCoordinates": {
     "x": 28,
