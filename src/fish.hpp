@@ -7,5 +7,10 @@
 struct Fish
 {
 	// Creates all the associated render resources and default transform
-	static ECS::Entity createFish(vec2 position);
+	static ECS::Entity createFish(vec2 position, ECS::Entity entity = ECS::Entity());
+};
+
+struct Move {
+	bool direction;
+	bool hasMoved;
 };
