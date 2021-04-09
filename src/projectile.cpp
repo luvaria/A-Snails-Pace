@@ -118,7 +118,7 @@ ECS::Entity SlugProjectile::createProjectile(Motion motion)
     ECS::registry<MinShadedMeshRef>.emplace(entity, resource_min, RenderBucket::PROJECTILE);
 
     auto& proj = ECS::registry<Projectile>.emplace(entity);
-    proj.dorigScale = motion.scale;
+    proj.origScale = motion.scale;
     ECS::registry<SlugProjectile>.emplace(entity);
 
 
