@@ -48,7 +48,7 @@ static std::vector<std::pair<int, std::string> > tutorial_messages =
   {200, "Nice job. You're almost at the end of the tutorial! If you ever forget the controls, you can press C to display them."} };
 
 static std::vector< std::vector< bool > > first_run;
-static int index = 0;
+static int msg_index = 0;
 
 // Create the fish world
 // Note, this has a lot of OpenGL specific things, could be moved to the renderer; but it also defines the callbacks to the mouse and keyboard. That is why it is called here.
@@ -317,10 +317,10 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
         if (yCoord < tiles.size()) {
             Tile& t = tiles[yCoord][xCoord];
             if (t.type == MESSAGE && first_run[yCoord][xCoord]) {
-                auto offset = tutorial_messages[index].first;
-                auto message = tutorial_messages[index].second;
+                auto offset = tutorial_messages[msg_index].first;
+                auto message = tutorial_messages[msg_index].second;
                 notify(Event(Event::START_DIALOGUE, message, offset));
-                index++;
+                msg_index++;
                 first_run[yCoord][xCoord] = false;
             }
         }
@@ -613,7 +613,7 @@ void WorldSystem::onNotify(Event event) {
 
         // if selecting tutorial from level menu reset messages
         if (level == 0) {
-            index = 0;
+            msg_index = 0;
             auto tiles = TileSystem::getTiles();
             first_run = std::vector< std::vector< bool > >(tiles.size(), std::vector<bool>(tiles[0].size(), true));
         }
