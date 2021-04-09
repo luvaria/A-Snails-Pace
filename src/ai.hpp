@@ -313,13 +313,14 @@ public:
 
     static std::string aiPathFindingAlgorithm;
     static bool aiMoved;
-    //static std::vector<vec2> birdPath;
+    static bool fire;
 	  void step(float elapsed_ms, vec2 window_size_in_game_units);
     void init();
     static std::vector<vec2> shortestPathBFS(vec2 start, vec2 goal, std::string animal);
     static std::vector<vec2> shortestPathAStar(vec2 start, vec2 goal, std::string animal);
     static void sortQueue(std::deque<std::vector<vec2>> &frontier, vec2 destCoord);
     static bool checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deque<std::vector<vec2>>& frontier, std::vector<vec2>& current, TileSystem::vec2Map& tileMovesMap, vec2& goal);
+    static void projectileShoot(ECS::Entity& e);
     static bool birdAddNeighborNodes(std::deque<std::vector<vec2>>& frontier, std::vector<vec2>& current, TileSystem::vec2Map& tileMovesMap, vec2& goal);
-   // static std::vector<vec2> getBirdPath() { return birdPath; }
+    static void superSpiderShoot(ECS::Entity& entity);
 };

@@ -10,3 +10,7 @@ struct Spider
 	static ECS::Entity createSpider(vec2 position, ECS::Entity entity = ECS::Entity());
     static ECS::Entity createExplodingSpider(Motion givenMotion, ECS::Entity entity);
 };
+
+struct SuperSpider {
+	static ECS::Entity createSuperSpider(vec2 position, ECS::Entity entity = ECS::Entity());
+};

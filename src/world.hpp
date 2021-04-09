@@ -63,6 +63,8 @@ public:
     static void rotate(Tile &currTile, Motion &motion, Tile &nextTile);
     
     static void changeDirection(Motion &motion, Tile &currTile, Tile &nextTile, int defaultDirection, ECS::Entity& entity);
+
+	static void fishMove(ECS::Entity &entity, int &moves);
     
 	// OpenGL window handle
 	GLFWwindow* window;
@@ -113,9 +115,20 @@ private:
     float projectile_turn_over_time;
 
 	// music references
+	Mix_Music* menu_music;
 	Mix_Music* background_music;
-	Mix_Chunk* salmon_dead_sound;
-	Mix_Chunk* salmon_eat_sound;
+	Mix_Chunk* level_complete_sound;
+	Mix_Chunk* snail_dead_sound;
+	Mix_Chunk* enemy_dead_sound;
+	Mix_Chunk* enemy_nope_sound;
+	Mix_Chunk* superspider_spawn_sound;
+	Mix_Chunk* snail_move_sound;
+	Mix_Chunk* snail_fall_sound;
+	Mix_Chunk* splash_sound;
+	Mix_Chunk* projectile_fire_sound;
+	Mix_Chunk* projectile_break_sound;
+	Mix_Chunk* dialogue_sound;
+	Mix_Chunk* collectible_sound;
 
 	// C++ random number generator
 	std::default_random_engine rng;
