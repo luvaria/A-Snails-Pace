@@ -3,7 +3,7 @@
 #include "snail.hpp"
 #include "load_save.hpp"
 #include "../tiles/tiles.hpp"
-#include "../tiles/wall.hpp"
+#include "../tiles/water.hpp"
 #include "../tiles/vine.hpp"
 
 #define SDL_MAIN_HANDLED
@@ -69,6 +69,28 @@ void StartMenu::loadEntities()
 	Motion& snailMotion = ECS::registry<Motion>.get(snail);
 	snailMotion.scale *= 6;
 	ECS::registry<StartMenuTag>.emplace(snail);
+
+	// decorative tiles	
+	// assuming 1200 x 800	
+	float scale = TileSystem::getScale();
+	// bottom platform	
+	for (int x = 0; x < 12; x++)
+	{
+		ECS::Entity water = WaterTile::createWaterTile({ (x + 0.5f) * scale, 7.5f * scale });
+		ECS::registry<StartMenuTag>.emplace(water);
+	}
+	// vines	
+	for (int x = 0; x < 12; x++)
+	{
+		if (x == 0 || x == 11)
+		{
+			for (int y = 1; y < 7; y++)
+			{
+				ECS::Entity vine = VineTile::createVineTile({ (x + 0.5f) * scale, (y + 0.5f) * scale });
+				ECS::registry<StartMenuTag>.emplace(vine);
+			}
+		}
+	}
 
 	// ensure snail is not red from quitting during DeathTimer
 	auto& texmesh = *ECS::registry<ShadedMeshRef>.get(snail).reference_to_cache;
