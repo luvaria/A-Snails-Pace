@@ -102,6 +102,8 @@ WorldSystem::~WorldSystem() {
         Mix_FreeChunk(enemy_dead_sound);
     if (enemy_nope_sound != nullptr)
         Mix_FreeChunk(enemy_nope_sound);
+    if (superspider_spawn_sound != nullptr)
+        Mix_FreeChunk(superspider_spawn_sound);
     if (snail_fall_sound != nullptr)
         Mix_FreeChunk(snail_fall_sound);
     if (snail_move_sound != nullptr)
@@ -145,6 +147,7 @@ void WorldSystem::init_audio()
     snail_dead_sound = Mix_LoadWAV(audio_path("417486__mentoslat__8-bit-death-sound.wav").c_str());
     enemy_dead_sound = Mix_LoadWAV(audio_path("523216__gemesil__death-scream.wav").c_str());
     enemy_nope_sound = Mix_LoadWAV(audio_path("439043__javapimp__lexie-nope.wav").c_str());
+    superspider_spawn_sound = Mix_LoadWAV(audio_path("341240__sharesynth__powerup03.wav").c_str());
     snail_move_sound = Mix_LoadWAV(audio_path("240776__f4ngy__card-flip.wav").c_str());
     snail_fall_sound = Mix_LoadWAV(audio_path("350906__cabled-mess__jump-c-04.wav").c_str());
     splash_sound = Mix_LoadWAV(audio_path("110393__soundscalpel-com__water-splash.wav").c_str());
@@ -153,7 +156,7 @@ void WorldSystem::init_audio()
     dialogue_sound = Mix_LoadWAV(audio_path("431891__syberic__aha.wav").c_str());
     collectible_sound = Mix_LoadWAV(audio_path("428663__jomse__pickupbook4.wav").c_str());
 
-    if (menu_music == nullptr || background_music == nullptr || level_complete_sound == nullptr || snail_dead_sound == nullptr || enemy_dead_sound == nullptr || enemy_nope_sound == nullptr || snail_move_sound == nullptr || snail_fall_sound == nullptr || splash_sound == nullptr || projectile_fire_sound == nullptr || projectile_break_sound == nullptr || dialogue_sound == nullptr || collectible_sound == nullptr)
+    if (menu_music == nullptr || background_music == nullptr || level_complete_sound == nullptr || snail_dead_sound == nullptr || enemy_dead_sound == nullptr || enemy_nope_sound == nullptr || superspider_spawn_sound == nullptr || snail_move_sound == nullptr || snail_fall_sound == nullptr || splash_sound == nullptr || projectile_fire_sound == nullptr || projectile_break_sound == nullptr || dialogue_sound == nullptr || collectible_sound == nullptr)
         throw std::runtime_error("Failed to load sounds; make sure the data directory is present");
 
     Volume::set(LoadSaveSystem::getSavedVolume());
@@ -459,9 +462,8 @@ void WorldSystem::onNotify(Event event) {
         if (ECS::registry<Snail>.has(event.entity))
         {
             // Check collisions that result in death
-            if (ECS::registry<Spider>.has(event.other_entity) || ECS::registry<WaterTile>.has(event.other_entity)
-                || ECS::registry<Slug>.has(event.other_entity) || ECS::registry<SlugProjectile>.has(event.other_entity)
-                || ECS::registry<SuperSpider>.has(event.other_entity) || ECS::registry<Fish>.has(event.other_entity))
+            if (ECS::registry<Enemy>.has(event.other_entity) || ECS::registry<WaterTile>.has(event.other_entity)
+                || ECS::registry<SlugProjectile>.has(event.other_entity))
             {
                 // Initiate death unless already dying
                 if (!ECS::registry<DeathTimer>.has(event.entity))
@@ -528,6 +530,7 @@ void WorldSystem::onNotify(Event event) {
         if (ECS::registry<Spider>.has(event.entity)) {
             if (ECS::registry<Spider>.has(event.other_entity)) {
                 std::cout << "2 spiders in the same tile" << std::endl;
+                Mix_PlayChannel(-1, superspider_spawn_sound, 0);
                 float scale = TileSystem::getScale();
                 auto& motion1 = ECS::registry<Motion>.get(event.entity);
                 auto& motion2 = ECS::registry<Motion>.get(event.other_entity);

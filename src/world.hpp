@@ -121,6 +121,7 @@ private:
 	Mix_Chunk* snail_dead_sound;
 	Mix_Chunk* enemy_dead_sound;
 	Mix_Chunk* enemy_nope_sound;
+	Mix_Chunk* superspider_spawn_sound;
 	Mix_Chunk* snail_move_sound;
 	Mix_Chunk* snail_fall_sound;
 	Mix_Chunk* splash_sound;
