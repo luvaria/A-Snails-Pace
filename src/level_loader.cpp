@@ -133,6 +133,9 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 					Collectible::equip(entity, 1); // bbcap
 				}
 				break;
+			case 'M':
+				tile.type = MESSAGE;
+				break;
 			default:
 				tile.type = EMPTY;
 				break;

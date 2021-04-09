@@ -1,0 +1,49 @@
+{
+  "name": "Tutorial",
+  "description": "Teaching you the game",
+  "scale": 100,
+  "direction": "right",
+  "turnsPerCamera": 2,
+  "AI-PathFinding-Algorithm": "Astar",
+  "endCoordinates": {
+    "x": 22,
+    "y": 6
+  },
+  "tiles": [
+    "                       ",
+    "                       ",
+    "                       ",
+    "                       ",
+    "XXXXXXXXXXXX           ",
+    "       V M M           ",
+    " M M  MV    M   MN M M ",
+    "XXXXXXXXWWWXXXXXXXXXXXX"
+  ],
+  "characters": {
+    "snail": [
+      {
+        "x": 1,
+        "y": 6
+      }
+    ],
+    "spider": [
+      {
+        "x": 5,
+        "y": 6
+      }
+    ],
+    "slug": [
+      {
+        "x": 16,
+        "y": 6
+      }
+    ]
+  },
+  "collectibles": [
+    {
+      "id": 1,
+      "x": 19,
+      "y": 4
+    }
+  ]
+}

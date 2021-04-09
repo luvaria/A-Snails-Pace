@@ -124,7 +124,7 @@ void NPC::onNotify(Event event)
 		npcNode& node = nodes[curNode];
 		std::string line = node.lines[curLine];
 
-		notify(Event(Event::START_DIALOGUE, line));
+		notify(Event(Event::START_DIALOGUE, line, 0));
 
 		curLine++;
 		if (curLine >= node.lines.size())
