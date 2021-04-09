@@ -4,7 +4,7 @@
   "scale": 100,
   "direction": "right",
   "background": "mountain",
-  "weather": "rain",
+  "weather": "snow",
   "turnsPerCamera": 8,
   "AI-PathFinding-Algorithm": "BFS",
   "snailProjectileMaxMoves" : 8,

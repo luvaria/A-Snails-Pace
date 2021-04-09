@@ -5,6 +5,7 @@
   "direction": "right",
   "turnsPerCamera": 2,
   "background": "castle",
+  "weather": "snow",
   "AI-PathFinding-Algorithm": "Astar",
   "snailProjectileMaxMoves" : 2,
   "aiProjectileMaxMoves" : 8,

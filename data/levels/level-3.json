@@ -4,6 +4,7 @@
   "scale": 100,
   "direction": "right",
   "background": "desert",
+  "weather": "rain",
   "turnsPerCamera": 5,
   "AI-PathFinding-Algorithm": "Astar",
   "snailProjectileMaxMoves" : 3,
@@ -17,7 +18,7 @@
     "                               ",
     "                      XXXXXXXX ",
     "             XXXX     V     V  ",
-    " XXXXXXXXXXX  V    XX V     V  ",
+    "  XXXXXXXXXX  V    XX V     V  ",
     "   V          V    V XXWWWXXXX ",
     "   V          V    V  X        ",
     "XXXXWWWWWWWWXXXXXXXXXXXXXXXXXXX"
