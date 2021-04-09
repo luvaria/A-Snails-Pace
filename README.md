@@ -25,3 +25,4 @@ Level music: "Arcade - Battle Network" by [TheoAllen on itch.io](https://theoall
 Death sound: "8 bit Death sound" by [MentosLat on freesound.org](https://freesound.org/people/MentosLat/sounds/417486/)
 Projectile firing sound: "mouth pop" by [Reitanna on freesound.org](https://freesound.org/people/Reitanna/sounds/323741/)
 Fall sound: "Jump (Retro video game SFX)" by [cabled_mess on freesound.org](https://freesound.org/people/cabled_mess/sounds/350906/)
+Dialogue sound: "aha" by [syberic on freesound.org](https://freesound.org/people/syberic/sounds/431891/)
