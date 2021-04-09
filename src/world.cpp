@@ -38,12 +38,15 @@ static std::vector<std::pair<int, std::string> > tutorial_messages =
 { {200, "Hello, and welcome to a Snail's Pace! This is a turn based game. Your objective is to make it to the end of each level without dying! Use WASD to move. Every move uses one turn. If you die, you will respawn at the beginning of the current level. Press any key to continue."},
   {200, "In front of you is a spider, left click with your mouse to shoot a projectile to kill it before it gets to you. Spiders kill you on contact. If you hold the left mouse you can see a preview of the shot. Shooting a projectile also uses one turn."},
   {200, "You will also die if you fall in the water, instead climb up the vines. Once at the top you can stick to the wall by clicking w again and can then move upside down."},
-  {300, "By now, you've probably notice the camera moves every few turns. If you fall behing the camera you die. The window tab at the top tells you what turn the camera will move" },
+  {300, "By now, you've probably noticed the camera moves every few turns. If you fall behing the camera you die. The window tab at the top tells you what turn the camera will move." },
   {300, "To fall back on the ground press space." },
   {200, "A few tiles ahead, there is a slug. Like spiders, slugs kill you on contact. Unlike spiders, they shoot projectiles that can also kill you. Dodge the slug projectile or destroy it using your own projectile."},
-  {200, "This is an NPC, to interact with them, press E. To go to their next dialogue press any key. To stop interracting press Q" },
+  {200, "This is an NPC, to interact with them, press E. To go to their next dialogue press any key. To stop interacting press Q." },
   {200, "Above you is a colletible. You can't reach this one but be on the look out for them in future levels, so you can look extra fly!"},
-  {200, "Nice job, you are almost at the end of the tutorial! If you ever forget the controls, you can press C to display them"} };
+  {200, "Nice job, you are almost at the end of the tutorial! If you ever forget the controls, you can press C to display them."} };
+
+static std::vector< std::vector< bool > > first_run;
+static int index = 0;
 
 // Create the fish world
 // Note, this has a lot of OpenGL specific things, could be moved to the renderer; but it also defines the callbacks to the mouse and keyboard. That is why it is called here.
@@ -280,15 +283,15 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 	if (turnType == PLAYER_WAITING)
     {
         auto tiles = TileSystem::getTiles();
-        Tile& t = tiles[yCoord][xCoord];
-        static std::vector< std::vector< bool > > first_run(tiles.size(), std::vector<bool>(tiles[0].size(), true));
-        static int index = 0;
-        if (t.type == MESSAGE && first_run[yCoord][xCoord]){
-            auto offset = tutorial_messages[index].first;
-            auto message = tutorial_messages[index].second;
-            notify(Event(Event::START_DIALOGUE, message, offset));
-            index++;
-            first_run[yCoord][xCoord] = false;
+        if (yCoord < tiles.size()) {
+            Tile& t = tiles[yCoord][xCoord];
+            if (t.type == MESSAGE && first_run[yCoord][xCoord]) {
+                auto offset = tutorial_messages[index].first;
+                auto message = tutorial_messages[index].second;
+                notify(Event(Event::START_DIALOGUE, message, offset));
+                index++;
+                first_run[yCoord][xCoord] = false;
+            }
         }
 	    if (snail_move <= 0)
         {
@@ -509,6 +512,14 @@ void WorldSystem::onNotify(Event event) {
         level = event.number;
 
         restart(level);
+
+        // if selecting tutorial from level menu reset messages
+        if (level == 0) {
+            index = 0;
+            auto tiles = TileSystem::getTiles();
+            first_run = std::vector< std::vector< bool > >(tiles.size(), std::vector<bool>(tiles[0].size(), true));
+        }
+        
     } else if (event.type == Event::SPLASH) {
         if((event.entity.id != WaterTile::splashEntityID) && (ECS::registry<WaterTile>.has(event.entity))) {
             WaterTile::onNotify(Event::SPLASH, event.entity);

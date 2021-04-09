@@ -6,18 +6,18 @@
   "turnsPerCamera": 2,
   "AI-PathFinding-Algorithm": "Astar",
   "endCoordinates": {
-    "x": 24,
+    "x": 22,
     "y": 6
   },
   "tiles": [
-    "                           ",
-    "                           ",
-    "                           ",
-    "                           ",
-    "     XXXXXXXX              ",
-    "      XV M  M              ",
-    "XM M  MV       M  VMN M  M ",
-    "XXXXXXXXWWWXXXXXXXXXXXXXXXX"
+    "                       ",
+    "                       ",
+    "                       ",
+    "                       ",
+    "XXXXXXXXXXXX           ",
+    "       V M M           ",
+    " M M  MV    M   MN M M ",
+    "XXXXXXXXWWWXXXXXXXXXXXX"
   ],
   "characters": {
     "snail": [
@@ -34,7 +34,7 @@
     ],
     "slug": [
       {
-        "x": 19,
+        "x": 16,
         "y": 6
       }
     ]
@@ -42,8 +42,8 @@
   "collectibles": [
     {
       "id": 1,
-      "x": 21,
-      "y": 1
+      "x": 19,
+      "y": 4
     }
   ]
 }
