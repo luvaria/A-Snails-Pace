@@ -123,59 +123,69 @@ ECS::Entity Spider::createSpider(Motion motion, ECS::Entity entity, std::shared_
 
 ECS::Entity SuperSpider::createSuperSpider(vec2 position, ECS::Entity entity)
 {
-	// Create rendering primitives
-	std::string key = "superspider";
-	ShadedMesh& resource = cache_resource(key);
-	if (resource.mesh.vertices.size() == 0)
-	{
-		resource.mesh.loadFromOBJFile(mesh_path("superspider.obj"));
-		RenderSystem::createColoredMesh(resource, "superspider");
-	}
+    // Initialize the motion
+    auto motion = Motion();
+    motion.angle = 0.f;
+    motion.velocity = { 0.f, 0.f }; // 200
+    motion.position = position;
+    motion.lastDirection = DIRECTION_WEST;
 
-	std::string key_min = "min-superspider";
-	ShadedMesh& resource_min = cache_resource(key_min);
-	if (resource_min.mesh.vertices.size() == 0)
-	{
-		resource_min.mesh.loadFromMinOBJFile(mesh_path("superspider-min.obj"));
-	}
+    createSuperSpider(motion, entity);
 
-	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
-	//we use the same entity for min and regular meshes, so you can access either one.
-	ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::CHARACTER);
-	ECS::registry<MinShadedMeshRef>.emplace(entity, resource_min, RenderBucket::CHARACTER);
+    std::string key = "superspider";
+    ShadedMesh& resource = cache_resource(key);
+    Motion& updatedMotion = ECS::registry<Motion>.get(entity);
+    updatedMotion.scale = resource.mesh.original_size / resource.mesh.original_size.x * TileSystem::getScale();
+    updatedMotion.scale.y *= -1; // fix orientation
+    // was originally 0.9f, trying to make superspider slightly bigger than normal spider
+    updatedMotion.scale *= 1.1f;
 
-	// Initialize the motion
-	auto& motion = ECS::registry<Motion>.emplace(entity);
-	motion.angle = 0.f;
-	motion.velocity = { 0.f, 0.f }; // 200
-	motion.position = position;
-	motion.scale = resource.mesh.original_size / resource.mesh.original_size.x * TileSystem::getScale();
-	motion.scale.y *= -1; // fix orientation
-	// was originally 0.9f, trying to make superspider slightly bigger than normal spider
-	motion.scale *= 1.1f;
-	motion.lastDirection = DIRECTION_WEST;
+    return entity;
+}
 
-	ECS::registry<AI>.emplace(entity);
-	ECS::registry<Enemy>.emplace(entity);
-	//ECS::registry<Spider>.emplace(entity);
-	ECS::registry<SuperSpider>.emplace(entity);
-	ECS::registry<DirectionInput>.emplace(entity);
+ECS::Entity SuperSpider::createSuperSpider(Motion motion, ECS::Entity entity, std::shared_ptr<BTNode> tree)
+{
+    // Create rendering primitives
+    std::string key = "superspider";
+    ShadedMesh& resource = cache_resource(key);
+    if (resource.mesh.vertices.size() == 0)
+    {
+        resource.mesh.loadFromOBJFile(mesh_path("superspider.obj"));
+        RenderSystem::createColoredMesh(resource, "superspider");
+    }
 
-	auto& fire = ECS::registry<Fire>.emplace(entity);
-	fire.fired = false;
+    std::string key_min = "min-superspider";
+    ShadedMesh& resource_min = cache_resource(key_min);
+    if (resource_min.mesh.vertices.size() == 0)
+    {
+        resource_min.mesh.loadFromMinOBJFile(mesh_path("superspider-min.obj"));
+    }
 
+    // Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
+    //we use the same entity for min and regular meshes, so you can access either one.
+    ECS::registry<ShadedMeshRef>.emplace(entity, resource, RenderBucket::CHARACTER);
+    ECS::registry<MinShadedMeshRef>.emplace(entity, resource_min, RenderBucket::CHARACTER);
 
-	// Adding Behaviour Tree to Spider
-	// Maybe add some registry that keeps track of trees??
-	std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>(false);
-	std::shared_ptr <BTNode> isr = std::make_unique<IsSnailInRange>();
-	std::shared_ptr <BTNode> tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ isr, lfs }));
-	//auto& ai = ECS::registry<AI>.get(entity);
-	//ai.tree = tree;
+    ECS::registry<Motion>.insert(entity, std::move(motion));
 
-	tree->init(entity);
-	auto& ai = ECS::registry<AI>.get(entity);
-	ai.tree = tree;
-	//ECS::registry<std::shared_ptr <BTNode>>.emplace(entity);
-	return entity;
+    ECS::registry<AI>.emplace(entity);
+    ECS::registry<Enemy>.emplace(entity);
+    ECS::registry<SuperSpider>.emplace(entity);
+    ECS::registry<DirectionInput>.emplace(entity);
+
+    auto& fire = ECS::registry<Fire>.emplace(entity);
+    fire.fired = false;
+
+    // Adding Behaviour Tree to super spider
+    if (!tree)
+    {
+        std::shared_ptr <BTNode> lfs = std::make_unique<LookForSnail>(false);
+        std::shared_ptr <BTNode> isr = std::make_unique<IsSnailInRange>();
+        tree = std::make_unique<BTSequence>(std::vector<std::shared_ptr <BTNode>>({ isr, lfs }));
+        tree->init(entity);
+    }
+
+    auto& ai = ECS::registry<AI>.get(entity);
+    ai.tree = tree;
+    return entity;
 }

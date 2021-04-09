@@ -300,6 +300,27 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset, bool from
                 }
 			}
 			break;
+        case eSuperSpider:
+            for (auto& super_s : it.value())
+            {
+                ivec2 birdPos = { super_s["x"], super_s["y"] };
+                if (preview && (xNotInPreviewArea(birdPos.x, previewOrigin) || yNotInPreviewArea(birdPos.y, previewOrigin)))
+                    continue;
+                Tile& tile = tiles[super_s["y"]][super_s["x"]];
+                tile.addOccupyingEntity();
+                if (fromSave)
+                {
+                    Motion motion = LoadSaveSystem::makeMotionFromJson(super_s);
+                    std::shared_ptr<BTNode> tree = BTNode::createSubclassNode(super_s[LoadSaveSystem::BTREE_KEY][BTKeys::TYPE_KEY]);
+                    tree->setFromJson(super_s[LoadSaveSystem::BTREE_KEY]);
+                    SuperSpider::createSuperSpider(motion, ECS::Entity(), tree);
+                }
+                else
+                {
+                    Bird::createBird({ tile.x, tile.y }, createTaggedEntity(preview));
+                }
+            }
+            break;
 		default:
 			throw std::runtime_error("Failed to spawn character " + it.key());
 			break;
@@ -390,6 +411,7 @@ LevelLoader::string_code LevelLoader::hashit(std::string const& inString) {
 	if (inString == "slug") return eSlug;
 	if (inString == "fish") return eFish;
 	if (inString == "bird") return eBird;
+	if (inString == "super_spider") return eSuperSpider;
 	throw std::runtime_error("No hash found for " + inString);
 }
 

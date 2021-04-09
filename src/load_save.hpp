@@ -18,6 +18,8 @@ namespace WorldKeys
     static std::string const NUM_ENEMIES_KILLS_KEY = "num_enemy_kills";
     static std::string const NUM_PROJECTILES_FIRED_KEY = "num_projectiles_fired";
     static std::string const CAMERA_KEY = "camera";
+    static std::string const MSG_INDEX_KEY = "msg_index";
+    static std::string const FIRST_RUN_VEC_KEY = "first_run_vec";
 }
 
 
@@ -73,6 +75,7 @@ public:
     static char constexpr SLUG_KEY[] = "slug";
     static char constexpr BIRD_KEY[] = "bird";
     static char constexpr FISH_KEY[] = "fish";
+    static char constexpr SUPER_SPIDER_KEY[] = "super_spider";
 
     static char constexpr FISH_MOVE_KEY[] = "move";
     static char constexpr FISH_MOVE_DIRECTION_KEY[] = "direction";

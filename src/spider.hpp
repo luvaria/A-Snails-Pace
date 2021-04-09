@@ -15,4 +15,5 @@ struct Spider
 
 struct SuperSpider {
 	static ECS::Entity createSuperSpider(vec2 position, ECS::Entity entity = ECS::Entity());
+    static ECS::Entity createSuperSpider(Motion motion, ECS::Entity entity = ECS::Entity(), std::shared_ptr<BTNode> tree = nullptr);
 };

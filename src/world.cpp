@@ -583,7 +583,6 @@ void WorldSystem::onNotify(Event event) {
                 t.addOccupyingEntity();
             }
         }
-
     }
     else if (event.type == Event::LOAD_SAVE)
     {
@@ -595,6 +594,7 @@ void WorldSystem::onNotify(Event event) {
         // save file should exist and level should exist
         assert(saved_level != -1 && saved_level < levels.size());
         level = saved_level;
+        Mix_PlayMusic(background_music, -1);
         restart(level, true);
     }
     else if (event.type == Event::LOAD_LEVEL)
@@ -643,6 +643,20 @@ void WorldSystem::setFromJson(nlohmann::json const& saved)
     enemies_killed = saved[WorldKeys::NUM_ENEMIES_KILLS_KEY];
     projectiles_fired = saved[WorldKeys::NUM_PROJECTILES_FIRED_KEY];
     Camera::reset({ saved[WorldKeys::CAMERA_KEY]["x"], saved[WorldKeys::CAMERA_KEY]["y"] });
+    if (level == 0)
+    {
+        msg_index = saved[WorldKeys::MSG_INDEX_KEY];
+
+        for (json row : saved[WorldKeys::FIRST_RUN_VEC_KEY])
+        {
+            std::vector<bool> vec;
+            for (bool tile : row)
+            {
+                vec.push_back(tile);
+            }
+            first_run.push_back(vec);
+        }
+    }
 }
 
 void WorldSystem::writeToJson(nlohmann::json& toSave)
@@ -656,6 +670,22 @@ void WorldSystem::writeToJson(nlohmann::json& toSave)
     vec2 cameraPos = Camera::getPosition();
     toSave[WorldKeys::CAMERA_KEY]["x"] = cameraPos.x;
     toSave[WorldKeys::CAMERA_KEY]["y"] = cameraPos.y;
+
+    // save tutorial status
+    if (level == 0)
+    {
+        toSave[WorldKeys::MSG_INDEX_KEY] = msg_index;
+
+        for (auto& vec : first_run)
+        {
+            json row;
+            for (bool tile : vec)
+            {
+                row.push_back(tile);
+            }
+            toSave[WorldKeys::FIRST_RUN_VEC_KEY].push_back(row);
+        }
+    }
 }
 
 // Should the game be over ?

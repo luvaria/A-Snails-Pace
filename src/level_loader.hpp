@@ -22,7 +22,8 @@ private:
 		eSpider,
 		eSlug,
 		eFish,
-		eBird
+		eBird,
+        eSuperSpider
 	};
 	static string_code hashit(std::string const& inString);
 

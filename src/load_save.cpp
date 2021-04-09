@@ -35,6 +35,7 @@ char constexpr LoadSaveSystem::SPIDER_KEY[];
 char constexpr LoadSaveSystem::SLUG_KEY[];
 char constexpr LoadSaveSystem::BIRD_KEY[];
 char constexpr LoadSaveSystem::FISH_KEY[];
+char constexpr LoadSaveSystem::SUPER_SPIDER_KEY[];
 
 char constexpr LoadSaveSystem::FISH_MOVE_KEY[];
 char constexpr LoadSaveSystem::FISH_MOVE_DIRECTION_KEY[];
@@ -232,6 +233,19 @@ void LoadSaveSystem::writeLevelFile(json& toSave)
         character[FISH_MOVE_KEY] = move;
 
         toSave[CHARACTER_KEY][FISH_KEY].push_back(character);
+    }
+
+    for (ECS::Entity super_spider : ECS::registry<SuperSpider>.entities)
+    {
+        auto& motion = ECS::registry<Motion>.get(super_spider);
+        json character = makeMotionJson(motion);
+
+        std::shared_ptr<BTNode> tree = ECS::registry<AI>.get(super_spider).tree;
+        json treeJson;
+        tree->writeToJson(treeJson);
+        character[BTREE_KEY] = treeJson;
+
+        toSave[CHARACTER_KEY][SUPER_SPIDER_KEY].push_back(character);
     }
 
     for (ECS::Entity projectile : ECS::registry<Projectile>.entities)
