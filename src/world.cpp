@@ -1217,6 +1217,11 @@ void WorldSystem::fishMove(ECS::Entity& entity, int& moves) {
 // Check out https://www.glfw.org/docs/3.3/input_guide.html
 void WorldSystem::on_key(int key, int, int action, int mod)
 {
+
+    if (ECS::registry<DeathTimer>.has(ECS::registry<Snail>.entities[0])) {
+        return;
+    }
+
     if (action == GLFW_PRESS)
     {
         // remove prompt on key press
