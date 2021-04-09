@@ -100,6 +100,8 @@ WorldSystem::~WorldSystem() {
         Mix_FreeChunk(enemy_dead_sound);
     if (snail_fall_sound != nullptr)
         Mix_FreeChunk(snail_fall_sound);
+    if (splash_sound != nullptr)
+        Mix_FreeChunk(splash_sound);
     if (projectile_sound != nullptr)
         Mix_FreeChunk(projectile_sound);
     if (dialogue_sound != nullptr)
@@ -135,11 +137,12 @@ void WorldSystem::init_audio()
     snail_dead_sound = Mix_LoadWAV(audio_path("417486__mentoslat__8-bit-death-sound.wav").c_str());
     enemy_dead_sound = Mix_LoadWAV(audio_path("523216__gemesil__death-scream.wav").c_str());
     snail_fall_sound = Mix_LoadWAV(audio_path("350906__cabled-mess__jump-c-04.wav").c_str());
+    splash_sound = Mix_LoadWAV(audio_path("110393__soundscalpel-com__water-splash.wav").c_str());
     projectile_sound = Mix_LoadWAV(audio_path("323741__reitanna__mouth-pop.wav").c_str());
     dialogue_sound = Mix_LoadWAV(audio_path("431891__syberic__aha.wav").c_str());
     collectible_sound = Mix_LoadWAV(audio_path("428663__jomse__pickupbook4.wav").c_str());
 
-    if (menu_music == nullptr || background_music == nullptr || level_complete_sound == nullptr || snail_dead_sound == nullptr || enemy_dead_sound == nullptr || snail_fall_sound == nullptr || projectile_sound == nullptr || dialogue_sound == nullptr || collectible_sound == nullptr)
+    if (menu_music == nullptr || background_music == nullptr || level_complete_sound == nullptr || snail_dead_sound == nullptr || enemy_dead_sound == nullptr || snail_fall_sound == nullptr || splash_sound == nullptr || projectile_sound == nullptr || dialogue_sound == nullptr || collectible_sound == nullptr)
         throw std::runtime_error("Failed to load sounds; make sure the data directory is present");
 }
 
@@ -505,6 +508,7 @@ void WorldSystem::onNotify(Event event) {
         restart(level);
     } else if (event.type == Event::SPLASH) {
         if((event.entity.id != WaterTile::splashEntityID) && (ECS::registry<WaterTile>.has(event.entity))) {
+            Mix_PlayChannel(-1, splash_sound, 0);
             WaterTile::onNotify(Event::SPLASH, event.entity);
         }
     }

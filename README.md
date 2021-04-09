@@ -26,5 +26,6 @@ Snail death sound: "8 bit Death sound" by [MentosLat on freesound.org](https://f
 Enemy death sound: "Death Scream" by [Gemesil on freesound.org](https://freesound.org/people/Gemesil/sounds/523216/)
 Projectile firing sound: "mouth pop" by [Reitanna on freesound.org](https://freesound.org/people/Reitanna/sounds/323741/)
 Fall sound: "Jump (Retro video game SFX)" by [cabled_mess on freesound.org](https://freesound.org/people/cabled_mess/sounds/350906/)
+Splash sound: "water_splash" by [soundscalpel.com on freesound.org](https://freesound.org/people/soundscalpel.com/sounds/110393/)
 Dialogue sound: "aha" by [syberic on freesound.org](https://freesound.org/people/syberic/sounds/431891/)
 Collectible pickup sound: "PickupBook4" by [jomse on freesound.org](https://freesound.org/people/jomse/sounds/428663/)

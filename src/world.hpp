@@ -118,6 +118,7 @@ private:
 	Mix_Chunk* snail_dead_sound;
 	Mix_Chunk* enemy_dead_sound;
 	Mix_Chunk* snail_fall_sound;
+	Mix_Chunk* splash_sound;
 	Mix_Chunk* projectile_sound;
 	Mix_Chunk* dialogue_sound;
 	Mix_Chunk* collectible_sound;
