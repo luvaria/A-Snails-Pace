@@ -7,6 +7,7 @@
 #include "snail.hpp"
 #include "slug.hpp"
 #include "spider.hpp"
+#include "fish.hpp"
 #include "projectile.hpp"
 #include "tiles/wall.hpp"
 #include "tiles/water.hpp"
@@ -432,12 +433,12 @@ bool shouldCheckCollision(ECS::Entity entity_i, ECS::Entity entity_j)
 
 	bool isValidSnailCollision_i = ECS::registry<Snail>.has(entity_i) &&
 		(ECS::registry<Spider>.has(entity_j) || ECS::registry<WaterTile>.has(entity_j) || ECS::registry<SlugProjectile>.has(entity_j) ||
-			ECS::registry<Slug>.has(entity_j) ||
+			ECS::registry<Slug>.has(entity_j) || ECS::registry<Fish>.has(entity_j) ||
                 (!ECS::registry<NoCollide>.has(entity_j) && ECS::registry<Collectible>.has(entity_j)));
 
 	bool isValidSnailCollision_j = ECS::registry<Snail>.has(entity_j) &&
 		(ECS::registry<Spider>.has(entity_i) || ECS::registry<WaterTile>.has(entity_i) || ECS::registry<SlugProjectile>.has(entity_i) ||
-			ECS::registry<Slug>.has(entity_i) ||
+			ECS::registry<Slug>.has(entity_i) || ECS::registry<Fish>.has(entity_i) ||
 		        (!ECS::registry<NoCollide>.has(entity_i) && ECS::registry<Collectible>.has(entity_i)));
 
 	bool isValidSnailProjectileCollision_i = ECS::registry<SnailProjectile>.has(entity_i) &&
@@ -520,7 +521,8 @@ void PhysicsSystem::stepToDestination(ECS::Entity entity, float step_seconds)
     auto& destReg = ECS::registry<Destination>;
     if (destReg.has(entity))
     {
-		bool isSnailOrSpider = (ECS::registry<Snail>.has(entity) || ECS::registry<Spider>.has(entity));
+		// updated to fit in fish
+		bool isSnailOrSpider = (ECS::registry<Snail>.has(entity) || ECS::registry<Spider>.has(entity) || ECS::registry<Fish>.has(entity));
         auto& dest = destReg.get(entity);
 		vec2 newPos = motion.position + (motion.velocity * step_seconds);
 		if ((dot(motion.position - newPos, dest.position - newPos) > 0) || (dest.position == newPos)) 
