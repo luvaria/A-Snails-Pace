@@ -460,6 +460,7 @@ void WorldSystem::onNotify(Event event) {
     if (event.type == Event::UNPAUSE)
     {
         setGLFWCallbacks();
+        Mix_ResumeMusic();
         ControlsOverlay::addControlsOverlayIfOn();
         notify(Event(Event::RESUME_DIALOGUE));
         running = true;
@@ -1242,6 +1243,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
                 left_mouse_pressed = false;
                 SnailProjectile::Preview::removeCurrent();
                 ControlsOverlay::removeControlsOverlay();
+                Mix_PauseMusic();
                 notify(Event(Event::PAUSE));
                 break;
             }
