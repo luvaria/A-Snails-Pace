@@ -868,8 +868,8 @@ void WorldSystem::goRight(ECS::Entity& entity, int& moves) {
     auto& camera = ECS::registry<Camera>.entities[0];
     vec2 cameraOffset = ECS::registry<Motion>.get(camera).position;
     int cameraOffsetX = cameraOffset.x / TileSystem::getScale();
-    int window_size = window_width;
-    int cameraRight = (window_width / scale) + cameraOffsetX;
+    int window_size = window_size_in_game_units.x;
+    int cameraRight = (window_size / scale) + cameraOffsetX;
     if (xCoord + 1 > tiles[yCoord].size() - 1 || xCoord + 1 >= cameraRight) {
         return;
     }
@@ -881,7 +881,6 @@ void WorldSystem::goRight(ECS::Entity& entity, int& moves) {
         nextTile = tiles[yCoord][xCoord];
         changeDirection(motion, currTile, nextTile, DIRECTION_EAST, entity);
         if (abs(currTile.x - nextTile.x) == 0 && abs(currTile.x - nextTile.x) == 0) {
-//            motion.scale = { motion.scale.y, motion.scale.x };
             motion.lastDirection = motion.angle == 0 ? DIRECTION_NORTH : DIRECTION_SOUTH;
             motion.angle = -PI / 2;
         }
