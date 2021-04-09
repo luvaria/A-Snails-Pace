@@ -71,6 +71,12 @@ public:
     static char constexpr PLAYER_KEY[] = "snail";
     static char constexpr SPIDER_KEY[] = "spider";
     static char constexpr SLUG_KEY[] = "slug";
+    static char constexpr BIRD_KEY[] = "bird";
+    static char constexpr FISH_KEY[] = "fish";
+
+    static char constexpr FISH_MOVE_KEY[] = "move";
+    static char constexpr FISH_MOVE_DIRECTION_KEY[] = "direction";
+    static char constexpr FISH_MOVE_MOVED_KEY[] = "has_moved";
 
     static char constexpr BTREE_KEY[] = "btree";
 
@@ -102,8 +108,8 @@ public:
     static int getSavedLevelNum(); // returns -1 if file doesn't exist
     static json loadLevelFileToJson();
     static void writeLevelFile(json& toSave); // passing partially filled json with world data
-    static Motion makeMotionFromJson(json const& motionJson);
+    static Motion makeMotionFromJson(json const& motionJson, bool centreOnTile = true);
 
 private:
-    static json makeBaseCharacterJson(Motion const& motion);
+    static json makeMotionJson(Motion const& motion, bool savePosAsTile = true);
 };

@@ -270,7 +270,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 	    if (snail_move <= 0)
         {
             for (auto& entity : ECS::registry<Fish>.entities) {
-                auto& move = ECS::registry<Move>.get(entity);
+                auto& move = ECS::registry<Fish::Move>.get(entity);
                 move.hasMoved = false;
             }
 	        turnType = PLAYER_UPDATE;
@@ -1100,7 +1100,7 @@ void WorldSystem::fishMove(ECS::Entity& entity, int& moves) {
     auto& motion = ECS::registry<Motion>.get(entity);
     int xCoord = static_cast<int>(motion.position.x / scale);
     int yCoord = static_cast<int>(motion.position.y / scale);
-    auto& move = ECS::registry<Move>.get(entity);
+    auto& move = ECS::registry<Fish::Move>.get(entity);
     if (move.hasMoved == false) {
         if (move.direction == true) {
             if (yCoord - 1 < 0) {

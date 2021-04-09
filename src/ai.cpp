@@ -28,6 +28,8 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     int yPos = (snailPos[1] - (0.5*scale))/scale;
     vec2 snailCoord = {yPos, xPos};
 
+    bool aiMovedThisTurn = false;
+
     auto& aiRegistry = ECS::registry<AI>;
     if (ECS::registry<Turn>.components[0].type == ENEMY) {
         for (unsigned int i = 0; i < aiRegistry.components.size(); i++)
@@ -35,7 +37,7 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             auto entity = aiRegistry.entities[i];
             auto& tree = aiRegistry.components[i].tree;
             tree->process(entity);
-            aiMoved = true;
+            aiMovedThisTurn = true;
         }
         for (auto& entity : ECS::registry<Bird>.entities) {
             auto& fire = ECS::registry<Fire>.get(entity);
@@ -44,6 +46,10 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
                 projectileShoot(entity);
             }
             
+        }
+        if (aiMovedThisTurn)
+        {
+            aiMoved = true;
         }
     }
 

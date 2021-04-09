@@ -436,9 +436,7 @@ void StartMenu::updateDisabled(MenuButton &button)
 
 void StartMenu::setVolume(ECS::Entity buttonEntity, double volumeRatio)
 {
-	Motion& motion = ECS::registry<Motion>.get(buttonEntity);
-
-	ECS::Entity volumeIndicatorEntity = ECS::registry<VolumeIndicator>.entities[0];
+    ECS::Entity volumeIndicatorEntity = ECS::registry<VolumeIndicator>.entities[0];
 	Motion& indicatorMotion = ECS::registry<Motion>.get(volumeIndicatorEntity);
 	indicatorMotion.scale.x = volumeRatio * 100;
 	indicatorMotion.position = { 50 + indicatorMotion.scale.x / 2, 50 };

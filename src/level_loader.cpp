@@ -266,7 +266,16 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset, bool from
 					continue;
 				Tile& tile = tiles[fish["y"]][fish["x"]];
 				tile.addOccupyingEntity();
-				Fish::createFish({ tile.x, tile.y }, createTaggedEntity(preview));
+				if (fromSave)
+                {
+                    Motion motion = LoadSaveSystem::makeMotionFromJson(fish);
+                    ECS::Entity entity = Fish::createFish(motion);
+                    ECS::registry<Fish::Move>.get(entity).setFromJson(fish[LoadSaveSystem::FISH_MOVE_KEY]);
+                }
+				else
+                {
+                    Fish::createFish({ tile.x, tile.y }, createTaggedEntity(preview));
+                }
 			}
 			break;
 		case eBird:
@@ -277,7 +286,15 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset, bool from
 					continue;
 				Tile& tile = tiles[bird["y"]][bird["x"]];
 				tile.addOccupyingEntity();
-				Bird::createBird({ tile.x, tile.y }, createTaggedEntity(preview));
+				if (fromSave)
+                {
+                    Motion motion = LoadSaveSystem::makeMotionFromJson(bird);
+                    Bird::createBird(motion);
+                }
+				else
+                {
+                    Bird::createBird({ tile.x, tile.y }, createTaggedEntity(preview));
+                }
 			}
 			break;
 		default:
@@ -291,7 +308,7 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset, bool from
     {
         for (auto& projectile : saved[LoadSaveSystem::PROJECTILE_KEY])
         {
-            Motion motion = LoadSaveSystem::makeMotionFromJson(projectile);
+            Motion motion = LoadSaveSystem::makeMotionFromJson(projectile, false);
             switch (hashit(projectile[LoadSaveSystem::PROJECTILE_TYPE_KEY]))
             {
                 case eSnail:

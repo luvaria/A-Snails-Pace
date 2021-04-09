@@ -10,6 +10,8 @@
 #include "npc.hpp"
 #include "render_components.hpp"
 #include "ai.hpp"
+#include "bird.hpp"
+#include "fish.hpp"
 
 // stlib
 #include <fstream>
@@ -31,6 +33,12 @@ char constexpr LoadSaveSystem::CHARACTER_KEY[];
 char constexpr LoadSaveSystem::PLAYER_KEY[];
 char constexpr LoadSaveSystem::SPIDER_KEY[];
 char constexpr LoadSaveSystem::SLUG_KEY[];
+char constexpr LoadSaveSystem::BIRD_KEY[];
+char constexpr LoadSaveSystem::FISH_KEY[];
+
+char constexpr LoadSaveSystem::FISH_MOVE_KEY[];
+char constexpr LoadSaveSystem::FISH_MOVE_DIRECTION_KEY[];
+char constexpr LoadSaveSystem::FISH_MOVE_MOVED_KEY[];
 
 char constexpr LoadSaveSystem::BTREE_KEY[];
 
@@ -166,14 +174,13 @@ json LoadSaveSystem::loadLevelFileToJson()
 
 void LoadSaveSystem::writeLevelFile(json& toSave)
 {
-    // TODO finish this
     std::string const filename = std::string(LEVEL_DIR) + std::string(LEVEL_FILE);
     std::ofstream o(save_path(filename));
 
     for (ECS::Entity player : ECS::registry<Player>.entities)
     {
         auto& motion = ECS::registry<Motion>.get(player);
-        json character = makeBaseCharacterJson(motion);
+        json character = makeMotionJson(motion);
         toSave[CHARACTER_KEY][PLAYER_KEY].push_back(character);
     }
 
@@ -183,7 +190,7 @@ void LoadSaveSystem::writeLevelFile(json& toSave)
         if (!ECS::registry<DeathTimer>.has(spider))
         {
             auto& motion = ECS::registry<Motion>.get(spider);
-            json character = makeBaseCharacterJson(motion);
+            json character = makeMotionJson(motion);
 
             std::shared_ptr<BTNode> tree = ECS::registry<AI>.get(spider).tree;
             json treeJson;
@@ -197,7 +204,7 @@ void LoadSaveSystem::writeLevelFile(json& toSave)
     for (ECS::Entity slug : ECS::registry<Slug>.entities)
     {
         auto& motion = ECS::registry<Motion>.get(slug);
-        json character = makeBaseCharacterJson(motion);
+        json character = makeMotionJson(motion);
 
         std::shared_ptr<BTNode> tree = ECS::registry<AI>.get(slug).tree;
         json treeJson;
@@ -207,10 +214,30 @@ void LoadSaveSystem::writeLevelFile(json& toSave)
         toSave[CHARACTER_KEY][SLUG_KEY].push_back(character);
     }
 
+    for (ECS::Entity bird : ECS::registry<Bird>.entities)
+    {
+        auto& motion = ECS::registry<Motion>.get(bird);
+        json character = makeMotionJson(motion);
+
+        toSave[CHARACTER_KEY][BIRD_KEY].push_back(character);
+    }
+
+    for (ECS::Entity fish : ECS::registry<Fish>.entities)
+    {
+        auto& motion = ECS::registry<Motion>.get(fish);
+        json character = makeMotionJson(motion);
+
+        json move;
+        ECS::registry<Fish::Move>.get(fish).writeToJson(move);
+        character[FISH_MOVE_KEY] = move;
+
+        toSave[CHARACTER_KEY][FISH_KEY].push_back(character);
+    }
+
     for (ECS::Entity projectile : ECS::registry<Projectile>.entities)
     {
         auto& motion = ECS::registry<Motion>.get(projectile);
-        json character = makeBaseCharacterJson(motion);
+        json character = makeMotionJson(motion, false);
 
         if (ECS::registry<SnailProjectile>.has(projectile))
         {
@@ -230,7 +257,7 @@ void LoadSaveSystem::writeLevelFile(json& toSave)
         if (!ECS::registry<NoCollide>.has(collectible)) // hack way of checking if it's not equipped
         {
             auto& motion = ECS::registry<Motion>.get(collectible);
-            json character = makeBaseCharacterJson(motion);
+            json character = makeMotionJson(motion);
             character["id"] = ECS::registry<Collectible>.get(collectible).id;
             toSave[COLLECTIBLE_KEY].push_back(character);
         }
@@ -254,12 +281,20 @@ void LoadSaveSystem::writeLevelFile(json& toSave)
     o << std::setw(2) << toSave << std::endl;
 }
 
-Motion LoadSaveSystem::makeMotionFromJson(json const& motionJson)
+Motion LoadSaveSystem::makeMotionFromJson(json const& motionJson, bool centreOnTile /* = true */)
 {
     Motion motion = Motion();
-    Tile tile = TileSystem::getTiles()[motionJson[CHARACTER_Y_POS_KEY]][motionJson[CHARACTER_X_POS_KEY]];
-    motion.position.x = tile.x;
-    motion.position.y = tile.y;
+    if (centreOnTile)
+    {
+        Tile tile = TileSystem::getTiles()[motionJson[CHARACTER_Y_POS_KEY]][motionJson[CHARACTER_X_POS_KEY]];
+        motion.position.x = tile.x;
+        motion.position.y = tile.y;
+    }
+    else
+    {
+        motion.position = { motionJson[CHARACTER_X_POS_KEY], motionJson[CHARACTER_Y_POS_KEY] };
+    }
+
     motion.angle = motionJson[CHARACTER_ANGLE_KEY];
     motion.velocity = { motionJson[CHARACTER_VELOCITY_KEY]["x"], motionJson[CHARACTER_VELOCITY_KEY]["y"] };
     motion.scale = { motionJson[CHARACTER_SCALE_KEY]["x"], motionJson[CHARACTER_SCALE_KEY]["y"] };
@@ -267,11 +302,19 @@ Motion LoadSaveSystem::makeMotionFromJson(json const& motionJson)
     return motion;
 }
 
-json LoadSaveSystem::makeBaseCharacterJson(Motion const& motion)
+json LoadSaveSystem::makeMotionJson(Motion const& motion, bool savePosAsTile /* = true */)
 {
     json character;
-    character[CHARACTER_X_POS_KEY] = static_cast<int>(motion.position.x / TileSystem::getScale());
-    character[CHARACTER_Y_POS_KEY] = static_cast<int>(motion.position.y / TileSystem::getScale());
+    if (savePosAsTile)
+    {
+        character[CHARACTER_X_POS_KEY] = static_cast<int>(motion.position.x / TileSystem::getScale());
+        character[CHARACTER_Y_POS_KEY] = static_cast<int>(motion.position.y / TileSystem::getScale());
+    }
+    else
+    {
+        character[CHARACTER_X_POS_KEY] = motion.position.x;
+        character[CHARACTER_Y_POS_KEY] = motion.position.y;
+    }
     character[CHARACTER_ANGLE_KEY] = motion.angle;
     character[CHARACTER_VELOCITY_KEY]["x"] = motion.velocity.x;
     character[CHARACTER_VELOCITY_KEY]["y"] = motion.velocity.y;
