@@ -352,20 +352,22 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset, bool from
         for (auto& projectile : saved[LoadSaveSystem::PROJECTILE_KEY])
         {
             Motion motion = LoadSaveSystem::makeMotionFromJson(projectile, false);
+            ECS::Entity entity;
             switch (hashit(projectile[LoadSaveSystem::PROJECTILE_TYPE_KEY]))
             {
                 case eSnail:
-                    SnailProjectile::createProjectile(motion);
+                    entity = SnailProjectile::createProjectile(motion);
                     break;
                 case eSpider:
                     throw std::runtime_error("somehow loaded a spider projectile???");
                     break;
                 case eSlug:
-                    SlugProjectile::createProjectile(motion);
+                    entity = SlugProjectile::createProjectile(motion);
                     break;
                 default:
                     throw std::runtime_error("failed to load projectile type: " + std::string(projectile[LoadSaveSystem::PROJECTILE_TYPE_KEY]));
             }
+            ECS::registry<Projectile>.get(entity).setFromJson(projectile);
         }
     }
 

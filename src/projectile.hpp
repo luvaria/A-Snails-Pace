@@ -2,6 +2,7 @@
 
 #include "common.hpp"
 #include "tiny_ecs.hpp"
+#include "load_save.hpp"
 
 struct Projectile
 {
@@ -10,6 +11,10 @@ struct Projectile
     vec2 origScale = vec2(20,-20);
     static int snailProjectileMaxMoves;
     static int aiProjectileMaxMoves;
+
+    // sets and writes non static members
+    void setFromJson(json const& saved);
+    void writeToJson(json& toSave);
 };
 
 struct SnailProjectile
