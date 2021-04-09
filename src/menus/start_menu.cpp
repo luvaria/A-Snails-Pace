@@ -123,11 +123,24 @@ void StartMenu::loadEntities()
 	ECS::registry<StartMenuTag>.emplace(startGameEntity);
 	buttonEntities.push_back(startGameEntity);
 
+    // continue from last save
+    auto loadSaveEntity = ECS::Entity();
+    ECS::registry<Text>.insert(
+            loadSaveEntity,
+            Text("Continue", ABEEZEE_REGULAR, { 650.0f, 400.0f })
+    );
+    Text& loadSaveText = ECS::registry<Text>.get(loadSaveEntity);
+    loadSaveText.colour = DEFAULT_COLOUR;
+    loadSaveText.scale *= OPTION_SCALE;
+    ECS::registry<MenuButton>.emplace(loadSaveEntity, ButtonEventType::LOAD_SAVE);
+    ECS::registry<StartMenuTag>.emplace(loadSaveEntity);
+    buttonEntities.push_back(loadSaveEntity);
+
 	// level select button
 	auto selectLevelEntity = ECS::Entity();
 	ECS::registry<Text>.insert(
 		selectLevelEntity,
-		Text("Select level", ABEEZEE_REGULAR, { 650.0f, 400.0f })
+		Text("Select level", ABEEZEE_REGULAR, { 650.0f, 450.0f })
 	);
 	Text& selectText = ECS::registry<Text>.get(selectLevelEntity);
 	selectText.colour = DEFAULT_COLOUR;
@@ -140,7 +153,7 @@ void StartMenu::loadEntities()
     auto collectiblesEntity = ECS::Entity();
     ECS::registry<Text>.insert(
             collectiblesEntity,
-            Text("Collectibles", ABEEZEE_REGULAR, { 650.0f, 450.0f })
+            Text("Collectibles", ABEEZEE_REGULAR, { 650.0f, 500.0f })
     );
     Text& collectiblesText = ECS::registry<Text>.get(collectiblesEntity);
     collectiblesText.colour = DEFAULT_COLOUR;
@@ -149,25 +162,12 @@ void StartMenu::loadEntities()
     ECS::registry<StartMenuTag>.emplace(collectiblesEntity);
     buttonEntities.push_back(collectiblesEntity);
 
-    // TODO: enable for M4
-	// load save button
-//    auto loadSaveEntity = ECS::Entity();
-//    ECS::registry<Text>.insert(
-//            loadSaveEntity,
-//            Text("Load save", ABEEZEE_REGULAR, { 650.0f, 450.0f })
-//    );
-//    Text& loadSaveText = ECS::registry<Text>.get(loadSaveEntity);
-//    loadSaveText.colour = DEFAULT_COLOUR;
-//    loadSaveText.scale *= OPTION_SCALE;
-//    ECS::registry<MenuButton>.emplace(loadSaveEntity, ButtonEventType::LOAD_SAVE);
-//    ECS::registry<StartMenuTag>.emplace(loadSaveEntity);
-//    buttonEntities.push_back(loadSaveEntity);
 
     // clear data button
     auto clearCollectibleDataEntity = ECS::Entity();
     ECS::registry<Text>.insert(
             clearCollectibleDataEntity,
-            Text("Clear collectible data", ABEEZEE_REGULAR, { 700.0f, 500.0f })
+            Text("Clear collectible data", ABEEZEE_REGULAR, { 700.0f, 550.0f })
     );
     Text& clearCollectibleDataText = ECS::registry<Text>.get(clearCollectibleDataEntity);
     clearCollectibleDataText.colour = DEFAULT_COLOUR;
@@ -402,6 +402,11 @@ void StartMenu::selectedKeyEvent()
 				// exit menu and start game
 				exit();
 				break;
+			case ButtonEventType::LOAD_SAVE:
+                removeEntities();
+                resetButtons();
+                notify(Event(Event::LOAD_SAVE));
+			    break;
 			case ButtonEventType::SELECT_LEVEL:
 				// don't overlay level select on top (text render order issues; always on top)
 				removeEntities();
@@ -445,13 +450,15 @@ void StartMenu::updateDisabled(MenuButton &button)
     {
         button.disabled = ECS::registry<Inventory>.components[0].collectibles.empty();
     }
+    else if (button.event == ButtonEventType::LOAD_SAVE)
+    {
+        button.disabled = !LoadSaveSystem::levelFileExists();
+    }
 }
 
 void StartMenu::setVolume(ECS::Entity buttonEntity, double volumeRatio)
 {
-	Motion& motion = ECS::registry<Motion>.get(buttonEntity);
-
-	ECS::Entity volumeIndicatorEntity = ECS::registry<VolumeIndicator>.entities[0];
+    ECS::Entity volumeIndicatorEntity = ECS::registry<VolumeIndicator>.entities[0];
 	Motion& indicatorMotion = ECS::registry<Motion>.get(volumeIndicatorEntity);
 	indicatorMotion.scale.x = volumeRatio * 100;
 	indicatorMotion.position = { 50 + indicatorMotion.scale.x / 2, 50 };

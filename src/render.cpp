@@ -57,8 +57,7 @@ void RenderSystem::drawTexturedMeshForParticles(ECS::Entity entity, vec2 window_
     GLint transform_uloc = glGetUniformLocation(texmesh.effect.program, "transform");
     GLint projection_uloc = glGetUniformLocation(texmesh.effect.program, "projection");
     gl_has_errors();
-    
-    int index = 0;
+
     auto element = ECS::registry<WeatherParentParticle>.get(entity);
     std::vector<glm::vec2> translations;
     for (int y = 0; y < element.particles.size(); y++)

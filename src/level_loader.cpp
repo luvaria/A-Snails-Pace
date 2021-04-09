@@ -12,6 +12,8 @@
 #include "tiles/water.hpp"
 #include "tiles/wall.hpp"
 #include "menus/level_select.hpp"
+#include "load_save.hpp"
+#include "projectile.hpp"
 
 // stlib
 #include <fstream>
@@ -25,7 +27,7 @@ using json = nlohmann::json;
 float LevelLoader::previewScale = 20.f;
 vec2 LevelLoader::previewDimensions = { 12, 8 };
 
-void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
+void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset, bool fromSave)
 {
 	std::ifstream i(levels_path(levels[levelIndex]));
 	json level = json::parse(i);
@@ -70,6 +72,29 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 		offset.y += previewDimensions.y / 2.f * previewScale; // centre snail vertically
 		offset.x += 1.f * previewScale; // show one tile to the left of snail
 	}
+
+    json saved;
+	json characters;
+    json collectibles;
+    json npcs;
+    if (fromSave)
+    {
+        std::string const filename = std::string(LoadSaveSystem::LEVEL_DIR) + std::string(LoadSaveSystem::LEVEL_FILE);
+        std::ifstream iSaved(save_path(filename));
+        saved = json::parse(iSaved);
+        characters = saved["characters"];
+        collectibles = saved["collectibles"];
+
+        if (saved.contains(LoadSaveSystem::NPC_KEY))
+        {
+            npcs = saved[LoadSaveSystem::NPC_KEY];
+        }
+    }
+    else
+    {
+        characters = level["characters"];
+        collectibles = level["collectibles"];
+    }
 
 	// load tile types row by row
 	std::string row;
@@ -125,9 +150,26 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 				VineTile::createVineTile(tile, entity);
 				break;
 			case 'N':
+			    if (fromSave)
+			    {
+			        std::string npcPosKey = std::to_string(x) + "," + std::to_string(y);
+			        if (!npcs.contains(npcPosKey))
+			            break;
+			    }
+
 				tile.type = INACCESSIBLE;
 				tile.addOccupyingEntity();
 				NPC::createNPC(tile, levelName, entity);
+				if (fromSave)
+                {
+				    // perhaps make a function in NPC struct for this lol...
+				    NPC& component = ECS::registry<NPC>.get(entity);
+                    std::string npcPosKey = std::to_string(x) + "," + std::to_string(y);
+                    json savedNPC = npcs[npcPosKey];
+				    component.curNode = savedNPC[LoadSaveSystem::NPC_CUR_NODE_KEY];
+				    component.curLine = savedNPC[LoadSaveSystem::NPC_CUR_LINE_KEY];
+				    component.timesTalkedTo = savedNPC[LoadSaveSystem::NPC_TIMES_TALKED_KEY];
+                }
 				if (!preview)
 				{
 					Collectible::equip(entity, 1); // bbcap
@@ -145,9 +187,9 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 		}
 		tiles.push_back(tileRow);
 	}
-    
-	// load characters
-	for (auto it = level["characters"].begin(); it != level["characters"].end(); ++it)
+
+    // load characters
+	for (auto it = characters.begin(); it != characters.end(); ++it)
 	{
 		auto entity = ECS::Entity();
 		if (preview)
@@ -164,8 +206,17 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 				Tile& tile = tiles[snail["y"]][snail["x"]];
 				// may not want this for snail location depending on enemy type and AI
 				tile.addOccupyingEntity();
-				ECS::Entity snailEntity = Snail::createSnail({ tile.x, tile.y }, createTaggedEntity(preview));
-				ECS::registry<Player>.emplace(snailEntity);
+                ECS::Entity snailEntity;
+				if (fromSave)
+                {
+				    Motion motion = LoadSaveSystem::makeMotionFromJson(snail);
+				    snailEntity = Snail::createSnail(motion);
+                }
+				else
+                {
+                    snailEntity = Snail::createSnail({ tile.x, tile.y }, createTaggedEntity(preview));
+                }
+                ECS::registry<Player>.emplace(snailEntity);
 			}
 			break;
 		case eSpider:
@@ -176,7 +227,17 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 					continue;
 				Tile& tile = tiles[spider["y"]][spider["x"]];
 				tile.addOccupyingEntity();
-				Spider::createSpider({ tile.x, tile.y }, createTaggedEntity(preview));
+				if (fromSave)
+                {
+                    Motion motion = LoadSaveSystem::makeMotionFromJson(spider);
+                    std::shared_ptr<BTNode> tree = BTNode::createSubclassNode(spider[LoadSaveSystem::BTREE_KEY][BTKeys::TYPE_KEY]);
+                    tree->setFromJson(spider[LoadSaveSystem::BTREE_KEY]);
+                    Spider::createSpider(motion, ECS::Entity(), tree);
+                }
+				else
+                {
+                    Spider::createSpider({ tile.x, tile.y }, createTaggedEntity(preview));
+                }
 			}
 			break;
 		case eSlug:
@@ -187,7 +248,17 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 					continue;
 				Tile& tile = tiles[slug["y"]][slug["x"]];
 				tile.addOccupyingEntity();
-				Slug::createSlug({ tile.x, tile.y }, createTaggedEntity(preview));
+				if (fromSave)
+                {
+                    Motion motion = LoadSaveSystem::makeMotionFromJson(slug);
+                    std::shared_ptr<BTNode> tree = BTNode::createSubclassNode(slug[LoadSaveSystem::BTREE_KEY][BTKeys::TYPE_KEY]);
+                    tree->setFromJson(slug[LoadSaveSystem::BTREE_KEY]);
+                    Slug::createSlug(motion, ECS::Entity(), tree);
+                }
+				else
+                {
+                    Slug::createSlug({ tile.x, tile.y }, createTaggedEntity(preview));
+                }
 			}
 			break;
 		case eFish:
@@ -198,7 +269,16 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 					continue;
 				Tile& tile = tiles[fish["y"]][fish["x"]];
 				tile.addOccupyingEntity();
-				Fish::createFish({ tile.x, tile.y }, createTaggedEntity(preview));
+				if (fromSave)
+                {
+                    Motion motion = LoadSaveSystem::makeMotionFromJson(fish);
+                    ECS::Entity entity = Fish::createFish(motion);
+                    ECS::registry<Fish::Move>.get(entity).setFromJson(fish[LoadSaveSystem::FISH_MOVE_KEY]);
+                }
+				else
+                {
+                    Fish::createFish({ tile.x, tile.y }, createTaggedEntity(preview));
+                }
 			}
 			break;
 		case eBird:
@@ -209,20 +289,72 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
 					continue;
 				Tile& tile = tiles[bird["y"]][bird["x"]];
 				tile.addOccupyingEntity();
-				Bird::createBird({ tile.x, tile.y }, createTaggedEntity(preview));
+				if (fromSave)
+                {
+                    Motion motion = LoadSaveSystem::makeMotionFromJson(bird);
+                    Bird::createBird(motion);
+                }
+				else
+                {
+                    Bird::createBird({ tile.x, tile.y }, createTaggedEntity(preview));
+                }
 			}
 			break;
+        case eSuperSpider:
+            for (auto& super_s : it.value())
+            {
+                ivec2 birdPos = { super_s["x"], super_s["y"] };
+                if (preview && (xNotInPreviewArea(birdPos.x, previewOrigin) || yNotInPreviewArea(birdPos.y, previewOrigin)))
+                    continue;
+                Tile& tile = tiles[super_s["y"]][super_s["x"]];
+                tile.addOccupyingEntity();
+                if (fromSave)
+                {
+                    Motion motion = LoadSaveSystem::makeMotionFromJson(super_s);
+                    std::shared_ptr<BTNode> tree = BTNode::createSubclassNode(super_s[LoadSaveSystem::BTREE_KEY][BTKeys::TYPE_KEY]);
+                    tree->setFromJson(super_s[LoadSaveSystem::BTREE_KEY]);
+                    SuperSpider::createSuperSpider(motion, ECS::Entity(), tree);
+                }
+                else
+                {
+                    Bird::createBird({ tile.x, tile.y }, createTaggedEntity(preview));
+                }
+            }
+            break;
 		default:
 			throw std::runtime_error("Failed to spawn character " + it.key());
 			break;
 		}
 	}
 
+    // load saved projectiles
+    if (fromSave && saved.contains(LoadSaveSystem::PROJECTILE_KEY))
+    {
+        for (auto& projectile : saved[LoadSaveSystem::PROJECTILE_KEY])
+        {
+            Motion motion = LoadSaveSystem::makeMotionFromJson(projectile, false);
+            switch (hashit(projectile[LoadSaveSystem::PROJECTILE_TYPE_KEY]))
+            {
+                case eSnail:
+                    SnailProjectile::createProjectile(motion);
+                    break;
+                case eSpider:
+                    throw std::runtime_error("somehow loaded a spider projectile???");
+                    break;
+                case eSlug:
+                    SlugProjectile::createProjectile(motion);
+                    break;
+                default:
+                    throw std::runtime_error("failed to load projectile type: " + std::string(projectile[LoadSaveSystem::PROJECTILE_TYPE_KEY]));
+            }
+        }
+    }
+
 	// no moves map or collectibles if preview
 	if (preview)
 		return;
 
-    for (auto& collectible : level["collectibles"])
+    for (auto& collectible : collectibles)
     {
         int id = collectible["id"];
         Tile& tile = tiles[collectible["y"]][collectible["x"]];
@@ -279,6 +411,7 @@ LevelLoader::string_code LevelLoader::hashit(std::string const& inString) {
 	if (inString == "slug") return eSlug;
 	if (inString == "fish") return eFish;
 	if (inString == "bird") return eBird;
+	if (inString == "super_spider") return eSuperSpider;
 	throw std::runtime_error("No hash found for " + inString);
 }
 
