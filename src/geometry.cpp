@@ -160,7 +160,8 @@ bool Geometry::pointInsideConvexHull(vec2 point, std::vector<Geometry::Line> lin
 		{
 			float C = -(A * line.x0 + B * line.y0);//-(Ax + By)
 			float C_other = -(A * line.x1 + B * line.y1);
-			assert(abs(C - C_other) < 0.02); //should be the same for either point, accounting for rounding error
+			assert(abs(C - C_other) < 0.02);
+			//should be the same for either point, accounting for rounding error
 			float valueAtPoint = A * point.x + B * point.y + C;
 			bool pointIsOnRHSOfLine = valueAtPoint >= 0;
 			sides.push_back(pointIsOnRHSOfLine);

@@ -263,7 +263,9 @@ void bounceProjectileOffWall(Motion& projectileMotion, std::vector<ColoredVertex
 					}
 				}
 			}
+			
 			assert(foundWall);
+			
 		}
 	}
 	// take the velocity as a unit vector, multiply it by the negative of the maxDistance, and add that to the position.
