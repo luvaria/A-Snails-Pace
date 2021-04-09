@@ -310,7 +310,7 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
         // changed from AI.size to Enemy.size
         if (((ECS::registry<Projectile>.size() != 0 && projectile_turn_over_time <= 0) 
             || (ECS::registry<Projectile>.size() == 0))
-            && (AISystem::aiMoved || (ECS::registry<Enemy>.size() == 0)))
+            && (AISystem::aiMoved || (ECS::registry<AI>.size() == 0)))
         {
             // In the following two cases, if true, all the enemies will have moved
             // Camera has to move
