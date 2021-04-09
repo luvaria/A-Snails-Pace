@@ -93,6 +93,8 @@ WorldSystem::~WorldSystem() {
         Mix_FreeChunk(level_complete_sound);
     if (snail_dead_sound != nullptr)
         Mix_FreeChunk(snail_dead_sound);
+    if (snail_move_sound != nullptr)
+        Mix_FreeChunk(snail_move_sound);
     Mix_CloseAudio();
 
     SDL_Quit();
@@ -119,13 +121,14 @@ void WorldSystem::init_audio()
     background_music = Mix_LoadMUS(audio_path("Arcade - Battle Network.mid").c_str());
     level_complete_sound = Mix_LoadWAV(audio_path("Victory.wav").c_str());
     snail_dead_sound = Mix_LoadWAV(audio_path("417486__mentoslat__8-bit-death-sound.wav").c_str());
+    snail_move_sound = Mix_LoadWAV(audio_path("350906__cabled-mess__jump-c-04.wav").c_str());
 
-    if (background_music == nullptr || level_complete_sound == nullptr || snail_dead_sound == nullptr)
+    if (background_music == nullptr || level_complete_sound == nullptr || snail_dead_sound == nullptr || snail_move_sound == nullptr)
         throw std::runtime_error("Failed to load sounds make sure the data directory is present: " +
             audio_path("Arcade - Battle Network.mid") +
             audio_path("Victory.wav") +
-            audio_path("417486__mentoslat__8-bit-death-sound.wav"));
-
+            audio_path("417486__mentoslat__8-bit-death-sound.wav") + 
+            audio_path("350906__cabled-mess__jump-c-04.wav"));
 }
 
 // Update our game world
@@ -1113,6 +1116,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 				    break;
             case GLFW_KEY_SPACE:
                     fallDown(player_snail, snail_move);
+                    if (snail_move == 0) Mix_PlayChannel(-1, snail_move_sound, 0);
                     break;
             case GLFW_KEY_E:
                 Motion& playerMotion = ECS::registry<Motion>.get(player_snail);
@@ -1145,7 +1149,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
                 break;
             }
         }
-	}
+    }
 }
 
 void WorldSystem::on_mouse_move(vec2 /*mouse_pos*/)
