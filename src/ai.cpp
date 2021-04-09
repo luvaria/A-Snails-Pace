@@ -42,7 +42,7 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
                 auto& fire = ECS::registry<Fire>.get(entity);
                 if (fire.fired == true) {
                     fire.fired = false;
-                    superSpiderShoot(entity);
+                    projectileShoot(entity);
                 }
             }
             
