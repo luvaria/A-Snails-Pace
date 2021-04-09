@@ -7,6 +7,7 @@ struct Projectile
 {
 	// tags all projectile types
     int moved = 0;
+    vec2 origScale = vec2(20,-20);
     static int snailProjectileMaxMoves;
     static int aiProjectileMaxMoves;
 };

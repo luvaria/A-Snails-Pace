@@ -39,10 +39,10 @@ void LevelLoader::loadLevel(int levelIndex, bool preview, vec2 offset)
     } catch (...) {}
     try {
         Projectile::aiProjectileMaxMoves = level["aiProjectileMaxMoves"];
-    } catch (...) {Projectile::aiProjectileMaxMoves = 1;}
+    } catch (...) {Projectile::aiProjectileMaxMoves = 2;}
     try {
         Projectile::snailProjectileMaxMoves = level["snailProjectileMaxMoves"];
-    } catch (...) {Projectile::snailProjectileMaxMoves = 1;}
+    } catch (...) {Projectile::snailProjectileMaxMoves = 2;}
     
     notify(Event(Event::LOAD_BG, bgName));
 

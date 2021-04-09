@@ -281,6 +281,11 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             {
                 auto& proj = ECS::registry<Projectile>.get(entity);
                 proj.moved++;
+                auto& motion = ECS::registry<Motion>.get(entity);
+                bool isSnailProjectile = ECS::registry<SnailProjectile>.has(entity);
+                int maxMoves = isSnailProjectile ? Projectile::snailProjectileMaxMoves : Projectile::aiProjectileMaxMoves;
+                float scaleFactor = (1.f - (proj.moved*1.0/maxMoves*1.0));
+                motion.scale = proj.origScale * vec2(scaleFactor, scaleFactor);
             }
             projectile_turn_over_time = k_projectile_turn_ms;
             snail_move = 1;

@@ -375,7 +375,7 @@ bool collides(ECS::Entity& entity1, ECS::Entity& entity2, Motion& motion1, Motio
 			}
 			else
 			{
-				//projectile is entity2, wall is entity1
+                //projectile is entity2, wall is entity1
 				bounceProjectileOffWall(motion2, vertices2, vertices1);
 			}
 		}
@@ -704,8 +704,10 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
         }
         for (auto entity : ECS::registry<Projectile>.entities)
         {
+            bool isSnailProjectile = ECS::registry<SnailProjectile>.has(entity);
+            int maxMoves = isSnailProjectile ? Projectile::snailProjectileMaxMoves : Projectile::aiProjectileMaxMoves;
             auto& proj = ECS::registry<Projectile>.get(entity);
-            if(proj.moved >= (ECS::registry<SnailProjectile>.has(entity) ? Projectile::snailProjectileMaxMoves : Projectile::aiProjectileMaxMoves)) {
+            if(proj.moved >= maxMoves) {
                 ECS::ContainerInterface::remove_all_components_of(entity);
             }
         }

@@ -89,14 +89,16 @@ ECS::Entity SlugProjectile::createProjectile(vec2 position, vec2 velocity) {
 	motion.velocity = velocity;
 	//divided by 5 since it shouldn't take up the whole tile
 	motion.scale = (resource.mesh.original_size / resource.mesh.original_size.x * TileSystem::getScale()) / 5.0f;
+    
 	motion.scale.y *= -1; // fix orientation
 
-	ECS::registry<Projectile>.emplace(entity);
+	auto& proj = ECS::registry<Projectile>.emplace(entity);
+    proj.origScale = motion.scale;
 	ECS::registry<SlugProjectile>.emplace(entity);
 	
 
 	return entity;
 }
-int Projectile::snailProjectileMaxMoves = 1;
-int Projectile::aiProjectileMaxMoves = 1;
+int Projectile::snailProjectileMaxMoves = 2;
+int Projectile::aiProjectileMaxMoves = 2;
 
