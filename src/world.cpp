@@ -1499,8 +1499,8 @@ void WorldSystem::shootProjectile(vec2 mousePos, bool preview /* = false */)
 
 	// now you want to go in the direction of the (mouse_pos - snail_pos), but make it a unit vector
 	vec2 snailPosition = ECS::registry<Motion>.get(player_snail).position;
-    // instead of firing from the centre of the snail, fire from half a tile in the direction of the mouse
-    vec2 projectilePosition = snailPosition + normalize(mousePos - snailPosition) * TileSystem::getScale() / 2.f;
+    // instead of firing from the centre of the snail, fire from 7/10 a tile in the direction of the mouse
+    vec2 projectilePosition = snailPosition + 0.70f * normalize(mousePos - snailPosition) * TileSystem::getScale();
 	vec2 projectileVelocity = (mousePos - projectilePosition);
 	float length = glm::length(projectileVelocity);
 	projectileVelocity.x = (projectileVelocity.x / length) * TileSystem::getScale() * 2;
