@@ -117,13 +117,13 @@ void WorldSystem::init_audio()
         throw std::runtime_error("Failed to open audio device");
 
     background_music = Mix_LoadMUS(audio_path("Arcade - Battle Network.mid").c_str());
-    level_complete_sound = Mix_LoadWAV(audio_path("Jingle - Victory.wav").c_str());
+    level_complete_sound = Mix_LoadWAV(audio_path("Victory.wav").c_str());
     snail_dead_sound = Mix_LoadWAV(audio_path("417486__mentoslat__8-bit-death-sound.wav").c_str());
 
     if (background_music == nullptr || level_complete_sound == nullptr || snail_dead_sound == nullptr)
         throw std::runtime_error("Failed to load sounds make sure the data directory is present: " +
             audio_path("Arcade - Battle Network.mid") +
-            audio_path("Jingle - Victory.wav") +
+            audio_path("Victory.wav") +
             audio_path("417486__mentoslat__8-bit-death-sound.wav"));
 
 }
