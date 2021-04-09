@@ -8,13 +8,13 @@
 			<encounter level_name="Tutorial">
 				<dialogue dID="0">
 					<lines>
-						<line>I call this move, the dissapearing snail.</line>
+						<line>Aha, you've fallen for my trap! I call this move "the dissapearing snail"!</line>
 					</lines>
 				</dialogue>
 				<dialogue dID="1">
 					<lines>
-						<line>Hello, I am an NPC, how are you today?</line>
-						<line>I dont have much to say so I'll stop speaking now. If you pester me again with E, I will dissapear.</line>
+						<line>Hi, I'm your friendly NPC. How are you today?</line>
+						<line>I don't have much to say at the moment. Try pestering me again to get a surprise.</line>
 					</lines>
 				</dialogue>
 			</encounter>
