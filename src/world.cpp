@@ -36,12 +36,12 @@
 const size_t PROJECTILE_PREVIEW_DELAY_MS = 100; // frequency of projectile previews
 
 static std::vector<std::pair<int, std::string> > tutorial_messages = 
-{ {200, "Hello, and welcome to A Snail's Pace! This is a turn-based game. Your objective is to make it to the end of each level without dying. Use WASD to move. Each move consumes one turn. If you die, you will respawn at the beginning of the level. Press any key to continue."},
-  {200, "In front of you is a spider. Left click to fire a projectile before it reaches you. Spiders kill you on contact. Hold the left mouse button to preview the trajectory. Shooting also consumes your turn."},
-  {200, "You will drown in water. Climb the vines instead. Once at the top, stick upside-down to the wall by pressing W."},
+{ {200, "Hello, and welcome to A Snail's Pace! This is a turn-based game. Your objective is to make it to the end of each level without dying. Use WASD to move. Each move consumes one turn. If you die, you will respawn at the beginning of the level. Press F to dismiss."},
+  {200, "In front of you is a spider. Left click to fire a projectile before it reaches you. Spiders kill you on contact. Hold the left mouse button to preview the trajectory. Shooting also consumes your turn. Beware when there are 2 spiders in a level. If they cross paths, they will merge into one big spider that can shoot projectiles! Press F to dismiss."},
+  {200, "You will drown in water. Climb the vines instead. Once at the top, stick upside-down to the wall by pressing W. There's also a fish in the water. Fish can't be killed by projectiles so you have to avoid them. We blocked this one's path so it can't get to you!"},
+  {500, "Above you, there is a slug. Like spiders, slugs will kill you on contact. However, they also fire projectiles. Dodge them or destroy them with your own! Don't worry, this one won't get to you. Next to him is a bird. Birds are unkillable like fish and can shoot projectiles like slugs."},
   {300, "By now, you've seen the camera move every few turns. You will die if you fall behind. The window title at the top displays when the camera will next move." },
   {300, "To fall back down to the ground, press SPACE." },
-  {200, "A few tiles ahead, there is a slug. Like spiders, slugs will kill you on contact. However, they also fire projectiles. Dodge them or destroy them with your own!"},
   {200, "This is an NPC. To interact with them, press E. To advance the interaction, press any key. To stop interacting, press Q." },
   {200, "Above you is a collectible. You can't reach this one, but stay on the lookout so you can look extra fly!"},
   {200, "Nice job. You're almost at the end of the tutorial! If you ever forget the controls, you can press C to display them."} };
@@ -1296,16 +1296,6 @@ void WorldSystem::on_key(int key, int, int action, int mod)
     {
         // remove prompt on key press
         ControlsOverlay::removeControlsPrompt();
-        
-        // tutorial messages
-        auto& snailMotion = ECS::registry<Motion>.get(player_snail);
-        float scale = TileSystem::getScale();
-        int xCoord = static_cast<int>(snailMotion.position.x / scale);
-        int yCoord = static_cast<int>(snailMotion.position.y / scale);
-        Tile& t = TileSystem::getTiles()[yCoord][xCoord];
-        if (t.type == MESSAGE) {
-            notify(Event(Event::END_DIALOGUE));
-        }
 
         bool shouldReturn = true;
 
@@ -1333,6 +1323,10 @@ void WorldSystem::on_key(int key, int, int action, int mod)
         // Path debugging
         case GLFW_KEY_P:
             DebugSystem::in_path_debug_mode = !DebugSystem::in_path_debug_mode;
+            break;
+        case GLFW_KEY_F:
+            // remove tutorial message
+            notify(Event(Event::END_DIALOGUE));
             break;
         default:
             {
@@ -1434,16 +1428,6 @@ void WorldSystem::on_mouse_button(int button, int action, int /*mods*/)
     if (action == GLFW_PRESS)
     {
         ControlsOverlay::removeControlsPrompt();
-
-        // tutorial messages
-        auto& snailMotion = ECS::registry<Motion>.get(player_snail);
-        float scale = TileSystem::getScale();
-        int xCoord = static_cast<int>(snailMotion.position.x / scale);
-        int yCoord = static_cast<int>(snailMotion.position.y / scale);
-        Tile& t = TileSystem::getTiles()[yCoord][xCoord];
-        if (t.type == MESSAGE) {
-            notify(Event(Event::END_DIALOGUE));
-        }
     }
 
     TurnType& turnType = ECS::registry<Turn>.components[0].type;
