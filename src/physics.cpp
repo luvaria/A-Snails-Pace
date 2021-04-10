@@ -777,6 +777,7 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 				stepToDestination(entity, step_seconds);
 			}
         }
+
 		if (ECS::registry<Destination>.components.size() == 0) {
 			// check if 2 spiders end turn in the same position
 			// this means that after the turn where to spiders clash, then they turn into a superspider
@@ -785,11 +786,7 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 					auto& motion1 = ECS::registry<Motion>.get(ECS::registry<Spider>.entities[i]);
 					auto& motion2 = ECS::registry<Motion>.get(ECS::registry<Spider>.entities[j]);
 					float scale = TileSystem::getScale();
-					int x1 = static_cast<float>(motion1.position.x / scale);
-					int y1 = static_cast<float>(motion1.position.y / scale);
-					int x2 = static_cast<float>(motion2.position.x / scale);
-					int y2 = static_cast<float>(motion2.position.y / scale);
-					if (x1 == x2 && y1 == y2) {
+					if (motion1.position == motion2.position) {
 						ECS::Entity e1 = ECS::registry<Spider>.entities[i];
 						ECS::Entity e2 = ECS::registry<Spider>.entities[j];
 						notify(Event(Event::COLLISION, e1, e2));
@@ -798,7 +795,7 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 				}
 			}
 		}
-
+	
     }
 	else if (turnType == CAMERA)
     {
