@@ -86,7 +86,7 @@ void RenderSystem::drawTexturedMeshForParticles(ECS::Entity entity, vec2 window_
     glBindVertexArray(quadVAO);
     glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
 
-    glBufferData(GL_ARRAY_BUFFER, sizeof(randomBoolean ? quadVerticesSnow : quadVerticesRain), randomBoolean ? quadVerticesSnow : quadVerticesRain, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, randomBoolean ? sizeof(quadVerticesSnow) : sizeof(quadVerticesRain), randomBoolean ? quadVerticesSnow : quadVerticesRain, GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
