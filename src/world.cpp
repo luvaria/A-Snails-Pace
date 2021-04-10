@@ -317,8 +317,8 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             if (t.type == MESSAGE && first_run[yCoord][xCoord]) {
                 auto offset = tutorial_messages[msg_index].first;
                 auto message = tutorial_messages[msg_index].second;
-                notify(Event(Event::START_DIALOGUE, message, offset));
                 msg_index++;
+                notify(Event(Event::START_DIALOGUE, message, offset));
                 first_run[yCoord][xCoord] = false;
             }
         }
@@ -381,6 +381,8 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
                 saveGame();
             }
         }
+
+
 
     }
 	else if (turnType == CAMERA)
