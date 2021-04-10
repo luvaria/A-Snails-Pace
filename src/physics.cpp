@@ -786,10 +786,6 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 					auto& motion1 = ECS::registry<Motion>.get(ECS::registry<Spider>.entities[i]);
 					auto& motion2 = ECS::registry<Motion>.get(ECS::registry<Spider>.entities[j]);
 					float scale = TileSystem::getScale();
-					int x1 = static_cast<float>(motion1.position.x / scale);
-					int y1 = static_cast<float>(motion1.position.y / scale);
-					int x2 = static_cast<float>(motion2.position.x / scale);
-					int y2 = static_cast<float>(motion2.position.y / scale);
 					if (motion1.position == motion2.position) {
 						ECS::Entity e1 = ECS::registry<Spider>.entities[i];
 						ECS::Entity e2 = ECS::registry<Spider>.entities[j];
