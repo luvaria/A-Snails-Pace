@@ -39,6 +39,7 @@ ECS::Entity WallTile::createWallTile(vec2 position, ECS::Entity entity)
 
 	// Create an (empty) WallTile component
 	ECS::registry<WallTile>.emplace(entity);
+	ECS::registry<Occluder>.emplace(entity);
 
 	return entity;
 }

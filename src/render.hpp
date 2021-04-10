@@ -72,8 +72,9 @@ private:
 	void initScreenTexture();
 
 	// Internal drawing functions for each entity type
-	void drawTexturedMesh(ECS::Entity entity, const mat3& projection, float elapsed_ms);
+	void drawTexturedMesh(ECS::Entity entity, const mat3& projection, float elapsed_ms, bool isOccluder);
 	void drawToScreen();
+	void drawShadowScreen();
 	void HandleFrameSwitchTiming(ECS::Entity entity, float elapsed_ms);
     void drawTexturedMeshForParticles(ECS::Entity entity, vec2 window_size_in_game_units, const mat3& projection, float elapsed_ms);
 
@@ -84,8 +85,11 @@ private:
 	GLFWwindow& window;
 
 	// Screen texture handles
+	GLuint frame_buffer_2;
 	GLuint frame_buffer;
 	ShadedMesh screen_sprite;
+	ShadedMesh shadow_sprite;
 	GLResource<RENDER_BUFFER> depth_render_buffer_id;
 	ECS::Entity screen_state_entity;
+	ECS::Entity shadow_entity;
 };
