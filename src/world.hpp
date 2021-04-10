@@ -12,6 +12,9 @@
 #include <random>
 #include <chrono>
 
+// json
+#include <../ext/nlohmann_json/single_include/nlohmann/json.hpp>
+
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
 #include <SDL_mixer.h>
@@ -31,7 +34,7 @@ public:
 	~WorldSystem();
 
 	// restart level
-	void restart(int level);
+	void restart(int level, bool fromSave = false);
 
 	// Steps the game ahead by ms milliseconds
 	void step(float elapsed_ms, vec2 window_size_in_game_units);
@@ -43,7 +46,8 @@ public:
 
 	void onNotify(Event event);
 
-	static int snailMoves;
+	void setFromJson(nlohmann::json const& saved);
+	void writeToJson(nlohmann::json& toSave);
 
 	// return true if a given point is off screen, false otherwise
 	static bool offScreen(vec2 const& pos, vec2 window_size_in_game_units, vec2 cameraOffset);
@@ -63,6 +67,8 @@ public:
     static void rotate(Tile &currTile, Motion &motion, Tile &nextTile);
     
     static void changeDirection(Motion &motion, Tile &currTile, Tile &nextTile, int defaultDirection, ECS::Entity& entity);
+
+	static void fishMove(ECS::Entity &entity, int &moves);
     
 	// OpenGL window handle
 	GLFWwindow* window;
@@ -71,6 +77,7 @@ public:
 
     static float constexpr k_move_seconds = 0.25f;
     static float constexpr k_projectile_turn_ms = 1000.f;
+    static vec2 window_size_in_game_units;
 
 private:
 	// Input callback functions
@@ -87,6 +94,11 @@ private:
 	void stopNPC();
 	void stepNPC();
 
+	void saveGame();
+
+	// kill the player :(
+	void die();
+
 	// Game state
 	float current_speed;
 	ECS::Entity player_snail;
@@ -102,19 +114,29 @@ private:
     // if someone holds the left mouse button for a while we shouldn't release the projectile on release of the button
     bool release_projectile;
 
-	// NEW: turn_number is not used for now, but will probably be used to keep track
-	// of what day it is on the calendar. snail_move is how many tiles the snail can
-	// move during the current turn.
+    int level;
 	int turn_number;
     // snail_move is the number of moves the snail has each turn
+    // right now we only allow 1
 	int snail_move;
 	unsigned turns_per_camera_move;
     float projectile_turn_over_time;
 
 	// music references
+	Mix_Music* menu_music;
 	Mix_Music* background_music;
-	Mix_Chunk* salmon_dead_sound;
-	Mix_Chunk* salmon_eat_sound;
+	Mix_Chunk* level_complete_sound;
+	Mix_Chunk* snail_dead_sound;
+	Mix_Chunk* enemy_dead_sound;
+	Mix_Chunk* enemy_nope_sound;
+	Mix_Chunk* superspider_spawn_sound;
+	Mix_Chunk* snail_move_sound;
+	Mix_Chunk* snail_fall_sound;
+	Mix_Chunk* splash_sound;
+	Mix_Chunk* projectile_fire_sound;
+	Mix_Chunk* projectile_break_sound;
+	Mix_Chunk* dialogue_sound;
+	Mix_Chunk* collectible_sound;
 
 	// C++ random number generator
 	std::default_random_engine rng;

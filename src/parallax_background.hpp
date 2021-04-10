@@ -11,12 +11,12 @@ public:
 	BackgroundSystem(vec2 window_size_in_game_units) : window_size_in_game_units(window_size_in_game_units) {}
 
 	void addBackground(std::string bgName, Parallax::Layer layer);
-	void addBackgrounds();
+	void addBackgrounds(std::string bg);
 	void removeBackgrounds();
 
 	void step();
 
-	void onNotify(Event event);
+    void onNotify(Event event);
 
 private:
 	// quadruplets of background entities (for infinite scrolling)

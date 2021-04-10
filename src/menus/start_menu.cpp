@@ -3,7 +3,7 @@
 #include "snail.hpp"
 #include "load_save.hpp"
 #include "../tiles/tiles.hpp"
-#include "../tiles/wall.hpp"
+#include "../tiles/water.hpp"
 #include "../tiles/vine.hpp"
 
 #define SDL_MAIN_HANDLED
@@ -70,6 +70,28 @@ void StartMenu::loadEntities()
 	snailMotion.scale *= 6;
 	ECS::registry<StartMenuTag>.emplace(snail);
 
+	// decorative tiles	
+	// assuming 1200 x 800	
+	float scale = TileSystem::getScale();
+	// bottom platform	
+	for (int x = 0; x < 12; x++)
+	{
+		ECS::Entity water = WaterTile::createWaterTile({ (x + 0.5f) * scale, 7.5f * scale });
+		ECS::registry<StartMenuTag>.emplace(water);
+	}
+	// vines	
+	for (int x = 0; x < 12; x++)
+	{
+		if (x == 0 || x == 11)
+		{
+			for (int y = 1; y < 7; y++)
+			{
+				ECS::Entity vine = VineTile::createVineTile({ (x + 0.5f) * scale, (y + 0.5f) * scale });
+				ECS::registry<StartMenuTag>.emplace(vine);
+			}
+		}
+	}
+
 	// ensure snail is not red from quitting during DeathTimer
 	auto& texmesh = *ECS::registry<ShadedMeshRef>.get(snail).reference_to_cache;
 	texmesh.texture.color = { 1, 1, 1 };
@@ -101,11 +123,24 @@ void StartMenu::loadEntities()
 	ECS::registry<StartMenuTag>.emplace(startGameEntity);
 	buttonEntities.push_back(startGameEntity);
 
+    // continue from last save
+    auto loadSaveEntity = ECS::Entity();
+    ECS::registry<Text>.insert(
+            loadSaveEntity,
+            Text("Continue", ABEEZEE_REGULAR, { 650.0f, 400.0f })
+    );
+    Text& loadSaveText = ECS::registry<Text>.get(loadSaveEntity);
+    loadSaveText.colour = DEFAULT_COLOUR;
+    loadSaveText.scale *= OPTION_SCALE;
+    ECS::registry<MenuButton>.emplace(loadSaveEntity, ButtonEventType::LOAD_SAVE);
+    ECS::registry<StartMenuTag>.emplace(loadSaveEntity);
+    buttonEntities.push_back(loadSaveEntity);
+
 	// level select button
 	auto selectLevelEntity = ECS::Entity();
 	ECS::registry<Text>.insert(
 		selectLevelEntity,
-		Text("Select level", ABEEZEE_REGULAR, { 650.0f, 400.0f })
+		Text("Select level", ABEEZEE_REGULAR, { 650.0f, 450.0f })
 	);
 	Text& selectText = ECS::registry<Text>.get(selectLevelEntity);
 	selectText.colour = DEFAULT_COLOUR;
@@ -118,7 +153,7 @@ void StartMenu::loadEntities()
     auto collectiblesEntity = ECS::Entity();
     ECS::registry<Text>.insert(
             collectiblesEntity,
-            Text("Collectibles", ABEEZEE_REGULAR, { 650.0f, 450.0f })
+            Text("Collectibles", ABEEZEE_REGULAR, { 650.0f, 500.0f })
     );
     Text& collectiblesText = ECS::registry<Text>.get(collectiblesEntity);
     collectiblesText.colour = DEFAULT_COLOUR;
@@ -127,25 +162,12 @@ void StartMenu::loadEntities()
     ECS::registry<StartMenuTag>.emplace(collectiblesEntity);
     buttonEntities.push_back(collectiblesEntity);
 
-    // TODO: enable for M4
-	// load save button
-//    auto loadSaveEntity = ECS::Entity();
-//    ECS::registry<Text>.insert(
-//            loadSaveEntity,
-//            Text("Load save", ABEEZEE_REGULAR, { 650.0f, 450.0f })
-//    );
-//    Text& loadSaveText = ECS::registry<Text>.get(loadSaveEntity);
-//    loadSaveText.colour = DEFAULT_COLOUR;
-//    loadSaveText.scale *= OPTION_SCALE;
-//    ECS::registry<MenuButton>.emplace(loadSaveEntity, ButtonEventType::LOAD_SAVE);
-//    ECS::registry<StartMenuTag>.emplace(loadSaveEntity);
-//    buttonEntities.push_back(loadSaveEntity);
 
     // clear data button
     auto clearCollectibleDataEntity = ECS::Entity();
     ECS::registry<Text>.insert(
             clearCollectibleDataEntity,
-            Text("Clear collectible data", ABEEZEE_REGULAR, { 700.0f, 500.0f })
+            Text("Clear collectible data", ABEEZEE_REGULAR, { 700.0f, 550.0f })
     );
     Text& clearCollectibleDataText = ECS::registry<Text>.get(clearCollectibleDataEntity);
     clearCollectibleDataText.colour = DEFAULT_COLOUR;
@@ -195,7 +217,7 @@ void StartMenu::loadEntities()
 	ECS::registry<StartMenuTag>.emplace(volumeSliderEntity);
 
 	// slider feedback
-	float curVol = static_cast<float>(max(Mix_Volume(-1, -1), Mix_VolumeMusic(-1))) / MIX_MAX_VOLUME;
+	float curVol = Volume::getCur();
 	ECS::Entity volumeIndicatorEntity = ECS::Entity();
 
 	std::string indicatorKey = "volume_indicator";
@@ -374,14 +396,17 @@ void StartMenu::selectedKeyEvent()
 		// perform action for button being hovered over (and pressed)
 		if (button.selected && !button.disabled)
 		{
-			double volumeRatio = 0;
-
 			switch (button.event)
 			{
 			case ButtonEventType::START_GAME:
 				// exit menu and start game
 				exit();
 				break;
+			case ButtonEventType::LOAD_SAVE:
+                removeEntities();
+                resetButtons();
+                notify(Event(Event::LOAD_SAVE));
+			    break;
 			case ButtonEventType::SELECT_LEVEL:
 				// don't overlay level select on top (text render order issues; always on top)
 				removeEntities();
@@ -425,17 +450,18 @@ void StartMenu::updateDisabled(MenuButton &button)
     {
         button.disabled = ECS::registry<Inventory>.components[0].collectibles.empty();
     }
+    else if (button.event == ButtonEventType::LOAD_SAVE)
+    {
+        button.disabled = !LoadSaveSystem::levelFileExists();
+    }
 }
 
 void StartMenu::setVolume(ECS::Entity buttonEntity, double volumeRatio)
 {
-	Motion& motion = ECS::registry<Motion>.get(buttonEntity);
-
-	ECS::Entity volumeIndicatorEntity = ECS::registry<VolumeIndicator>.entities[0];
+    ECS::Entity volumeIndicatorEntity = ECS::registry<VolumeIndicator>.entities[0];
 	Motion& indicatorMotion = ECS::registry<Motion>.get(volumeIndicatorEntity);
 	indicatorMotion.scale.x = volumeRatio * 100;
 	indicatorMotion.position = { 50 + indicatorMotion.scale.x / 2, 50 };
 
-	Mix_Volume(-1, volumeRatio * MIX_MAX_VOLUME);
-	Mix_VolumeMusic(volumeRatio * MIX_MAX_VOLUME);
+	Volume::set(volumeRatio);
 }

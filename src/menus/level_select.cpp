@@ -74,7 +74,8 @@ void LevelSelect::loadEntities()
 			if (levelIndex >= levels.size())
 				return;
 
-			LevelLoader::previewLevel(levelIndex, previewOffset);
+            LevelLoader lvlldr;
+            lvlldr.previewLevel(levelIndex, previewOffset);
 
 			// draw border around preview
 			createPreviewBackground(previewOffset + SCALED_DIMENSIONS / 2.f, SCALED_DIMENSIONS);

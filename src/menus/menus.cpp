@@ -143,8 +143,19 @@ void MenuSystem::onNotify(Event event)
 			toDelete.push(menu);
 		}
 		setup();
+		notify(event); // tell world to play menu music
 		openMenu(Event::START_MENU);
 		break;
+	case Event::LOAD_SAVE:
+        while (!menus.empty())
+        {
+            Menu* menu = menus.top();
+            menus.pop();
+            toDelete.push(menu);
+        }
+        // notify world to load level by passing event on
+        notify(event);
+	    break;
 	case Event::NEXT_LEVEL:
 	case Event::LOAD_LEVEL:
 		// move all current menus to delete queue

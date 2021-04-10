@@ -7,6 +7,7 @@
 #include "snail.hpp"
 #include "slug.hpp"
 #include "spider.hpp"
+#include "fish.hpp"
 #include "projectile.hpp"
 #include "tiles/wall.hpp"
 #include "tiles/water.hpp"
@@ -262,7 +263,9 @@ void bounceProjectileOffWall(Motion& projectileMotion, std::vector<ColoredVertex
 					}
 				}
 			}
+			
 			assert(foundWall);
+			
 		}
 	}
 	// take the velocity as a unit vector, multiply it by the negative of the maxDistance, and add that to the position.
@@ -375,7 +378,7 @@ bool collides(ECS::Entity& entity1, ECS::Entity& entity2, Motion& motion1, Motio
 			}
 			else
 			{
-				//projectile is entity2, wall is entity1
+                //projectile is entity2, wall is entity1
 				bounceProjectileOffWall(motion2, vertices2, vertices1);
 			}
 		}
@@ -432,21 +435,21 @@ bool shouldCheckCollision(ECS::Entity entity_i, ECS::Entity entity_j)
 
 	bool isValidSnailCollision_i = ECS::registry<Snail>.has(entity_i) &&
 		(ECS::registry<Spider>.has(entity_j) || ECS::registry<WaterTile>.has(entity_j) || ECS::registry<SlugProjectile>.has(entity_j) ||
-			ECS::registry<Slug>.has(entity_j) ||
+			ECS::registry<Slug>.has(entity_j) || ECS::registry<SuperSpider>.has(entity_j) || ECS::registry<Fish>.has(entity_j) ||
                 (!ECS::registry<NoCollide>.has(entity_j) && ECS::registry<Collectible>.has(entity_j)));
 
 	bool isValidSnailCollision_j = ECS::registry<Snail>.has(entity_j) &&
 		(ECS::registry<Spider>.has(entity_i) || ECS::registry<WaterTile>.has(entity_i) || ECS::registry<SlugProjectile>.has(entity_i) ||
-			ECS::registry<Slug>.has(entity_i) ||
+			ECS::registry<Slug>.has(entity_i) || ECS::registry<SuperSpider>.has(entity_i) || ECS::registry<Fish>.has(entity_i) ||
 		        (!ECS::registry<NoCollide>.has(entity_i) && ECS::registry<Collectible>.has(entity_i)));
 
 	bool isValidSnailProjectileCollision_i = ECS::registry<SnailProjectile>.has(entity_i) &&
-		(ECS::registry<Spider>.has(entity_j) || ECS::registry<WallTile>.has(entity_j) || 
-			ECS::registry<Slug>.has(entity_j) || ECS::registry<SlugProjectile>.has(entity_j));
+		(ECS::registry<Enemy>.has(entity_j) || ECS::registry<WallTile>.has(entity_j) || 
+			ECS::registry<SlugProjectile>.has(entity_j));
 
 	bool isValidSnailProjectileCollision_j = ECS::registry<SnailProjectile>.has(entity_j) &&
-		(ECS::registry<Spider>.has(entity_i) || ECS::registry<WallTile>.has(entity_i) ||
-			ECS::registry<Slug>.has(entity_i) || ECS::registry<SlugProjectile>.has(entity_i));
+		(ECS::registry<Enemy>.has(entity_i) || ECS::registry<WallTile>.has(entity_i) ||
+			ECS::registry<SlugProjectile>.has(entity_i));
 
 	bool isValidSlugProjectileCollision_i = ECS::registry<SlugProjectile>.has(entity_i) &&
 		(ECS::registry<WallTile>.has(entity_j));
@@ -520,7 +523,9 @@ void PhysicsSystem::stepToDestination(ECS::Entity entity, float step_seconds)
     auto& destReg = ECS::registry<Destination>;
     if (destReg.has(entity))
     {
-		bool isSnailOrSpider = (ECS::registry<Snail>.has(entity) || ECS::registry<Spider>.has(entity));
+		// updated to fit in fish
+		bool isSnailOrSpider = (ECS::registry<Snail>.has(entity) || ECS::registry<Spider>.has(entity) || ECS::registry<Fish>.has(entity)
+			|| ECS::registry<Slug>.has(entity) || ECS::registry<SuperSpider>.has(entity));
         auto& dest = destReg.get(entity);
 		vec2 newPos = motion.position + (motion.velocity * step_seconds);
 		if ((dot(motion.position - newPos, dest.position - newPos) > 0) || (dest.position == newPos)) 
@@ -702,10 +707,20 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             vec2 velocity = motion.velocity;
             motion.position += velocity * step_seconds;
         }
+        for (auto entity : ECS::registry<Projectile>.entities)
+        {
+            bool isSnailProjectile = ECS::registry<SnailProjectile>.has(entity);
+            int maxMoves = isSnailProjectile ? Projectile::snailProjectileMaxMoves : Projectile::aiProjectileMaxMoves;
+            auto& proj = ECS::registry<Projectile>.get(entity);
+            if(proj.moved >= maxMoves) {
+                ECS::ContainerInterface::remove_all_components_of(entity);
+            }
+        }
     }
     // if snail is moving to its destination then nothing else should be! for now...
 	else if (turnType == PLAYER_UPDATE)
     {
+
         auto& snailEntity = ECS::registry<Snail>.entities[0];
 		if (ECS::registry<Destination>.has(snailEntity)) //don't want to do any stepping if we don't have a destination
 		{
@@ -721,6 +736,7 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 		ECS::Entity entity;
         auto& motion = ECS::registry<Motion>.get(snailEntity);
         Particle::createParticle(motion, entity);
+
     }
 	else if (turnType == ENEMY)
     {
@@ -732,6 +748,10 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             auto& motion = ECS::registry<Motion>.get(entity);
             vec2 velocity = motion.velocity;
             motion.position += velocity * step_seconds;
+            auto& proj = ECS::registry<Projectile>.get(entity);
+            if(proj.moved > Projectile::snailProjectileMaxMoves) {
+                ECS::ContainerInterface::remove_all_components_of(entity);
+            }
         }
 		// making sure slug projectiles move
 		for (auto entity : ECS::registry<SlugProjectile>.entities)
@@ -739,6 +759,10 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 			auto& motion = ECS::registry<Motion>.get(entity);
 			vec2 velocity = motion.velocity;
 			motion.position += velocity * step_seconds;
+            auto& proj = ECS::registry<Projectile>.get(entity);
+            if(proj.moved > Projectile::aiProjectileMaxMoves) {
+                ECS::ContainerInterface::remove_all_components_of(entity);
+            }
 		}
 
         // move enemies
@@ -753,6 +777,25 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
 				stepToDestination(entity, step_seconds);
 			}
         }
+
+		if (ECS::registry<Destination>.components.size() == 0) {
+			// check if 2 spiders end turn in the same position
+			// this means that after the turn where to spiders clash, then they turn into a superspider
+			for (int i = 0; i < ECS::registry<Spider>.entities.size(); i++) {
+				for (int j = i + 1; j < ECS::registry<Spider>.entities.size(); j++) {
+					auto& motion1 = ECS::registry<Motion>.get(ECS::registry<Spider>.entities[i]);
+					auto& motion2 = ECS::registry<Motion>.get(ECS::registry<Spider>.entities[j]);
+					float scale = TileSystem::getScale();
+					if (motion1.position == motion2.position) {
+						ECS::Entity e1 = ECS::registry<Spider>.entities[i];
+						ECS::Entity e2 = ECS::registry<Spider>.entities[j];
+						notify(Event(Event::COLLISION, e1, e2));
+						notify(Event(Event::COLLISION, e2, e1));
+					}
+				}
+			}
+		}
+	
     }
 	else if (turnType == CAMERA)
     {

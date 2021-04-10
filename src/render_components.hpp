@@ -178,8 +178,9 @@ struct MinShadedMeshRef
 
 struct Camera
 {
-	static void reset();
+	static void reset(vec2 position = { 0.f,0.f });
 	static void update(float move_seconds);
+	static vec2 getPosition();
 };
 
 // A struct to refer to debugging graphics in the ECS

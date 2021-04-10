@@ -101,8 +101,7 @@ void RenderSystem::drawTexturedMeshForParticles(ECS::Entity entity, vec2 window_
     GLint transform_uloc = glGetUniformLocation(texmesh.effect.program, "transform");
     GLint projection_uloc = glGetUniformLocation(texmesh.effect.program, "projection");
     gl_has_errors();
-    
-    int index = 0;
+
     auto element = ECS::registry<WeatherParentParticle>.get(entity);
     std::vector<glm::vec2> translations;
     for (int y = 0; y < element.particles.size(); y++)
@@ -117,28 +116,22 @@ void RenderSystem::drawTexturedMeshForParticles(ECS::Entity entity, vec2 window_
     if(translations.size() == 0) {
         return;
     }
-
-    unsigned int instanceVBO;
-    glGenBuffers(1, &instanceVBO);
+    if(instanceVBO == 0) {
+        glGenBuffers(1, &instanceVBO);
+    }
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * element.particles.size(), &translations[0], GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    float quadVertices[] = {
-        -0.05f,  0.05f,  1.0f, 1.0f, 1.0f,
-         0.05f, -0.05f,  1.0f, 1.0f, 1.0f,
-        -0.05f, -0.05f,  1.0f, 1.0f, 1.0f,
-
-        -0.05f,  0.05f,  1.0f, 1.0f, 1.0f,
-         0.05f, -0.05f,  1.0f, 1.0f, 1.0f,
-         0.05f,  0.05f,  1.0f, 1.0f, 1.0f
-    };
-    unsigned int quadVAO, quadVBO;
-    glGenVertexArrays(1, &quadVAO);
-    glGenBuffers(1, &quadVBO);
+    
+    if(quadVBO == 0) {
+        glGenVertexArrays(1, &quadVAO);
+        glGenBuffers(1, &quadVBO);
+    }
     glBindVertexArray(quadVAO);
     glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+
+    glBufferData(GL_ARRAY_BUFFER, randomBoolean ? sizeof(quadVerticesSnow) : sizeof(quadVerticesRain), randomBoolean ? quadVerticesSnow : quadVerticesRain, GL_STATIC_DRAW);
+
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
@@ -511,3 +504,4 @@ bool renderCmp(ECS::Entity a, ECS::Entity b)
 
 	return a_bucket > b_bucket;
 }
+bool RenderSystem::randomBoolean = RenderSystem::randomBool();

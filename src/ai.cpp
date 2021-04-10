@@ -29,6 +29,7 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     vec2 snailCoord = {yPos, xPos};
 
     bool aiMovedThisStep = false;
+
     auto& aiRegistry = ECS::registry<AI>;
     if (ECS::registry<Turn>.components[0].type == ENEMY) {
         for (unsigned int i = 0; i < aiRegistry.components.size(); i++)
@@ -36,14 +37,36 @@ void AISystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             auto entity = aiRegistry.entities[i];
             auto& tree = aiRegistry.components[i].tree;
             tree->process(entity);
+
+            if (ECS::registry<SuperSpider>.has(entity) == true) {
+                auto& fire = ECS::registry<Fire>.get(entity);
+                if (fire.fired == true) {
+                    fire.fired = false;
+                    projectileShoot(entity);
+                }
+            }
             aiMovedThisStep = true;
         }
-
-        if (aiMovedThisStep) {
+        for (auto& entity : ECS::registry<Bird>.entities) {
+            auto& fire = ECS::registry<Fire>.get(entity);
+            if (fire.fired == true) {
+                fire.fired = false;
+                projectileShoot(entity);
+            }
+        }
+        if (aiMovedThisStep)
+        {
             aiMoved = true;
         }
     }
-    
+
+    if (ECS::registry<Turn>.components[0].type == PLAYER_WAITING) {
+        for (int i = 0; i < ECS::registry<Fire>.components.size(); i++) {
+            auto& fired = ECS::registry<Fire>.components[i].fired;
+            fired = true;
+        }
+    }
+
 	(void)elapsed_ms; // placeholder to silence unused warning until implemented
 	(void)window_size_in_game_units; // placeholder to silence unused warning until implemented
 }
@@ -88,6 +111,7 @@ std::vector<vec2> AISystem::shortestPathAStar(vec2 start, vec2 goal, std::string
   return startFrontier;
 }
   
+
 void AISystem::sortQueue(std::deque<std::vector<vec2>> &frontier, vec2 destCoord)
 {
     std::vector<std::vector<vec2>> list;
@@ -398,6 +422,60 @@ bool AISystem::checkIfReachedDestinationOrAddNeighboringNodesToFrontier(std::deq
 
 }
 
+void AISystem::projectileShoot(ECS::Entity& e) {
+
+    // range of bird firing, don't want him to fire if he is off the screen.
+    if (ECS::registry<Bird>.has(e)) {
+        auto& snailEntity = ECS::registry<Snail>.entities[0];
+        float scale = TileSystem::getScale();
+
+        vec2 snailPos = ECS::registry<Motion>.get(snailEntity).position;
+        int xPos = (snailPos[0] - (0.5 * scale)) / scale;
+        int yPos = (snailPos[1] - (0.5 * scale)) / scale;
+        vec2 snailCoord = { yPos, xPos };
+
+        auto tiles = TileSystem::getTiles();
+        auto& motion = ECS::registry<Motion>.get(e);
+        vec2 aiPos = motion.position;
+        int xAiPos = (aiPos.x - (0.5 * scale)) / scale;
+        int yAiPos = (aiPos.y - (0.5 * scale)) / scale;
+        vec2 aiCoord = { yAiPos, xAiPos };
+
+        if (xAiPos - 5 > xPos) {
+            return;
+        }
+        if (xAiPos + 4 < xPos) {
+            return;
+        }
+        
+    }
+
+
+    vec2 birdPosition = ECS::registry<Motion>.get(e).position;
+
+    auto& snailEntity = ECS::registry<Snail>.entities[0];
+
+    // now you want to go in the direction of the (mouse_pos - snail_pos), but make it a unit vector
+    vec2 snailPosition = ECS::registry<Motion>.get(snailEntity).position;
+    if (birdPosition == snailPosition) {
+        return;
+    }
+    vec2 normal = normalize(snailPosition - birdPosition);
+    float factor = 0.50f * TileSystem::getScale();
+    vec2 offset = factor * normal;
+    vec2 projectilePosition = birdPosition + offset;
+    //vec2 projectilePosition = snailPosition + 0.70f * normalize(mousePos - snailPosition) * TileSystem::getScale();
+    vec2 projectileVelocity = (snailPosition - projectilePosition);
+    float length = glm::length(projectileVelocity);
+    projectileVelocity.x = (projectileVelocity.x / length) * TileSystem::getScale();
+    projectileVelocity.y = (projectileVelocity.y / length) * TileSystem::getScale();
+    if (projectileVelocity != vec2(0, 0))
+    {
+        // implement a version of this for the slug
+        SlugProjectile::createProjectile(projectilePosition, projectileVelocity);
+    }
+}
+
 BTState LookForSnail::process(ECS::Entity e) {
     //std::cout << "in look for snail" << std::endl;
     // before for loop
@@ -445,42 +523,50 @@ BTState LookForSnail::process(ECS::Entity e) {
     if (ECS::registry<Turn>.components[0].type == ENEMY && !AISystem::aiMoved) {
         int aiMove = current.size() == 1 ? 1 : 0;
         vec2 currPos = current.size() > 1 ? current[1] : current[0];
-        if (aiMove == 0) {
-            if (currPos.x - yAiPos > 0) {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_SOUTH;
-                WorldSystem::goDown(entity, aiMove);
-            }
-            else if (currPos.x - yAiPos < 0) {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_NORTH;
-                WorldSystem::goUp(entity, aiMove);
-            }
-            else if (currPos.y - xAiPos > 0) {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_EAST;
-                WorldSystem::goRight(entity, aiMove);
-            }
-            else {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_WEST;
-                WorldSystem::goLeft(entity, aiMove);
-            }
+        /*
+        if (ECS::registry<SuperSpider>.has(e) == true) {
+            std::cout << "super spider" << std::endl;
+            AISystem::superSpiderMove(entity, current);
         }
-        if (aiMove == 0) {
-            if (motion.lastDirection == DIRECTION_NORTH) {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_NORTH;
-                WorldSystem::goUp(entity, aiMove);
+        */
+        //else {
+            if (aiMove == 0) {
+                if (currPos.x - yAiPos > 0) {
+                    ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_SOUTH;
+                    WorldSystem::goDown(entity, aiMove);
+                }
+                else if (currPos.x - yAiPos < 0) {
+                    ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_NORTH;
+                    WorldSystem::goUp(entity, aiMove);
+                }
+                else if (currPos.y - xAiPos > 0) {
+                    ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_EAST;
+                    WorldSystem::goRight(entity, aiMove);
+                }
+                else {
+                    ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_WEST;
+                    WorldSystem::goLeft(entity, aiMove);
+                }
             }
-            else if (motion.lastDirection == DIRECTION_SOUTH) {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_SOUTH;
-                WorldSystem::goDown(entity, aiMove);
+            if (aiMove == 0) {
+                if (motion.lastDirection == DIRECTION_NORTH) {
+                    ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_NORTH;
+                    WorldSystem::goUp(entity, aiMove);
+                }
+                else if (motion.lastDirection == DIRECTION_SOUTH) {
+                    ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_SOUTH;
+                    WorldSystem::goDown(entity, aiMove);
+                }
+                else if (motion.lastDirection == DIRECTION_EAST) {
+                    ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_EAST;
+                    WorldSystem::goRight(entity, aiMove);
+                }
+                else {
+                    ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_WEST;
+                    WorldSystem::goLeft(entity, aiMove);
+                }
             }
-            else if (motion.lastDirection == DIRECTION_EAST) {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_EAST;
-                WorldSystem::goRight(entity, aiMove);
-            }
-            else {
-                ECS::registry<DirectionInput>.get(entity).direction = DIRECTION_WEST;
-                WorldSystem::goLeft(entity, aiMove);
-            }
-        }
+        //}
         //std::cout << "returning Failure" << std::endl;
         return BTState::Failure;
     }
@@ -494,12 +580,23 @@ BTState LookForSnail::process(ECS::Entity e) {
         if (xAiPos - 1 == xLoc && yAiPos == yLoc) {
             return BTState::Success;
         }
-        else if (xAiPos + 1 == xPos && yAiPos == yPos) {
+        else if (xAiPos + 1 == xLoc && yAiPos == yLoc) {
             return BTState::Success;
         }
     }
 
     return BTState::Running;
+}
+
+void LookForSnail::writeToJson(json &toSave)
+{
+    toSave[BTKeys::TYPE_KEY] = getNodeType();
+    toSave[BTKeys::IN_RANGE_KEY] = m_inRange;
+}
+
+void LookForSnail::setFromJson(const json &saved)
+{
+    m_inRange = saved[BTKeys::IN_RANGE_KEY];
 }
 
 BTState IsSnailInRange::process(ECS::Entity e) {
@@ -545,6 +642,11 @@ BTState IsSnailInRange::process(ECS::Entity e) {
     }
 }
 
+void IsSnailInRange::writeToJson(json &toSave)
+{
+    toSave[BTKeys::TYPE_KEY] = getNodeType();
+}
+
 
 BTState FireXShots::process(ECS::Entity e) {
     
@@ -572,10 +674,20 @@ BTState FireXShots::process(ECS::Entity e) {
         // implement a version of this for the slug
         SlugProjectile::createProjectile(projectilePosition, projectileVelocity);
     }
+
    
     return BTState::Success;
-    
+}
 
+void FireXShots::writeToJson(json &toSave)
+{
+    toSave[BTKeys::TYPE_KEY] = getNodeType();
+    toSave[BTKeys::SKIP_KEY] = m_Skip;
+}
+
+void FireXShots::setFromJson(const json &saved)
+{
+    m_Skip = saved[BTKeys::SKIP_KEY];
 }
 
 BTState PredictShot::process(ECS::Entity e) {
@@ -583,10 +695,69 @@ BTState PredictShot::process(ECS::Entity e) {
     return BTState::Success;
 }
 
+void PredictShot::writeToJson(json &toSave)
+{
+    toSave[BTKeys::TYPE_KEY] = getNodeType();
+}
+
 BTState GetToSnail::process(ECS::Entity e) {
     return BTState::Success;
 }
 
+void GetToSnail::writeToJson(json &toSave)
+{
+    toSave[BTKeys::TYPE_KEY] = getNodeType();
+}
+
+std::shared_ptr<BTNode> BTNode::createSubclassNode(NodeType const& type)
+{
+    // T.T really hurts the eyes... sorry
+
+    std::shared_ptr<BTNode> node;
+    if (type == BTKeys::NodeTypes::SEQUENCE_KEY)
+    {
+        node = std::make_shared<BTSequence>(std::vector<std::shared_ptr<BTNode>>());
+    }
+    else if (type == BTKeys::NodeTypes::SELECTOR_KEY)
+    {
+        node = std::make_shared<BTSelector>(std::vector<std::shared_ptr<BTNode>>());
+    }
+    else if (type == BTKeys::NodeTypes::REPEAT_FOR_N_KEY)
+    {
+        node = std::make_shared<RepeatForN>(nullptr, 0);
+    }
+    else if (type == BTKeys::NodeTypes::SNAIL_IN_RANGE_KEY)
+    {
+        node = std::make_shared<IsSnailInRange>();
+    }
+    else if (type == BTKeys::NodeTypes::LOOK_FOR_SNAIL_KEY)
+    {
+        node = std::make_shared<LookForSnail>();
+    }
+    else if (type == BTKeys::NodeTypes::FIRE_X_SHOTS_KEY)
+    {
+        node = std::make_shared<FireXShots>();
+    }
+    else if (type == BTKeys::NodeTypes::RANDOM_SELECTOR)
+    {
+        node = std::make_shared<RandomSelector>(0, nullptr, nullptr);
+    }
+    else if (type == BTKeys::NodeTypes::PREDICT_SHOT_KEY)
+    {
+        node = std::make_shared<PredictShot>();
+    }
+    else if (type == BTKeys::NodeTypes::GET_TO_SNAIL_KEY)
+    {
+        node = std::make_shared<GetToSnail>();
+    }
+    else
+    {
+        throw std::runtime_error("Cannot create BTNode subclass because type does not exist. Type: " + type);
+    }
+    return node;
+}
+
 bool AISystem::aiMoved = false;
+bool AISystem::fire = true;
 std::string AISystem::aiPathFindingAlgorithm = "BFS";
 //std::vector<vec2> birdPath = AISystem::getBirdPath();

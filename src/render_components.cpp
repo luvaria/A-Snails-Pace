@@ -328,7 +328,7 @@ MinShadedMeshRef::MinShadedMeshRef(ShadedMesh& mesh, RenderBucket bucket) :
 	renderBucket(bucket)
 {};
 
-void Camera::reset()
+void Camera::reset(vec2 position)
 {
     auto& camReg = ECS::registry<Camera>;
     if (camReg.size() == 0)
@@ -343,7 +343,7 @@ void Camera::reset()
     {
         motionReg.emplace(cameraEntity);
     }
-    motionReg.get(cameraEntity).position = { 0.f,0.f };
+    motionReg.get(cameraEntity).position = position;
 }
 
 void Camera::update(float move_seconds)
@@ -369,6 +369,15 @@ void Camera::update(float move_seconds)
 		cameraDest.position = { cameraMotion.position.x, cameraMotion.position.y + TileSystem::getScale() };
 	}
     cameraMotion.velocity = (cameraDest.position - cameraMotion.position) / move_seconds;
+}
+
+vec2 Camera::getPosition()
+{
+    assert(ECS::registry<Camera>.size() != 0);
+    auto &cameraEntity = ECS::registry<Camera>.entities[0];
+    assert(ECS::registry<Motion>.has(cameraEntity));
+    auto &cameraMotion = ECS::registry<Motion>.get(cameraEntity);
+    return cameraMotion.position;
 }
 
 // Very, VERY simple OBJ loader adapted from https://github.com/opengl-tutorials/ogl tutorial 7
