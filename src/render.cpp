@@ -411,12 +411,12 @@ void RenderSystem::draw(vec2 window_size_in_game_units, float elapsed_ms)
 		
 		// Note, its not very efficient to access elements indirectly via the entity albeit iterating through all Sprites in sequence
 		if (ECS::registry<Overlay>.has(entity))
-			drawTexturedMesh(entity, overlay_projection_2D, elapsed_ms, false);
+			// draw overlays after shadow
+			continue;
 		else if (ECS::registry<Parallax>.has(entity))
 			drawTexturedMesh(entity, projection2D(window_size_in_game_units, cameraOffset / static_cast<float>(ECS::registry<Parallax>.get(entity).layer)), elapsed_ms, false);
-        else if (ECS::registry<WeatherParentParticle>.has(entity)) {
+        else if (ECS::registry<WeatherParentParticle>.has(entity))
             drawTexturedMeshForParticles(entity, window_size_in_game_units, projection_2D, elapsed_ms);
-        }
 		else
 			drawTexturedMesh(entity, projection_2D, elapsed_ms, false);
 
@@ -425,6 +425,17 @@ void RenderSystem::draw(vec2 window_size_in_game_units, float elapsed_ms)
 
 	//draw frame_buffer_2 to frame_buffer.
 	drawShadowScreen();
+
+	//Draw all Overlay textured meshes that have a position and size component
+	for (ECS::Entity entity : ECS::registry<ShadedMeshRef>.entities)
+	{
+		if (!ECS::registry<Motion>.has(entity) || !ECS::registry<Overlay>.has(entity))
+			continue;
+		else
+			drawTexturedMesh(entity, overlay_projection_2D, elapsed_ms, false);
+
+		gl_has_errors();
+	}
 
 	//use a shader where it goes through every single pixel, and determines if we should have a shadow on top of it.
 
