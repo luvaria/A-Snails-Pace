@@ -18,7 +18,7 @@ void main()
     unit_direction.x *= 0.005;
     unit_direction.y *= 0.005;
     vec2 current_position = texcoord + unit_direction;
-    while (current_position.x > 0.01 && current_position.x < 0.99 && current_position.y < 0.99) 
+    while (current_position.x > 0.001 && current_position.x < 0.999 && current_position.y < 0.999) 
     {
         
         vec4 current_color = texture(screen_texture, current_position);
