@@ -18,7 +18,9 @@ RenderSystem::RenderSystem(GLFWwindow& window) :
 	// Create a frame buffer
 	frame_buffer = 0;
 	glGenFramebuffers(1, &frame_buffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
+
+	frame_buffer_2 = 0;
+	glGenFramebuffers(1, &frame_buffer_2);
 
 	initScreenTexture();
 }
@@ -27,6 +29,7 @@ RenderSystem::~RenderSystem()
 {
 	// delete allocated resources
 	glDeleteFramebuffers(1, &frame_buffer);
+	glDeleteFramebuffers(1, &frame_buffer_2);
 
 	// remove all entities created by the render system
 	while (ECS::registry<Motion>.entities.size() > 0)
@@ -120,10 +123,18 @@ void RenderSystem::createColoredMesh(ShadedMesh& texmesh, std::string shader_nam
 // Initialize the screen texture from a standard sprite
 void RenderSystem::initScreenTexture()
 {
+	glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
 	// Create a sprite without loading a texture
-	createSprite(screen_sprite, "", "water", false);
+	createSprite(screen_sprite, "", "water", false); 
 
-	// Initialize the screen texture and its state
+	// Initialize the screen texture and its state 
 	screen_sprite.texture.create_from_screen(&window, depth_render_buffer_id.data());
 	ECS::registry<ScreenState>.emplace(screen_state_entity);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_2);
+	createSprite(shadow_sprite, "", "shadow", false);
+	shadow_sprite.texture.create_from_screen(&window, depth_render_buffer_id.data());
+	ECS::registry<ShadowScreen>.emplace(shadow_entity);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
 }

@@ -9,6 +9,50 @@
 
 #include <iostream>
 
+// Draw the intermediate texture to the screen, with shadow to simulate light.
+void RenderSystem::drawShadowScreen()
+{
+	// Setting shaders
+	glUseProgram(shadow_sprite.effect.program);
+	glBindVertexArray(shadow_sprite.mesh.vao);
+	gl_has_errors();
+
+	// Disable alpha channel for mapping the screen texture onto the real screen
+	//glDisable(GL_BLEND); // we have a single texture without transparency. Areas with alpha <1 cab arise around the texture transparency boundary, enabling blending would make them visible.
+	glDisable(GL_DEPTH_TEST);
+
+	glBindBuffer(GL_ARRAY_BUFFER, shadow_sprite.mesh.vbo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shadow_sprite.mesh.ibo); // Note, GL_ELEMENT_ARRAY_BUFFER associates indices to the bound GL_ARRAY_BUFFER
+	gl_has_errors();
+
+	// Draw the screen texture on the quad geometry
+	gl_has_errors();
+
+	// Set clock
+	GLuint time_uloc = glGetUniformLocation(shadow_sprite.effect.program, "time");
+	GLuint dead_timer_uloc = glGetUniformLocation(shadow_sprite.effect.program, "darken_screen_factor");
+	glUniform1f(time_uloc, static_cast<float>(glfwGetTime() * 10.0f));
+	gl_has_errors();
+
+	// Set the vertex position and vertex texture coordinates (both stored in the same VBO)
+	GLint in_position_loc = glGetAttribLocation(shadow_sprite.effect.program, "in_position");
+	glEnableVertexAttribArray(in_position_loc);
+	glVertexAttribPointer(in_position_loc, 3, GL_FLOAT, GL_FALSE, sizeof(TexturedVertex), (void*)0);
+	GLint in_texcoord_loc = glGetAttribLocation(shadow_sprite.effect.program, "in_texcoord");
+	glEnableVertexAttribArray(in_texcoord_loc);
+	glVertexAttribPointer(in_texcoord_loc, 2, GL_FLOAT, GL_FALSE, sizeof(TexturedVertex), (void*)sizeof(vec3)); // note the stride to skip the preceeding vertex position
+	gl_has_errors();
+
+	// Bind our texture in Texture Unit 0
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, shadow_sprite.texture.texture_id);
+
+	// Draw
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr); // two triangles = 6 vertices; nullptr indicates that there is no offset from the bound index buffer
+	glBindVertexArray(0);
+	gl_has_errors();
+}
+
 //change the data that gets passed to the fs on a frame-frame basis (nothing regarding intial loading here)
 void DoSpriteSheetLogic(ECS::Entity entity, const ShadedMesh& mesh)
 {
@@ -116,7 +160,7 @@ void RenderSystem::drawTexturedMeshForParticles(ECS::Entity entity, vec2 window_
 
 }
 
-void RenderSystem::drawTexturedMesh(ECS::Entity entity, const mat3& projection, float elapsed_ms)
+void RenderSystem::drawTexturedMesh(ECS::Entity entity, const mat3& projection, float elapsed_ms, bool isOccluder)
 {
 	auto& motion = ECS::registry<Motion>.get(entity);
 	auto& texmesh = *ECS::registry<ShadedMeshRef>.get(entity).reference_to_cache;
@@ -126,7 +170,6 @@ void RenderSystem::drawTexturedMesh(ECS::Entity entity, const mat3& projection, 
 	transform.translate(motion.position);
     transform.rotate(motion.angle);
 	transform.scale(motion.scale);
-	// !!! TODO A1: add rotation to the chain of transformations, mind the order of transformations
 
 	// Setting shaders
 	glUseProgram(texmesh.effect.program);
@@ -137,6 +180,20 @@ void RenderSystem::drawTexturedMesh(ECS::Entity entity, const mat3& projection, 
 	glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDisable(GL_DEPTH_TEST);
 	gl_has_errors();
+
+	//if (isOccluder) 
+	//{
+	//	//set the color to the color for the occluder
+	//	GLint solid_color_uloc = glGetUniformLocation(texmesh.effect.program, "solid_color");
+	//	gl_has_errors();
+	//	glUniform4fv(solid_color_uloc, 1, (float*)&ECS::registry<Occluder>.get(entity).color);
+	//	gl_has_errors();
+
+	//	GLint isOccluder_uloc = glGetUniformLocation(texmesh.effect.program, "isOccluder");
+	//	gl_has_errors();
+	//	glUniform1i(isOccluder_uloc, true);
+	//	gl_has_errors();
+	//}
 
 	GLint transform_uloc = glGetUniformLocation(texmesh.effect.program, "transform");
 	GLint projection_uloc = glGetUniformLocation(texmesh.effect.program, "projection");
@@ -293,27 +350,15 @@ void RenderSystem::drawToScreen()
 // http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
 void RenderSystem::draw(vec2 window_size_in_game_units, float elapsed_ms)
 {
-	// Getting size of window
+	// Getting size of window 
 	ivec2 frame_buffer_size; // in pixels
 	glfwGetFramebufferSize(&window, &frame_buffer_size.x, &frame_buffer_size.y);
-
-	// First render to the custom framebuffer
-	glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
-	gl_has_errors();
-
-	// Clearing backbuffer
-	glViewport(0, 0, frame_buffer_size.x, frame_buffer_size.y);
-	glDepthRange(0.00001, 10);
-	glClearColor(0, 0, 1, 1.0);
-	glClearDepth(1.f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	gl_has_errors();
 
 	auto& camera = ECS::registry<Camera>.entities[0];
 	vec2 cameraOffset = ECS::registry<Motion>.get(camera).position;
 
-	// projection that follows camera
-	mat3 projection_2D = projection2D(window_size_in_game_units, cameraOffset);
+	// projection that follows camera 
+	mat3 projection_2D = projection2D(window_size_in_game_units, cameraOffset); 
 
 	// stationary entities that don't move with camera
 	mat3 overlay_projection_2D = projection2D(window_size_in_game_units, { 0, 0 });
@@ -321,7 +366,51 @@ void RenderSystem::draw(vec2 window_size_in_game_units, float elapsed_ms)
 	// Sort meshes for correct asset drawing order
 	ECS::registry<ShadedMeshRef>.sort(renderCmp);
 
-	// Draw all textured meshes that have a position and size component
+	// bind it
+	glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_2);
+	gl_has_errors();
+
+	// Clearing backbuffer
+	glViewport(0, 0, frame_buffer_size.x, frame_buffer_size.y);
+	glDepthRange(0.00001, 10);
+	glClearColor(0, 0, 0, 0); //alpha = 0 means n occluder is drawn on it
+	glClearDepth(1.f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	gl_has_errors();
+
+	// first we draw all objects that block light onto a temporary texture.
+
+	 //Draw all textured meshes that have a position and size component, and are occluders
+	for (ECS::Entity entity : ECS::registry<ShadedMeshRef>.entities)
+	{
+		if (!ECS::registry<Motion>.has(entity))
+			continue;
+
+		if (!ECS::registry<Occluder>.has(entity))
+			continue;
+		
+		// Note, its not very efficient to access elements indirectly via the entity albeit iterating through all Sprites in sequence
+		if (ECS::registry<Overlay>.has(entity))
+			drawTexturedMesh(entity, overlay_projection_2D, elapsed_ms, true);
+		else
+			drawTexturedMesh(entity, projection_2D, elapsed_ms, true);
+
+		gl_has_errors();
+	}
+
+	//bind the new frame buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
+	gl_has_errors();
+
+	//Clearing backbuffer
+	glViewport(0, 0, frame_buffer_size.x, frame_buffer_size.y);
+	glDepthRange(0.00001, 10);
+	glClearColor(0, 0, 1, 1.0);
+	glClearDepth(1.f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	gl_has_errors();
+
+	 //Draw all textured meshes that have a position and size component
 	for (ECS::Entity entity : ECS::registry<ShadedMeshRef>.entities)
 	{
 		if (!ECS::registry<Motion>.has(entity))
@@ -329,32 +418,37 @@ void RenderSystem::draw(vec2 window_size_in_game_units, float elapsed_ms)
 		
 		// Note, its not very efficient to access elements indirectly via the entity albeit iterating through all Sprites in sequence
 		if (ECS::registry<Overlay>.has(entity))
-			drawTexturedMesh(entity, overlay_projection_2D, elapsed_ms);
+			drawTexturedMesh(entity, overlay_projection_2D, elapsed_ms, false);
 		else if (ECS::registry<Parallax>.has(entity))
-			drawTexturedMesh(entity, projection2D(window_size_in_game_units, cameraOffset / static_cast<float>(ECS::registry<Parallax>.get(entity).layer)), elapsed_ms);
+			drawTexturedMesh(entity, projection2D(window_size_in_game_units, cameraOffset / static_cast<float>(ECS::registry<Parallax>.get(entity).layer)), elapsed_ms, false);
         else if (ECS::registry<WeatherParentParticle>.has(entity)) {
             drawTexturedMeshForParticles(entity, window_size_in_game_units, projection_2D, elapsed_ms);
         }
 		else
-			drawTexturedMesh(entity, projection_2D, elapsed_ms);
+			drawTexturedMesh(entity, projection_2D, elapsed_ms, false);
 
 		gl_has_errors();
 	}
+
+	//draw frame_buffer_2 to frame_buffer.
+	drawShadowScreen();
+
+	//use a shader where it goes through every single pixel, and determines if we should have a shadow on top of it.
 
 	// Draw text components to the screen
 	// NOTE: for simplicity, text components are drawn in a second pass,
 	// on top of all texture mesh components. This should be reasonable
 	// for nearly all use cases. If you need text to appear behind meshes,
 	// consider using a depth buffer during rendering and adding a
-	// Z-component or depth index to all rendererable components.
-	for (const Text& text : ECS::registry<Text>.components) {
+	// Z-component or depth index to all rendererable components. 
+	for (const Text& text : ECS::registry<Text>.components) { 
 		drawText(text, window_size_in_game_units);
 	}
 
 	// Truely render to the screen
 	drawToScreen();
 
-	// flicker-free display with a double buffer
+	// flicker-free display with a double buffer 
 	glfwSwapBuffers(&window);
 }
 
@@ -406,6 +500,7 @@ void gl_has_errors()
 		std::cerr << "OpenGL:" << error_str << std::endl;
 		error = glGetError();
 	}
+	std::cout << "OpenGL:" << std::string(error_str) << std::endl;
 	throw std::runtime_error("last OpenGL error:" + std::string(error_str));
 }
 

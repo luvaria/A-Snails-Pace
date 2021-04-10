@@ -71,6 +71,14 @@ struct TexturedVertex
 	vec2 texcoord;
 };
 
+struct Occluder 
+{
+	vec4 color = vec4((static_cast <float> (rand()) / static_cast <float> (RAND_MAX)),
+		(static_cast <float> (rand()) / static_cast <float> (RAND_MAX)),
+		(static_cast <float> (rand()) / static_cast <float> (RAND_MAX)),
+		1); //alpha = 1
+}; //entities which are solid and block light will have this component
+
 // Texture wrapper
 struct Texture
 {
@@ -122,6 +130,8 @@ struct ScreenState
 {
 	float darken_screen_factor = -1;
 };
+
+struct ShadowScreen {};
 
 // ShadedMesh datastructure for storing mesh, shader, and texture objects
 struct ShadedMesh
