@@ -5,7 +5,7 @@
   "direction": "right",
   "background": "desert",
   "weather": "rain",
-  "turnsPerCamera": 3,
+  "turnsPerCamera": 2,
   "AI-PathFinding-Algorithm": "Astar",
   "snailProjectileMaxMoves" : 3,
   "aiProjectileMaxMoves" : 5,
