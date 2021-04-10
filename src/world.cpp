@@ -648,7 +648,7 @@ void WorldSystem::setFromJson(nlohmann::json const& saved)
     if (level == 0)
     {
         msg_index = saved[WorldKeys::MSG_INDEX_KEY];
-
+        first_run.clear();
         for (json row : saved[WorldKeys::FIRST_RUN_VEC_KEY])
         {
             std::vector<bool> vec;
