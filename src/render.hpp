@@ -42,6 +42,9 @@ public:
     static bool randomBoolean; 
 
 private:
+    unsigned int instanceVBO = 0;
+    unsigned int quadVAO = 0, quadVBO = 0;
+
     float quadVerticesSnow[30] = {
             -0.05f,  0.05f,  1.0f, 1.0f, 1.0f,
              0.05f, -0.05f,  1.0f, 1.0f, 1.0f,

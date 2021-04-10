@@ -72,21 +72,22 @@ void RenderSystem::drawTexturedMeshForParticles(ECS::Entity entity, vec2 window_
     if(translations.size() == 0) {
         return;
     }
-
-    unsigned int instanceVBO;
-    glGenBuffers(1, &instanceVBO);
+    if(instanceVBO == 0) {
+        glGenBuffers(1, &instanceVBO);
+    }
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * element.particles.size(), &translations[0], GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-//    float quadVertices[30] = ;
     
-    unsigned int quadVAO, quadVBO;
-    glGenVertexArrays(1, &quadVAO);
-    glGenBuffers(1, &quadVBO);
+    if(quadVBO == 0) {
+        glGenVertexArrays(1, &quadVAO);
+        glGenBuffers(1, &quadVBO);
+    }
     glBindVertexArray(quadVAO);
     glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(randomBoolean ? quadVerticesSnow : quadVerticesRain), randomBoolean ? quadVerticesSnow : quadVerticesRain, GL_STATIC_DRAW);
+
+    glBufferData(GL_ARRAY_BUFFER, randomBoolean ? sizeof(quadVerticesSnow) : sizeof(quadVerticesRain), randomBoolean ? quadVerticesSnow : quadVerticesRain, GL_STATIC_DRAW);
+
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
