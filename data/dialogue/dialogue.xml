@@ -8,7 +8,7 @@
 			<encounter level_name="Tutorial">
 				<dialogue dID="0">
 					<lines>
-						<line>Aha, you've fallen for my trap! I call this move "the dissapearing snail"!</line>
+						<line>Aha, you've fallen for my trap! I call this move "the disappearing snail"!</line>
 					</lines>
 				</dialogue>
 				<dialogue dID="1">
