@@ -1526,9 +1526,8 @@ void WorldSystem::shootProjectile(vec2 mousePos, bool preview /* = false */)
     // instead of firing from the centre of the snail, fire from 7/10 a tile in the direction of the mouse
     if (snailPosition == mousePos) {
         return;
-    }
-    vec2 projectilePosition = snailPosition + 0.70f * normalize(mousePos - snailPosition) * TileSystem::getScale();
-	vec2 projectileVelocity = (mousePos - projectilePosition);
+    vec2 projectilePosition = snailPosition + 0.7f * normalize(mousePos - snailPosition) * TileSystem::getScale();
+	vec2 projectileVelocity = (mousePos - snailPosition);
 	float length = glm::length(projectileVelocity);
 	projectileVelocity.x = (projectileVelocity.x / length) * TileSystem::getScale() * 2;
 	projectileVelocity.y = (projectileVelocity.y / length) * TileSystem::getScale() * 2;
