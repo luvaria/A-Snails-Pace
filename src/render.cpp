@@ -6,6 +6,7 @@
 #include "particle.hpp"
 #include "render.hpp"
 #include "text.hpp"
+#include "menus/level_select.hpp"
 
 #include <iostream>
 
@@ -377,6 +378,9 @@ void RenderSystem::draw(vec2 window_size_in_game_units, float elapsed_ms)
 	for (ECS::Entity entity : ECS::registry<ShadedMeshRef>.entities)
 	{
 		if (!ECS::registry<Motion>.has(entity))
+			continue;
+
+		if (ECS::registry<LevelSelectTag>.has(entity))
 			continue;
 
 		if (!ECS::registry<Occluder>.has(entity))
