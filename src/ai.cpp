@@ -457,8 +457,14 @@ void AISystem::projectileShoot(ECS::Entity& e) {
 
     // now you want to go in the direction of the (mouse_pos - snail_pos), but make it a unit vector
     vec2 snailPosition = ECS::registry<Motion>.get(snailEntity).position;
-
-    vec2 projectilePosition = birdPosition + glm::normalize(snailPosition - birdPosition) * TileSystem::getScale() / 2.f;
+    if (birdPosition == snailPosition) {
+        return;
+    }
+    vec2 normal = normalize(snailPosition - birdPosition);
+    float factor = 0.50f * TileSystem::getScale();
+    vec2 offset = factor * normal;
+    vec2 projectilePosition = birdPosition + offset;
+    //vec2 projectilePosition = snailPosition + 0.70f * normalize(mousePos - snailPosition) * TileSystem::getScale();
     vec2 projectileVelocity = (snailPosition - projectilePosition);
     float length = glm::length(projectileVelocity);
     projectileVelocity.x = (projectileVelocity.x / length) * TileSystem::getScale();
