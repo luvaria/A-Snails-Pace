@@ -60,7 +60,7 @@ void LevelSelect::loadEntities()
 {
 	// level previews
 	vec2 previewSpacing = LevelLoader::previewScale * LevelLoader::previewDimensions + 2.f * vec2(LevelLoader::previewScale, 2.f * LevelLoader::previewScale);
-	vec2 previewOffset = vec2(100.f, 100.f);
+	vec2 previewOffset = vec2(100.f, 90.f);
 
 	int levelIndex = 0;
 	for (int y = 0; y < 3; y++)
