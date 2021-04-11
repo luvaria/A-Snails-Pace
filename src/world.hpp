@@ -135,6 +135,7 @@ private:
 	Mix_Chunk* splash_sound;
 	Mix_Chunk* projectile_fire_sound;
 	Mix_Chunk* projectile_break_sound;
+	Mix_Chunk* projectile_pop_sound;
 	Mix_Chunk* camera_advance_sound;
 	Mix_Chunk* dialogue_sound;
 	Mix_Chunk* collectible_sound;

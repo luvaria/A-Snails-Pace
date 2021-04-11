@@ -30,6 +30,7 @@ Parallax asset [PNG]: https://saurabhkgp.itch.io/the-dawn-parallax-background, h
 - Superspider spawn sound: "Powerup03" by [sharesynth on freesound.org](https://freesound.org/people/sharesynth/sounds/341240/)
 - Projectile firing sound: "mouth pop" by [Reitanna on freesound.org](https://freesound.org/people/Reitanna/sounds/323741/)
 - Projectile breaking sound: "Quick Clack" by [effectator on freesound.org](https://freesound.org/people/effectator/sounds/443328/)
+- Projectile popping sound: "dop!" by [Voktebef on freesound.org](https://freesound.org/people/Voktebef/sounds/28786/)
 - Snail move sound: edited from "Card Flip" by [f4ngy on freesound.org](https://freesound.org/people/f4ngy/sounds/240776/)
 - Fall sound: "Jump (Retro video game SFX)" by [cabled_mess on freesound.org](https://freesound.org/people/cabled_mess/sounds/350906/)
 - Splash sound: "water_splash" by [soundscalpel.com on freesound.org](https://freesound.org/people/soundscalpel.com/sounds/110393/)
