@@ -84,7 +84,33 @@ protected:
 			activeButtonIndex++;
 
 		activeButtonEntity = buttonEntities[activeButtonIndex];
-		ECS::registry<MenuButton>.get(activeButtonEntity).selected = true;
+		// skip disabled buttons
+		int buttonAcc = 0; // buttons checked
+		while (ECS::registry<MenuButton>.get(activeButtonEntity).disabled)
+		{
+			if (buttonAcc == buttonEntities.size())
+			{
+				// no undisabled buttons
+				activeButtonIndex = -1;
+				break;
+			}
+			buttonAcc++;
+			if (activeButtonIndex + 1 >= buttonEntities.size())
+			{
+				// loop around to first button
+				activeButtonIndex = 0;
+			}
+			else
+			{
+				// next button
+				activeButtonIndex++;
+			}
+			activeButtonEntity = buttonEntities[activeButtonIndex];
+		}
+		if (activeButtonIndex >= 0)
+		{
+			ECS::registry<MenuButton>.get(activeButtonEntity).selected = true;
+		}
 	}
 	void selectPreviousButton()
 	{
@@ -105,7 +131,33 @@ protected:
 			activeButtonIndex--;
 
 		activeButtonEntity = buttonEntities[activeButtonIndex];
-		ECS::registry<MenuButton>.get(activeButtonEntity).selected = true;
+		// skip disabled buttons
+		int buttonAcc = 0; // buttons checked
+		while (ECS::registry<MenuButton>.get(activeButtonEntity).disabled)
+		{
+			if (buttonAcc == buttonEntities.size())
+			{
+				// no undisabled buttons
+				activeButtonIndex = -1;
+				break;
+			}
+			buttonAcc--;
+			if (activeButtonIndex <= 0)
+			{
+				// loop around to last button
+				activeButtonIndex = buttonEntities.size() - 1;
+			}
+			else
+			{
+				// previous button
+				activeButtonIndex--;
+			}
+			activeButtonEntity = buttonEntities[activeButtonIndex];
+		}
+		if (activeButtonIndex >= 0)
+		{
+			ECS::registry<MenuButton>.get(activeButtonEntity).selected = true;
+		}
 	}
 
 public:
