@@ -134,6 +134,11 @@ void LevelSelect::on_key(int key, int, int action, int /*mod*/)
 			// exit level select (go back to start menu)
 			exit();
 			break;
+		case GLFW_KEY_T:
+			// load tutorial level
+			notify(Event(Event::EventType::LOAD_LEVEL, 0));
+			notify(Event(Event::EventType::MENU_CLOSE_ALL));
+			break;
 		default:
 			// see https://discourse.glfw.org/t/get-integer-representing-label-printed-on-keyboard-layout/1522
 			const char* keyName = glfwGetKeyName(key, 0);
@@ -141,7 +146,7 @@ void LevelSelect::on_key(int key, int, int action, int /*mod*/)
 			{
 				return; // ignore keys without names
 			}
-			const int keyNum = (int)keyName[0] - '0' - 1; // key presses are not zero-indexed
+			const int keyNum = (int)keyName[0] - '0'; // key presses are zero-indexed, as the tutorial is level 0
 			if (keyNum >= 0 && keyNum < levels.size())
 			{
 				notify(Event(Event::EventType::LOAD_LEVEL, keyNum));
