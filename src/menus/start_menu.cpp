@@ -65,7 +65,7 @@ void StartMenu::step(vec2 /*window_size_in_game_units*/)
 void StartMenu::loadEntities()
 {
 	// a big boi
-	ECS::Entity snail = Snail::createSnail({ 350, 460 });
+	ECS::Entity snail = Snail::createSnail({ 375, 450 });
 	Motion& snailMotion = ECS::registry<Motion>.get(snail);
 	snailMotion.scale *= 6;
 	ECS::registry<StartMenuTag>.emplace(snail);
@@ -99,12 +99,19 @@ void StartMenu::loadEntities()
 	const auto ABEEZEE_REGULAR = Font::load(ABEEZEE_REGULAR_PATH);
 	const auto VIGA_REGULAR = Font::load(VIGA_REGULAR_PATH);
 
+	float title_pos_x = 600.f;
+	float title_pos_y = 285.f;
+	float text_offset_x = 50.f;
+	float text_offset_y = 50.f;
+	float text_pos_x = title_pos_x + 2.f * text_offset_x;
+	float text_pos_y = title_pos_y + text_offset_y;
+
 	// title text
 	// probably best to replace with a png/mesh
 	auto titleTextEntity = ECS::Entity();
 	ECS::registry<Text>.insert(
 		titleTextEntity,
-		Text("A Snail's Pace", VIGA_REGULAR, { 550.0f, 300.0f })
+		Text("A Snail's Pace", VIGA_REGULAR, { title_pos_x, title_pos_y })
 	);
 	Text& titleText = ECS::registry<Text>.get(titleTextEntity);
 	titleText.colour = TITLE_COLOUR;
@@ -114,7 +121,7 @@ void StartMenu::loadEntities()
 	auto startGameEntity = ECS::Entity();
 	ECS::registry<Text>.insert(
 		startGameEntity,
-		Text("Start", ABEEZEE_REGULAR, { 650.0f, 350.0f })
+		Text("Start", ABEEZEE_REGULAR, { text_pos_x, text_pos_y })
 	);
 	Text& startText = ECS::registry<Text>.get(startGameEntity);
 	startText.colour = DEFAULT_COLOUR;
@@ -124,10 +131,11 @@ void StartMenu::loadEntities()
 	buttonEntities.push_back(startGameEntity);
 
     // continue from last save
+	text_pos_y += text_offset_y;
     auto loadSaveEntity = ECS::Entity();
     ECS::registry<Text>.insert(
             loadSaveEntity,
-            Text("Continue", ABEEZEE_REGULAR, { 650.0f, 400.0f })
+            Text("Continue", ABEEZEE_REGULAR, { text_pos_x, text_pos_y })
     );
     Text& loadSaveText = ECS::registry<Text>.get(loadSaveEntity);
     loadSaveText.colour = DEFAULT_COLOUR;
@@ -137,10 +145,11 @@ void StartMenu::loadEntities()
     buttonEntities.push_back(loadSaveEntity);
 
 	// level select button
+	text_pos_y += text_offset_y;
 	auto selectLevelEntity = ECS::Entity();
 	ECS::registry<Text>.insert(
 		selectLevelEntity,
-		Text("Select level", ABEEZEE_REGULAR, { 650.0f, 450.0f })
+		Text("Select level", ABEEZEE_REGULAR, { text_pos_x, text_pos_y })
 	);
 	Text& selectText = ECS::registry<Text>.get(selectLevelEntity);
 	selectText.colour = DEFAULT_COLOUR;
@@ -150,10 +159,11 @@ void StartMenu::loadEntities()
 	buttonEntities.push_back(selectLevelEntity);
 
     // collectibles menu button
+	text_pos_y += text_offset_y;
     auto collectiblesEntity = ECS::Entity();
     ECS::registry<Text>.insert(
             collectiblesEntity,
-            Text("Collectibles", ABEEZEE_REGULAR, { 650.0f, 500.0f })
+            Text("Collectibles", ABEEZEE_REGULAR, { text_pos_x, text_pos_y })
     );
     Text& collectiblesText = ECS::registry<Text>.get(collectiblesEntity);
     collectiblesText.colour = DEFAULT_COLOUR;
@@ -164,10 +174,12 @@ void StartMenu::loadEntities()
 
 
     // clear data button
+	text_pos_x += text_offset_x;
+	text_pos_y += text_offset_y;
     auto clearCollectibleDataEntity = ECS::Entity();
     ECS::registry<Text>.insert(
             clearCollectibleDataEntity,
-            Text("Clear collectible data", ABEEZEE_REGULAR, { 700.0f, 550.0f })
+            Text("Clear collectible data", ABEEZEE_REGULAR, { text_pos_x, text_pos_y })
     );
     Text& clearCollectibleDataText = ECS::registry<Text>.get(clearCollectibleDataEntity);
     clearCollectibleDataText.colour = DEFAULT_COLOUR;
