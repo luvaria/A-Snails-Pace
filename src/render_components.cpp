@@ -348,8 +348,10 @@ void Camera::reset(vec2 position)
 
 void Camera::update(float move_seconds)
 {
-    assert(ECS::registry<Camera>.size() != 0);
+	assert(ECS::registry<Camera>.size() != 0);
     auto &cameraEntity = ECS::registry<Camera>.entities[0];
+	Camera& camera = ECS::registry<Camera>.components[0];
+	camera.playSound = true;
 
     assert(ECS::registry<Motion>.has(cameraEntity));
     auto &cameraMotion = ECS::registry<Motion>.get(cameraEntity);
@@ -378,6 +380,21 @@ vec2 Camera::getPosition()
     assert(ECS::registry<Motion>.has(cameraEntity));
     auto &cameraMotion = ECS::registry<Motion>.get(cameraEntity);
     return cameraMotion.position;
+}
+
+bool Camera::shouldPlaySound()
+{
+	assert(ECS::registry<Camera>.size() != 0);
+	Camera& camera = ECS::registry<Camera>.components[0];
+	if (camera.playSound)
+	{
+		camera.playSound = false;
+		return true;
+	}
+	else
+	{
+		return camera.playSound;
+	}
 }
 
 // Very, VERY simple OBJ loader adapted from https://github.com/opengl-tutorials/ogl tutorial 7

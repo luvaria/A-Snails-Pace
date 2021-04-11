@@ -128,6 +128,8 @@ WorldSystem::~WorldSystem() {
         Mix_FreeChunk(projectile_fire_sound);
     if (projectile_break_sound != nullptr)
         Mix_FreeChunk(projectile_break_sound);
+    if (camera_advance_sound != nullptr)
+        Mix_FreeChunk(camera_advance_sound);
     if (dialogue_sound != nullptr)
         Mix_FreeChunk(dialogue_sound);
     if (collectible_sound != nullptr)
@@ -167,10 +169,11 @@ void WorldSystem::init_audio()
     splash_sound = Mix_LoadWAV(audio_path("110393__soundscalpel-com__water-splash.wav").c_str());
     projectile_fire_sound = Mix_LoadWAV(audio_path("323741__reitanna__mouth-pop.wav").c_str());
     projectile_break_sound = Mix_LoadWAV(audio_path("443328__effectator__quick-clack.wav").c_str());
+    camera_advance_sound = Mix_LoadWAV(audio_path("394448__inspectorj__bamboo-swing-c7.wav").c_str());
     dialogue_sound = Mix_LoadWAV(audio_path("431891__syberic__aha.wav").c_str());
     collectible_sound = Mix_LoadWAV(audio_path("428663__jomse__pickupbook4.wav").c_str());
 
-    if (menu_music == nullptr || background_music == nullptr || level_complete_sound == nullptr || snail_dead_sound == nullptr || enemy_dead_sound == nullptr || enemy_nope_sound == nullptr || superspider_spawn_sound == nullptr || snail_move_sound == nullptr || snail_fall_sound == nullptr || splash_sound == nullptr || projectile_fire_sound == nullptr || projectile_break_sound == nullptr || dialogue_sound == nullptr || collectible_sound == nullptr)
+    if (menu_music == nullptr || background_music == nullptr || level_complete_sound == nullptr || snail_dead_sound == nullptr || enemy_dead_sound == nullptr || enemy_nope_sound == nullptr || superspider_spawn_sound == nullptr || snail_move_sound == nullptr || snail_fall_sound == nullptr || splash_sound == nullptr || projectile_fire_sound == nullptr || projectile_break_sound == nullptr || camera_advance_sound == nullptr || dialogue_sound == nullptr || collectible_sound == nullptr)
         throw std::runtime_error("Failed to load sounds; make sure the data directory is present");
 
     Volume::set(LoadSaveSystem::getSavedVolume());
@@ -397,6 +400,11 @@ void WorldSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
     }
 	else if (turnType == CAMERA)
     {
+        if (Camera::shouldPlaySound())
+        {
+            Mix_PlayChannel(-1, camera_advance_sound, 0);
+        }
+
 	    if (!ECS::registry<Destination>.has(cameraEntity))
         {
 	        turnType = PLAYER_WAITING;
