@@ -713,6 +713,10 @@ void PhysicsSystem::step(float elapsed_ms, vec2 window_size_in_game_units)
             int maxMoves = isSnailProjectile ? Projectile::snailProjectileMaxMoves : Projectile::aiProjectileMaxMoves;
             auto& proj = ECS::registry<Projectile>.get(entity);
             if(proj.moved >= maxMoves) {
+				if (ECS::registry<SnailProjectile>.has(entity))
+				{
+					notify(Event(Event::PROJECTILE_POPPED));
+				}
                 ECS::ContainerInterface::remove_all_components_of(entity);
             }
         }

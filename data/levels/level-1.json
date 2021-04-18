@@ -6,7 +6,7 @@
   "background": "mountain",
   "weather": "snow",
   "turnsPerCamera": 3,
-  "AI-PathFinding-Algorithm": "BFS",
+  "AI-PathFinding-Algorithm": "Astar",
   "snailProjectileMaxMoves" : 8,
   "aiProjectileMaxMoves" : 2,
   "endCoordinates": {"x" : 19 , "y" : 6 },

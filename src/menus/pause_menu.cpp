@@ -52,7 +52,7 @@ void PauseMenu::loadEntities()
 	auto titleTextEntity = ECS::Entity();
 	ECS::registry<Text>.insert(
 		titleTextEntity,
-		Text("Game Paused", ABEEZEE_REGULAR, { 450.f, 250.f })
+		Text("Game Paused", ABEEZEE_REGULAR, { 445.f, 360.f })
 	);
 	Text& titleText = ECS::registry<Text>.get(titleTextEntity);
 	titleText.scale = SUBTITLE_SCALE;
@@ -63,7 +63,7 @@ void PauseMenu::loadEntities()
 	auto quitGameEntity = ECS::Entity();
 	ECS::registry<Text>.insert(
 		quitGameEntity,
-		Text("Quit", ABEEZEE_REGULAR, { 550.f, 325.0f })
+		Text("Quit", ABEEZEE_REGULAR, { 560.f, 420.f })
 	);
 	Text& quitText = ECS::registry<Text>.get(quitGameEntity);
 	quitText.colour = DEFAULT_COLOUR;
@@ -71,6 +71,26 @@ void PauseMenu::loadEntities()
 	ECS::registry<MenuButton>.emplace(quitGameEntity, ButtonEventType::QUIT_GAME);
 	ECS::registry<PauseMenuTag>.emplace(quitGameEntity);
 	buttonEntities.push_back(quitGameEntity);
+
+	ECS::Entity panelEntity = ECS::Entity();
+	std::string panelKey = "pause_panel";
+	ShadedMesh& panelResource = cache_resource(panelKey);
+	if (panelResource.effect.program.resource == 0)
+	{
+		panelResource = ShadedMesh();
+		RenderSystem::createSprite(panelResource, textures_path("pause_panel.png"), "textured", false);
+	}
+
+	ECS::registry<ShadedMeshRef>.emplace(panelEntity, panelResource, RenderBucket::OVERLAY_2);
+
+	Motion& minVolMotion = ECS::registry<Motion>.emplace(panelEntity);
+	minVolMotion.angle = 0.f;
+	minVolMotion.velocity = { 0, 0 };
+	minVolMotion.position = { 600, 375 };
+	minVolMotion.scale = static_cast<vec2>(panelResource.texture.size) / static_cast<vec2>(panelResource.texture.size).x * 500.f;
+
+	ECS::registry<Overlay>.emplace(panelEntity);
+	ECS::registry<PauseMenuTag>.emplace(panelEntity);
 }
 
 void PauseMenu::removeEntities()
