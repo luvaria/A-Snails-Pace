@@ -248,7 +248,7 @@ void bounceProjectileOffWall(Motion& projectileMotion, std::vector<ColoredVertex
 			{
 				if (Geometry::linesIntersect(projectileLine, wallLine))
 				{
-					assert(foundWall == false); //you should only intersect with one wallLine
+					//assert(foundWall == false); //you should only intersect with one wallLine
 					foundWall = true;
 					//if they intersect, then this is the line that determines the distance my point needs to
 					// go back. So, determine what that distance is.
