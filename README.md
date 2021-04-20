@@ -1,11 +1,11 @@
 # A Snail's Pace
 ## Team 01
-- Rebecca Li 12961165
-- Emily Jia  29069168
-- Povel Batth 79296877
-- Joao Freitas 42608159
-- Doru Kesriyeli 52316759
-- Eric Raywood 54831169
+- Rebecca Li @luvaria
+- Emily Jia @emilyyjia
+- Povel Batth @povel62
+- Joao Freitas @joaogaldioli
+- Doru Kesriyeli
+- Eric Raywood
 
 ## CREDITS
 Exploding spider created with inspiration from [CODE]:
