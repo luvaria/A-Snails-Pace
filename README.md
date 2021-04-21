@@ -5,7 +5,7 @@
 - Povel Batth @povel62
 - Joao Freitas @joaogaldioli
 - Doru Kesriyeli
-- Eric Raywood
+- Eric Raywood @bjossa
 
 ## CREDITS
 Exploding spider created with inspiration from [CODE]:
